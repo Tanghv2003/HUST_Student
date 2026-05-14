@@ -1,0 +1,57 @@
+{
+  "Tiếng Nhật": [
+    {
+      "title": "Kanji N5",
+      "terms": 120,
+      "file": "Tieng_Nhat-Kanji_N5.json"
+    },
+    {
+      "title": "Từ vựng bài 1",
+      "terms": 80,
+      "file": "Tieng_Nhat-Tu_vung_bai_1.json"
+    }
+  ],
+  "Tiếng Nhật/Tiếng Nhật 1": [
+    {
+      "title": "Kanji N5",
+      "terms": 120,
+      "file": "Tieng_Nhat-Tieng_Nhat_1-Kanji_N5.json"
+    },
+    {
+      "title": "Từ vựng bài 1",
+      "terms": 80,
+      "file": "Tieng_Nhat-Tieng_Nhat_1-Tu_vung_bai_1.json"
+    }
+  ],
+  "Tiếng Nhật/Tiếng Nhật 1/Kanji": [
+    {
+      "title": "Kanji N5 - Phần 1",
+      "terms": 50,
+      "file": "Tieng_Nhat-Tieng_Nhat_1-Kanji_N5_Phan_1.json"
+    },
+    {
+      "title": "Kanji N5 - Phần 2",
+      "terms": 50,
+      "file": "Tieng_Nhat-Tieng_Nhat_1-Kanji_N5_Phan_2.json"
+    }
+  ],
+  "Tiếng Nhật/Tiếng Nhật 1/Ngữ pháp": [
+    {
+      "title": "Ngữ pháp N5",
+      "terms": 100,
+      "file": "Tieng_Nhat-Tieng_Nhat_1-Ngu_phap_N5.json"
+    },
+    {
+      "title": "Ngữ pháp N4",
+      "terms": 120,
+      "file": "Tieng_Nhat-Tieng_Nhat_1-Ngu_phap_N4.json"
+    }
+  ],
+  "Toeic": [
+    {
+      "title": "Toeic Listening",
+      "terms": 300,
+      "file": "Toeic-Listening.json"
+    }
+  ]
+}

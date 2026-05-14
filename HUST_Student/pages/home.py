@@ -2,8 +2,52 @@ import reflex as rx
 
 from HUST_Student.components.sidebar import sidebar
 from HUST_Student.components.topbar import topbar
-from HUST_Student.components.study_card import study_card
-from HUST_Student.components.recent_item import recent_item
+
+from HUST_Student.pages.library import library_page
+from HUST_Student.pages.classes import classes_page
+from HUST_Student.pages.folder_detail import folder_detail_page
+
+from HUST_Student.states.navigation_state import NavigationState
+
+
+def homepage_content():
+
+    return rx.vstack(
+
+        rx.text(
+            "Homepage",
+            font_size="3rem",
+            font_weight="700",
+        ),
+
+        width="100%",
+    )
+
+
+def content_router():
+
+    return rx.cond(
+
+        NavigationState.current_page == "home",
+
+        homepage_content(),
+
+        rx.cond(
+
+            NavigationState.current_page == "library",
+
+            library_page(),
+
+            rx.cond(
+
+                NavigationState.current_page == "folder_detail",
+
+                folder_detail_page(),
+
+                classes_page(),
+            ),
+        ),
+    )
 
 
 def home():
@@ -18,85 +62,7 @@ def home():
 
                 topbar(),
 
-                rx.vstack(
-
-                    rx.text(
-                        "Jump back in",
-                        font_size="2rem",
-                        font_weight="700",
-                    ),
-
-                    rx.grid(
-
-                        study_card("Tính từ N4 thông dụng"),
-
-                        study_card("Danh sách động từ N5, N4"),
-
-                        columns="2",
-
-                        spacing="6",
-
-                        width="100%",
-                    ),
-
-                    spacing="6",
-
-                    width="100%",
-                ),
-
-                rx.vstack(
-
-                    rx.hstack(
-
-                        rx.text(
-                            "Recents",
-                            font_size="2rem",
-                            font_weight="700",
-                        ),
-
-                        rx.spacer(),
-
-                        rx.link(
-                            "Xem tất cả",
-                            color="#4F46E5",
-                        ),
-
-                        width="100%",
-                    ),
-
-                    rx.grid(
-
-                        recent_item(
-                            "Tính từ N4 thông dụng",
-                            "140 cards • by you",
-                        ),
-
-                        recent_item(
-                            "Từ vựng N4",
-                            "1138 cards • by Dorr1207",
-                        ),
-
-                        recent_item(
-                            "Danh sách động từ N5, N4",
-                            "Folder • by you",
-                        ),
-
-                        recent_item(
-                            "Day 12",
-                            "60 cards • by dovanthai92",
-                        ),
-
-                        columns="2",
-
-                        spacing="4",
-
-                        width="100%",
-                    ),
-
-                    spacing="5",
-
-                    width="100%",
-                ),
+                content_router(),
 
                 spacing="8",
 
@@ -107,7 +73,7 @@ def home():
 
             padding="2rem",
 
-            bg="#FCFCFD",
+            bg="#F6F7FB",
 
             min_height="100vh",
         ),
