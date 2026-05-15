@@ -1,21 +1,7 @@
 import random
 import reflex as rx
-from pydantic import BaseModel
 
-
-class LearnCard(BaseModel):
-    front: str
-    back: str
-    stage: int = 0          # 0=chưa học, 1=đã xem, 2=gõ đúng, 3=trắc nghiệm đúng, 4=thành thạo
-    correct_streak: int = 0
-    wrong_count: int = 0
-    last_wrong: bool = False
-
-
-class PracticeItem(BaseModel):
-    card_index: int         # index vào self.cards
-    mode: str               # "type" | "choice"
-    is_new: bool = True     # True = từ mới lô này, False = từ ôn lại
+from HUST_Student.models import LearnCard, PracticeItem
 
 
 class LearnState(rx.State):

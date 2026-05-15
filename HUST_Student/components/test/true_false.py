@@ -1,5 +1,7 @@
 import reflex as rx
+
 from HUST_Student.states.folder_state import FolderState
+
 
 def true_false_section():
     is_selected_true = FolderState.selected_answer == "Đúng"
@@ -53,13 +55,21 @@ def true_false_section():
         rx.hstack(
             rx.vstack(
                 rx.text("Định nghĩa", color="#6B7280", font_weight="600"),
-                rx.box(rx.text(FolderState.current_question_display, font_size="1.4rem", font_weight="700"), padding="1rem", bg="#F8FAFC", border_radius="12px", border="1px solid #E5E7EB", width="100%"),
+                rx.box(
+                    rx.text(FolderState.current_question_display, font_size="1.4rem", font_weight="700"),
+                    padding="1rem", bg="#F8FAFC", border_radius="12px",
+                    border="1px solid #E5E7EB", width="100%",
+                ),
                 flex="1",
             ),
             rx.box(width="1px", bg="#E5E7EB"),
             rx.vstack(
                 rx.text("Thuật ngữ", color="#6B7280", font_weight="600", align_self="flex-end"),
-                rx.box(rx.text(FolderState.dung_sai_candidate, font_size="1.3rem", font_weight="700", text_align="right"), padding="1rem", bg="#F8FAFC", border_radius="12px", border="1px solid #E5E7EB", width="100%", align_self="flex-end"),
+                rx.box(
+                    rx.text(FolderState.dung_sai_candidate, font_size="1.3rem", font_weight="700", text_align="right"),
+                    padding="1rem", bg="#F8FAFC", border_radius="12px",
+                    border="1px solid #E5E7EB", width="100%", align_self="flex-end",
+                ),
                 flex="1",
             ),
             spacing="6",
@@ -73,9 +83,20 @@ def true_false_section():
             width="100%",
         ),
         rx.hstack(
-            rx.text("Bạn không biết?", color="#4F46E5", font_weight="600", cursor="pointer", on_click=lambda: FolderState.set_selected_answer(FolderState.correct_answer), _hover={"text_decoration": "underline"}),
+            rx.text(
+                "Bạn không biết?",
+                color="#4F46E5", font_weight="600", cursor="pointer",
+                on_click=lambda: FolderState.set_selected_answer(FolderState.correct_answer),
+                _hover={"text_decoration": "underline"},
+            ),
             rx.spacer(),
-            rx.button("Tiếp", on_click=FolderState.next_test_question, bg=rx.cond(FolderState.selected_answer != "", "#4F46E5", "#C7D2FE"), color="white", border_radius="999px", padding="0.6rem 1.2rem", cursor=rx.cond(FolderState.selected_answer != "", "pointer", "not-allowed")),
+            rx.button(
+                "Tiếp",
+                on_click=FolderState.next_test_question,
+                bg=rx.cond(FolderState.selected_answer != "", "#4F46E5", "#C7D2FE"),
+                color="white", border_radius="999px", padding="0.6rem 1.2rem",
+                cursor=rx.cond(FolderState.selected_answer != "", "pointer", "not-allowed"),
+            ),
         ),
         spacing="4",
         width="100%",

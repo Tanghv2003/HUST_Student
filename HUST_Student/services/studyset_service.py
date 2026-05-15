@@ -1,21 +1,14 @@
 import json
-from pathlib import Path
 
-
-data_dir = Path(__file__).parent.parent / "data"
+from HUST_Student.core.paths import STUDYSETS_DIR, STUDYSETS_JSON
 
 
 def load_studysets():
-
-    file_path = data_dir / "studysets.json"
-
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(STUDYSETS_JSON, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def load_studyset_detail(file_name: str):
-
-    file_path = data_dir / "studysets" / file_name
-
+    file_path = STUDYSETS_DIR / file_name
     with open(file_path, "r", encoding="utf-8") as f:
         return json.load(f)
