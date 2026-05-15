@@ -16,6 +16,8 @@ class LearnState(rx.State):
 
     # ── Batch config ───────────────────────────────────────────────
     BATCH_SIZE: int = 5     # số từ MỚI mỗi lô
+    # Sau khi sai: chèn ôn lại sau N thẻ khác (spaced repetition trong phiên — kiểu Quizlet Learn)
+    SESSION_SRS_GAP: int = 3
 
     # ── Tracking tích lũy ─────────────────────────────────────────
     # Toàn bộ thứ tự đã shuffle một lần, không đổi trong suốt round
@@ -135,35 +137,78 @@ class LearnState(rx.State):
 
     def _build_practice_queue(self, new_indices: list, old_indices: list):
         """
-        Từ mới  → luôn type (ghi nhớ lần đầu)
-        Từ cũ   → mặc định type, chỉ xen kẽ choice khi streak >= 2 VÀ chưa sai lần nào
-        Shuffle toàn bộ sau khi tạo.
+        - Thẻ mới: luôn type, xáo trộn trong nhóm.
+        - Thẻ ôn: ưu tiên thẻ sai nhiều / stage thấp trước; xen kẽ với thẻ mới (interleaving).
+        - Xáo trộn nhẹ theo từng khối để không dính cụm một loại.
         """
-        practice: list[PracticeItem] = []
-
-        for card_idx in new_indices:
-            practice.append(PracticeItem(
-                card_index=card_idx,
-                mode="type",
-                is_new=True,
-            ))
-
+        practice_new: list[PracticeItem] = [
+            PracticeItem(card_index=idx, mode="type", is_new=True)
+            for idx in new_indices
+        ]
+        practice_old: list[PracticeItem] = []
         for i, card_idx in enumerate(old_indices):
             card = self.cards[card_idx]
-            # Từ cũ: luôn type, chỉ thêm choice xen kẽ khi đã thành thạo tốt (streak >= 2)
             if card.correct_streak >= 2 and card.wrong_count == 0:
                 mode = "choice" if i % 2 == 0 else "type"
             else:
                 mode = "type"
-            practice.append(PracticeItem(
-                card_index=card_idx,
-                mode=mode,
-                is_new=False,
-            ))
+            practice_old.append(
+                PracticeItem(card_index=card_idx, mode=mode, is_new=False)
+            )
 
-        random.shuffle(practice)
-        self.practice_queue = practice
+        random.shuffle(practice_new)
+        practice_old.sort(
+            key=lambda it: (
+                -self.cards[it.card_index].wrong_count,
+                self.cards[it.card_index].stage,
+            )
+        )
+
+        merged: list[PracticeItem] = []
+        i, j = 0, 0
+        while i < len(practice_new) or j < len(practice_old):
+            if i < len(practice_new):
+                merged.append(practice_new[i])
+                i += 1
+            if j < len(practice_old):
+                merged.append(practice_old[j])
+                j += 1
+
+        chunk_size = 4
+        chunks = [merged[k : k + chunk_size] for k in range(0, len(merged), chunk_size)]
+        random.shuffle(chunks)
+        merged = [item for ch in chunks for item in ch]
+
+        self.practice_queue = merged
         self.practice_pos = 0
+
+    def _insert_spaced_review(self, card_idx: int):
+        """Chèn ôn lại thẻ vừa sai sau SESSION_SRS_GAP thẻ (lặp ngắt quãng trong phiên)."""
+        repeat = PracticeItem(
+            card_index=card_idx,
+            mode="type",
+            is_new=False,
+        )
+        q = list(self.practice_queue)
+        insert_at = min(self.practice_pos + self.SESSION_SRS_GAP, len(q))
+        q.insert(insert_at, repeat)
+        self.practice_queue = q
+
+    def _continue_after_answer(self):
+        """Tiếp sau feedback: nếu sai thì chèn ôn SRS vào hàng đợi."""
+        if not self.show_feedback:
+            return
+        if self.practice_pos >= len(self.practice_queue):
+            return
+        item = self.practice_queue[self.practice_pos]
+        was_wrong = not self.feedback_correct
+        self.show_feedback = False
+        self.typed_answer = ""
+        self.selected_answer = ""
+        self.practice_pos += 1
+        if was_wrong:
+            self._insert_spaced_review(item.card_index)
+        self._load_practice_item()
 
     # ═══════════════════════════════════════════════════════════════
     # PHASE: PREVIEW
@@ -275,9 +320,7 @@ class LearnState(rx.State):
         self._record_answer(item.card_index, is_correct)
 
     def continue_after_type(self):
-        self.show_feedback = False
-        self.practice_pos += 1
-        self._load_practice_item()
+        self._continue_after_answer()
 
     # ── Choice ────────────────────────────────────────────────────
 
@@ -299,10 +342,7 @@ class LearnState(rx.State):
         self._record_answer(item.card_index, is_correct)
 
     def continue_after_choice(self):
-        self.show_feedback = False
-        self.selected_answer = ""
-        self.practice_pos += 1
-        self._load_practice_item()
+        self._continue_after_answer()
 
     # ═══════════════════════════════════════════════════════════════
     # BATCH REVIEW
@@ -386,6 +426,16 @@ class LearnState(rx.State):
     # ═══════════════════════════════════════════════════════════════
     # COMPUTED VARS
     # ═══════════════════════════════════════════════════════════════
+
+    @rx.var
+    def session_srs_hint(self) -> str:
+        """Mô tả ngắn SRS trong phiên (ôn sai xen kẽ)."""
+        if self.phase not in ("practice", "batch_review"):
+            return ""
+        return (
+            f"Lặp ngắt quãng: sai một thẻ → gặp lại sau {self.SESSION_SRS_GAP} thẻ khác · "
+            "thẻ mới và ôn xen kẽ theo độ khó."
+        )
 
     @rx.var
     def current_card_front(self) -> str:

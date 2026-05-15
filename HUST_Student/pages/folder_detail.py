@@ -7,6 +7,7 @@ from HUST_Student.components.learn.overlay import learn_overlay
 from HUST_Student.components.test.options_modal import test_options_modal
 from HUST_Student.components.test.result_overlay import result_overlay
 from HUST_Student.components.test.run_modal import test_run_modal
+from HUST_Student.components.ui import theme as T
 from HUST_Student.states.folder_state import FolderState
 from HUST_Student.states.navigation_state import NavigationState
 
@@ -19,10 +20,22 @@ def folder_detail_page():
         result_overlay(),
         flashcard_overlay(),
         learn_overlay(),
-        rx.text(
-            NavigationState.current_folder,
-            font_size="2.5rem",
-            font_weight="700",
+        rx.vstack(
+            rx.text(
+                NavigationState.current_folder,
+                font_size="2rem",
+                font_weight="800",
+                color=T.TEXT_PRIMARY,
+                letter_spacing="-0.02em",
+            ),
+            rx.text(
+                "Chọn một học phần để học hoặc kiểm tra.",
+                font_size="0.95rem",
+                color=T.TEXT_SECONDARY,
+            ),
+            spacing="1",
+            align="start",
+            width="100%",
         ),
         rx.vstack(
             rx.foreach(

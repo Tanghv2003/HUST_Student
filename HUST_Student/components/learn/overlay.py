@@ -1,4 +1,6 @@
 import reflex as rx
+
+from HUST_Student.components.ui import theme as T
 from HUST_Student.states.learn_state import LearnState
 
 
@@ -35,11 +37,11 @@ def _progress_bar():
             rx.box(
                 height="100%",
                 width=LearnState.batch_progress_pct.to_string() + "%",
-                bg="linear-gradient(90deg, #4F46E5, #818CF8)",
+                bg=f"linear-gradient(90deg, {T.PRIMARY}, #5B8CFF)",
                 border_radius="999px",
                 transition="width 0.4s ease",
             ),
-            width="100%", height="8px", bg="#E5E7EB", border_radius="999px", overflow="hidden",
+            width="100%", height="8px", bg=T.BORDER_LIGHT, border_radius="999px", overflow="hidden",
         ),
         # Tiến độ tổng thể (mỏng, màu xanh)
         rx.box(
@@ -50,7 +52,7 @@ def _progress_bar():
                 border_radius="999px",
                 transition="width 0.6s ease",
             ),
-            width="100%", height="4px", bg="#E5E7EB", border_radius="999px", overflow="hidden",
+            width="100%", height="4px", bg=T.BORDER_LIGHT, border_radius="999px", overflow="hidden",
         ),
         width="100%", spacing="2",
     )
@@ -113,8 +115,8 @@ def preview_phase():
         rx.hstack(
             rx.box(
                 rx.text(LearnState.batch_label,
-                        font_size="0.72rem", font_weight="700", color="#4F46E5"),
-                bg="#EEF2FF", border_radius="999px", padding="0.2rem 0.7rem",
+                        font_size="0.72rem", font_weight="700", color=T.PRIMARY),
+                bg=T.PRIMARY_TINT, border_radius="999px", padding="0.2rem 0.7rem",
             ),
             rx.text(LearnState.batch_composition_label,
                     font_size="0.78rem", color="#9CA3AF"),
@@ -126,7 +128,7 @@ def preview_phase():
             rx.vstack(
                 rx.text(
                     rx.cond(LearnState.is_preview_flipped, "Thuật ngữ", "Nghĩa"),
-                    font_size="0.78rem", font_weight="700", color="#A78BFA",
+                    font_size="0.78rem", font_weight="700", color=T.PRIMARY,
                     text_transform="uppercase", letter_spacing="0.08em",
                 ),
                 rx.text(
@@ -135,21 +137,21 @@ def preview_phase():
                         LearnState.current_card_back,
                         LearnState.current_card_front,
                     ),
-                    font_size="2rem", font_weight="700", color="#1E1B4B",
+                    font_size="2rem", font_weight="700", color=T.TEXT_PRIMARY,
                     text_align="center", line_height="1.3",
                 ),
-                rx.text("Nhấp để lật thẻ", font_size="0.75rem", color="#C4B5FD",
+                rx.text("Nhấp để lật thẻ", font_size="0.75rem", color=T.TEXT_SECONDARY,
                         margin_top="0.5rem"),
                 spacing="3", align="center", justify="center", height="100%",
             ),
             width="100%", min_height="200px",
-            bg="linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)",
-            border="2px solid #DDD6FE", border_radius="20px",
+            bg=T.LEARN_CARD_BG,
+            border=f"2px solid {T.LEARN_CARD_BORDER}", border_radius="20px",
             padding="2rem", cursor="pointer",
             on_click=LearnState.flip_preview,
             display="flex", align_items="center", justify_content="center",
             transition="all 0.2s ease",
-            _hover={"border_color": "#8B5CF6", "box_shadow": "0 8px 24px rgba(139,92,246,0.15)"},
+            _hover={"border_color": T.PRIMARY, "box_shadow": T.SHADOW_CARD_HOVER},
         ),
 
         rx.hstack(
@@ -167,9 +169,9 @@ def preview_phase():
                 rx.hstack(rx.icon("check", size=16), rx.text("Đã biết"),
                           spacing="2", align="center"),
                 on_click=LearnState.preview_got_it,
-                bg="#4F46E5", color="white",
+                bg=T.PRIMARY, color="white",
                 border_radius="12px", padding="0.75rem 1.5rem", font_weight="600",
-                _hover={"bg": "#4338CA"},
+                _hover={"bg": T.PRIMARY_HOVER},
                 flex="1",
             ),
             spacing="3", width="100%",
@@ -203,7 +205,7 @@ def _question_box(accent_bg: str, accent_border: str):
 
 def type_practice():
     return rx.vstack(
-        _question_box("#F5F3FF", "#DDD6FE"),
+        _question_box(T.QUESTION_BOX_BG, T.QUESTION_BOX_BORDER),
         rx.cond(
             LearnState.show_feedback,
             rx.vstack(
@@ -237,13 +239,13 @@ def type_practice():
                         width="100%", height="52px",
                         bg="white", border="2px solid #E5E7EB", border_radius="12px",
                         font_size="1.05rem", padding="0 1rem",
-                        _focus={"border_color": "#4F46E5",
-                                "box_shadow": "0 0 0 3px rgba(79,70,229,0.1)"},
+                        _focus={"border_color": T.PRIMARY,
+                                "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}"},
                     ),
                     rx.button(
                         rx.icon("send", size=18),
                         on_click=LearnState.submit_typed,
-                        bg=rx.cond(LearnState.typed_answer != "", "#4F46E5", "#C7D2FE"),
+                        bg=rx.cond(LearnState.typed_answer != "", T.PRIMARY, T.PRIMARY_DISABLED),
                         color="white", border_radius="12px", height="52px", width="52px",
                         cursor=rx.cond(LearnState.typed_answer != "", "pointer", "not-allowed"),
                     ),
@@ -290,7 +292,7 @@ def _choice_btn(option: str):
             has_answered,
             rx.cond(is_correct, "2px solid #16A34A",
                     rx.cond(is_selected, "2px solid #DC2626", "1.5px solid #E5E7EB")),
-            rx.cond(is_selected, "2px solid #4F46E5", "1.5px solid #E5E7EB"),
+            rx.cond(is_selected, f"2px solid {T.PRIMARY}", f"1.5px solid {T.BORDER}"),
         ),
         border_radius="13px",
         bg=rx.cond(
@@ -301,14 +303,14 @@ def _choice_btn(option: str):
         ),
         cursor=rx.cond(has_answered, "default", "pointer"),
         on_click=lambda: LearnState.select_choice(option),
-        _hover=rx.cond(has_answered, {}, {"bg": "#F5F3FF", "border_color": "#4F46E5"}),
+        _hover=rx.cond(has_answered, {}, {"bg": T.PRIMARY_TINT, "border_color": T.PRIMARY}),
         transition="all 0.14s ease",
     )
 
 
 def choice_practice():
     return rx.vstack(
-        _question_box("#FFFBEB", "#FDE68A"),
+        _question_box(T.QUESTION_BOX_ALT_BG, T.QUESTION_BOX_ALT_BORDER),
         rx.text("Chọn thuật ngữ đúng", font_size="0.82rem", color="#6B7280", font_weight="500"),
         rx.grid(
             rx.foreach(LearnState.choice_options, _choice_btn),
@@ -396,7 +398,7 @@ def round_review_phase():
             rx.box(width="1px", height="50px", bg="#E5E7EB"),
             rx.vstack(
                 rx.text(LearnState.mastered_count, font_size="2rem", font_weight="800",
-                        color="#4F46E5"),
+                        color=T.PRIMARY),
                 rx.text("Thành thạo", font_size="0.85rem", color="#6B7280"),
                 align="center",
             ),
@@ -437,7 +439,7 @@ def complete_phase():
                 rx.box(width="1px", height="60px", bg="#E5E7EB"),
                 rx.vstack(
                     rx.text(LearnState.mastered_count, font_size="2.2rem", font_weight="800",
-                            color="#4F46E5"),
+                            color=T.PRIMARY),
                     rx.text("Thành thạo", font_size="0.8rem", color="#6B7280"),
                     align="center",
                 ),
@@ -457,17 +459,17 @@ def complete_phase():
             rx.button(
                 rx.hstack(rx.icon("refresh-cw", size=16), rx.text("Học lại"), spacing="2"),
                 on_click=LearnState.close_learn,
-                bg="white", color="#4F46E5",
-                border="2px solid #4F46E5", border_radius="12px",
+                bg="white", color=T.PRIMARY,
+                border=f"2px solid {T.PRIMARY}", border_radius="12px",
                 padding="0.75rem 1.5rem", font_weight="700",
-                _hover={"bg": "#EEF2FF"}, flex="1",
+                _hover={"bg": T.PRIMARY_TINT}, flex="1",
             ),
             rx.button(
                 rx.hstack(rx.icon("x", size=16), rx.text("Đóng"), spacing="2"),
                 on_click=LearnState.close_learn,
-                bg="#4F46E5", color="white", border_radius="12px",
+                bg=T.PRIMARY, color="white", border_radius="12px",
                 padding="0.75rem 1.5rem", font_weight="700",
-                _hover={"bg": "#4338CA"}, flex="1",
+                _hover={"bg": T.PRIMARY_HOVER}, flex="1",
             ),
             spacing="3", width="100%",
         ),
@@ -513,15 +515,34 @@ def learn_overlay():
                     rx.hstack(
                         rx.vstack(
                             rx.text(LearnState.set_title,
-                                    font_size="1.15rem", font_weight="700", color="#111827"),
+                                    font_size="1.15rem", font_weight="700", color=T.TEXT_PRIMARY),
                             rx.hstack(
                                 _phase_badge(),
                                 rx.text(LearnState.queue_progress_label,
                                         font_size="0.8rem", color="#6B7280", font_weight="600"),
                                 rx.text("·", color="#D1D5DB"),
                                 rx.text(LearnState.batch_label,
-                                        font_size="0.8rem", color="#4F46E5", font_weight="700"),
+                                        font_size="0.8rem", color=T.PRIMARY, font_weight="700"),
                                 spacing="2", align="center",
+                            ),
+                            rx.cond(
+                                LearnState.phase == "practice",
+                                rx.text(
+                                    LearnState.session_srs_hint,
+                                    font_size="0.72rem",
+                                    color=T.TEXT_SECONDARY,
+                                    line_height="1.35",
+                                ),
+                                rx.cond(
+                                    LearnState.phase == "batch_review",
+                                    rx.text(
+                                        LearnState.session_srs_hint,
+                                        font_size="0.72rem",
+                                        color=T.TEXT_SECONDARY,
+                                        line_height="1.35",
+                                    ),
+                                    rx.box(),
+                                ),
                             ),
                             spacing="1", align="start",
                         ),
@@ -549,15 +570,19 @@ def learn_overlay():
 
                     spacing="5", padding="1.8rem 2rem 2rem", width="100%",
                 ),
-                bg="white", border_radius="24px",
-                width="560px", max_width="95vw", max_height="92vh",
+                bg="white", border_radius=T.RADIUS_XL,
+                width="560px", max_width="min(560px, calc(100vw - 2.5rem))",
+                max_height=T.MODAL_CONTENT_MAX_HEIGHT,
+                min_height="0",
                 overflow_y="auto",
-                box_shadow="0 20px 60px rgba(0,0,0,0.16)",
+                overflow_x="hidden",
+                border=f"1px solid {T.BORDER}",
+                box_shadow=T.SHADOW_MODAL,
                 on_click=rx.stop_propagation,
             ),
             position="fixed", top="0", left="0", right="0", bottom="0",
             display="flex", align_items="center", justify_content="center",
-            bg="rgba(17,24,39,0.45)", z_index="1000", padding="1.5rem",
+            bg=T.OVERLAY_SCRIM, z_index="1000", padding=T.MODAL_OVERLAY_PADDING,
             on_click=LearnState.close_learn,
         ),
         rx.box(),
