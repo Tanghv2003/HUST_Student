@@ -14,6 +14,13 @@ class WordPair(BaseModel):
     back: str
 
 
+class AnswerRecord(BaseModel):
+    question: str       # nội dung câu hỏi
+    correct: str        # đáp án đúng
+    chosen: str         # đáp án user chọn
+    is_correct: bool    # đúng hay sai
+
+
 class StudySet(BaseModel):
     title: str
     terms: int = 0
@@ -30,6 +37,7 @@ class FolderState(rx.State):
     show_set_options: bool = False
     show_test_options: bool = False
     show_test: bool = False
+    show_result: bool = False
     show_flashcards: bool = False
 
     test_question_count: int = 10
@@ -45,6 +53,12 @@ class FolderState(rx.State):
     current_word_index: int = 0
     is_flipped: bool = False
 
+    # Kết quả bài kiểm tra
+    answer_records: list[AnswerRecord] = []
+    score_correct: int = 0
+    score_wrong: int = 0
+    show_wrong_only: bool = False
+
     # ── Helpers ──────────────────────────────────────────────────────────────
 
     def _build_options(self):
@@ -59,9 +73,9 @@ class FolderState(rx.State):
         current = words[idx]
 
         # front = nghĩa (foreign/english) — dùng làm câu hỏi mặc định
-        # back  = chữ Nhật (japanese)      — dùng làm đáp án mặc định
-        # "Cả hai"/"Native": hỏi front → đáp án back (chữ Nhật)
-        # "Foreign":  hỏi back  → đáp án front (nghĩa)
+        # back  = chữ Nhật (native)       — dùng làm đáp án mặc định
+        # "Cả hai"/"Native": hỏi front → đáp án back
+        # "Foreign":  hỏi back  → đáp án front
         if self.answer_language == "Foreign":
             correct = current.front
             get_ans = lambda w: w.front
@@ -71,19 +85,28 @@ class FolderState(rx.State):
 
         self.correct_answer = correct
 
-        # Pick 3 distractors from other words
         other_words = [w for i, w in enumerate(words) if i != idx]
         sample_count = min(3, len(other_words))
         distractors_words = random.sample(other_words, sample_count)
         distractors = [get_ans(w) for w in distractors_words]
 
-        # Pad if not enough words
         while len(distractors) < 3:
             distractors.append("—")
 
         options = [correct] + distractors
         random.shuffle(options)
         self.current_options = options
+
+    def _get_question_text(self) -> str:
+        """Get the question text for the current index."""
+        if not self.selected_set or not self.selected_set.words:
+            return ""
+        words = self.selected_set.words
+        idx = self.current_test_index % len(words)
+        current = words[idx]
+        if self.answer_language == "Foreign":
+            return current.back
+        return current.front
 
     # ── Folder loading ────────────────────────────────────────────────────────
 
@@ -185,31 +208,102 @@ class FolderState(rx.State):
         if self.selected_set and self.selected_set.words:
             self.show_test_options = False
             self.show_test = True
+            self.show_result = False
             self.current_test_index = 0
             self.selected_answer = ""
             self.test_question_count = len(self.selected_set.words)
+            self.answer_records = []
+            self.score_correct = 0
+            self.score_wrong = 0
+            self.show_wrong_only = False
             self._build_options()
 
     def close_test(self):
         self.show_test = False
+        self.show_result = False
         self.current_test_index = 0
         self.selected_answer = ""
         self.current_options = []
         self.correct_answer = ""
+        self.answer_records = []
 
     def next_test_question(self):
-        if self.selected_set and self.selected_set.words:
-            self.current_test_index = (
-                self.current_test_index + 1
-            ) % len(self.selected_set.words)
-            self.selected_answer = ""
-            self._build_options()
+        if not self.selected_set or not self.selected_set.words:
+            return
+        if self.selected_answer == "":
+            return
+
+        # Lưu kết quả câu hiện tại
+        question_text = self._get_question_text()
+        is_correct = self.selected_answer == self.correct_answer
+        record = AnswerRecord(
+            question=question_text,
+            correct=self.correct_answer,
+            chosen=self.selected_answer,
+            is_correct=is_correct,
+        )
+        self.answer_records = self.answer_records + [record]
+
+        if is_correct:
+            self.score_correct += 1
+        else:
+            self.score_wrong += 1
+
+        # Kiểm tra đã hết câu chưa
+        next_index = self.current_test_index + 1
+        if next_index >= self.test_question_count:
+            # Hiện màn hình kết quả
+            self.show_test = False
+            self.show_result = True
+            return
+
+        self.current_test_index = next_index
+        self.selected_answer = ""
+        self._build_options()
 
     def set_selected_answer(self, answer: str):
         if self.selected_answer != "":
-            # Already answered — don't allow change
             return
         self.selected_answer = str(answer) if answer is not None else ""
+
+    def retry_wrong_only(self):
+        """Làm lại chỉ các câu sai."""
+        if not self.selected_set:
+            return
+        wrong_records = [r for r in self.answer_records if not r.is_correct]
+        if not wrong_records:
+            return
+        # Tạo lại word list chỉ từ các câu sai
+        wrong_fronts = {r.question for r in wrong_records}
+        if self.answer_language == "Foreign":
+            wrong_words = [w for w in self.selected_set.words if w.back in wrong_fronts]
+        else:
+            wrong_words = [w for w in self.selected_set.words if w.front in wrong_fronts]
+
+        self.selected_set.words = wrong_words if wrong_words else self.selected_set.words
+        self.show_result = False
+        self.show_test = True
+        self.current_test_index = 0
+        self.selected_answer = ""
+        self.test_question_count = len(self.selected_set.words)
+        self.answer_records = []
+        self.score_correct = 0
+        self.score_wrong = 0
+        self._build_options()
+
+    def retry_all(self):
+        """Làm lại toàn bộ bài."""
+        self.show_result = False
+        self.show_test = True
+        self.current_test_index = 0
+        self.selected_answer = ""
+        self.answer_records = []
+        self.score_correct = 0
+        self.score_wrong = 0
+        self._build_options()
+
+    def set_show_wrong_only(self, value: bool):
+        self.show_wrong_only = value
 
     # ── Flashcards ────────────────────────────────────────────────────────────
 
