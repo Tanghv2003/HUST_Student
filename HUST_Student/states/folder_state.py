@@ -49,6 +49,12 @@ class FolderState(rx.State):
     correct_answer: str = ""
     selected_answer: str = ""
 
+    # Đúng/Sai: câu trả lời bool
+    dung_sai_answer: bool | None = None
+
+    # Tự luận: input text
+    tu_luan_answer: str = ""
+
     current_test_index: int = 0
     shuffled_indices: list[int] = []   # thứ tự câu hỏi đã xáo trộn
     current_word_index: int = 0
@@ -63,7 +69,7 @@ class FolderState(rx.State):
     # ── Helpers ──────────────────────────────────────────────────────────────
 
     def _build_options(self):
-        """Build 4 shuffled answer options for current test question."""
+        """Build 4 shuffled answer options for current test question (trắc nghiệm)."""
         if not self.selected_set or not self.selected_set.words:
             self.current_options = []
             self.correct_answer = ""
@@ -137,7 +143,14 @@ class FolderState(rx.State):
         """Get the question text for the current index (dùng nội bộ)."""
         return self.current_question_text
 
-    # ── Folder loading ────────────────────────────────────────────────────────
+    def _check_answer(self, user_answer: str) -> bool:
+        """Check if user answer matches correct answer (cho tự luận & đúng/sai)."""
+        # Chuẩn hóa: xóa khoảng trắng thừa và chuyển thành lowercase
+        normalized_user = user_answer.strip().lower()
+        normalized_correct = self.correct_answer.strip().lower()
+        return normalized_user == normalized_correct
+
+    # ── Folder loading ───────────────────────────────────────────────────────────
 
     def open_folder(self, folder_name: str):
         data = load_folders()
@@ -195,7 +208,7 @@ class FolderState(rx.State):
                 self.show_set_options = True
                 break
 
-    # ── Test options ──────────────────────────────────────────────────────────
+    # ── Test options ────────────────────────────────────────────────────────────
 
     def open_test_options(self):
         if self.selected_set:
@@ -231,7 +244,7 @@ class FolderState(rx.State):
             return
         self.answer_language = str(value)
 
-    # ── Test run ──────────────────────────────────────────────────────────────
+    # ── Test run ─────────────────────────────────────────────────────────────────
 
     def start_test(self):
         if self.selected_set and self.selected_set.words:
@@ -240,6 +253,8 @@ class FolderState(rx.State):
             self.show_result = False
             self.current_test_index = 0
             self.selected_answer = ""
+            self.dung_sai_answer = None
+            self.tu_luan_answer = ""
             self.test_question_count = len(self.selected_set.words)
             self.answer_records = []
             self.score_correct = 0
@@ -255,6 +270,8 @@ class FolderState(rx.State):
         self.show_result = False
         self.current_test_index = 0
         self.selected_answer = ""
+        self.dung_sai_answer = None
+        self.tu_luan_answer = ""
         self.current_options = []
         self.correct_answer = ""
         self.answer_records = []
@@ -263,16 +280,45 @@ class FolderState(rx.State):
     def next_test_question(self):
         if not self.selected_set or not self.selected_set.words:
             return
-        if self.selected_answer == "":
+
+        # Xác định câu trả lời dựa trên chế độ
+        is_answered = False
+        user_answer = ""
+        is_correct = False
+
+        if self.test_mode == "trac_nghiem":
+            if self.selected_answer == "":
+                return
+            is_answered = True
+            user_answer = self.selected_answer
+            is_correct = self.selected_answer == self.correct_answer
+
+        elif self.test_mode == "dung_sai":
+            if self.dung_sai_answer is None:
+                return
+            is_answered = True
+            user_answer = "Đúng" if self.dung_sai_answer else "Sai"
+            # Kiểm tra: nếu answer_language == "Foreign", correct_answer là front,
+            # ngược lại là back
+            # Đúng = user_answer == correct_answer
+            is_correct = self._check_answer(user_answer)
+
+        elif self.test_mode == "tu_luan":
+            if self.tu_luan_answer.strip() == "":
+                return
+            is_answered = True
+            user_answer = self.tu_luan_answer.strip()
+            is_correct = self._check_answer(user_answer)
+
+        if not is_answered:
             return
 
         # Lưu kết quả câu hiện tại
         question_text = self._get_question_text()
-        is_correct = self.selected_answer == self.correct_answer
         record = AnswerRecord(
             question=question_text,
             correct=self.correct_answer,
-            chosen=self.selected_answer,
+            chosen=user_answer,
             is_correct=is_correct,
         )
         self.answer_records = self.answer_records + [record]
@@ -290,14 +336,25 @@ class FolderState(rx.State):
             self.show_result = True
             return
 
+        # Chuyển sang câu tiếp theo
         self.current_test_index = next_index
         self.selected_answer = ""
+        self.dung_sai_answer = None
+        self.tu_luan_answer = ""
         self._build_options()
 
     def set_selected_answer(self, answer: str):
         if self.selected_answer != "":
             return
         self.selected_answer = str(answer) if answer is not None else ""
+
+    def set_dung_sai_answer(self, value: bool):
+        if self.dung_sai_answer is not None:
+            return
+        self.dung_sai_answer = value
+
+    def set_tu_luan_answer(self, value: str):
+        self.tu_luan_answer = str(value) if value is not None else ""
 
     def retry_wrong_only(self):
         """Làm lại chỉ các câu sai."""
@@ -318,6 +375,8 @@ class FolderState(rx.State):
         self.show_test = True
         self.current_test_index = 0
         self.selected_answer = ""
+        self.dung_sai_answer = None
+        self.tu_luan_answer = ""
         self.test_question_count = len(self.selected_set.words)
         self.answer_records = []
         self.score_correct = 0
@@ -333,6 +392,8 @@ class FolderState(rx.State):
         self.show_test = True
         self.current_test_index = 0
         self.selected_answer = ""
+        self.dung_sai_answer = None
+        self.tu_luan_answer = ""
         self.answer_records = []
         self.score_correct = 0
         self.score_wrong = 0
@@ -344,7 +405,7 @@ class FolderState(rx.State):
     def set_show_wrong_only(self, value: bool):
         self.show_wrong_only = value
 
-    # ── Flashcards ────────────────────────────────────────────────────────────
+    # ── Flashcards ─────────────────────────────────────────────────────────────
 
     def start_flashcards(self):
         if self.selected_set and self.selected_set.words:
@@ -376,7 +437,7 @@ class FolderState(rx.State):
         self.current_word_index = 0
         self.is_flipped = False
 
-    # ── Modals ────────────────────────────────────────────────────────────────
+    # ── Modals ──────────────────────────────────────────────────────────────────
 
     def close_set_options(self):
         self.show_set_options = False
