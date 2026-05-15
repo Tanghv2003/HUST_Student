@@ -150,10 +150,7 @@ class LearnState(rx.State):
     def _build_practice_queue(self, new_indices: list, old_indices: list):
         """
         Từ mới  → luôn type (ghi nhớ lần đầu)
-        Từ cũ   → dựa vào wrong_count:
-                  wrong >= 2 → type
-                  wrong == 1 → xen kẽ type/choice
-                  wrong == 0 → xen kẽ choice/type (nhẹ hơn)
+        Từ cũ   → mặc định type, chỉ xen kẽ choice khi streak >= 2 VÀ chưa sai lần nào
         Shuffle toàn bộ sau khi tạo.
         """
         practice: list[PracticeItem] = []
@@ -167,12 +164,11 @@ class LearnState(rx.State):
 
         for i, card_idx in enumerate(old_indices):
             card = self.cards[card_idx]
-            if card.wrong_count >= 2:
-                mode = "type"
-            elif card.wrong_count == 1:
-                mode = "type" if i % 2 == 0 else "choice"
-            else:
+            # Từ cũ: luôn type, chỉ thêm choice xen kẽ khi đã thành thạo tốt (streak >= 2)
+            if card.correct_streak >= 2 and card.wrong_count == 0:
                 mode = "choice" if i % 2 == 0 else "type"
+            else:
+                mode = "type"
             practice.append(PracticeItem(
                 card_index=card_idx,
                 mode=mode,
