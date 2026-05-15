@@ -1,7 +1,9 @@
+# pages/folder_detail.py
 import reflex as rx
 
 from HUST_Student.states.folder_state import FolderState
 from HUST_Student.states.navigation_state import NavigationState
+from HUST_Student.components.true_false_mode import true_false_section
 
 
 def option_button(icon: str, label: str, on_click=None):
@@ -241,7 +243,7 @@ def trac_nghiem_section():
             width="100%",
         ),
 
-        # "Bạn không biết?" link + hint text (chỉ hiển thị, không tự động chọn)
+        # "Bạn không biết?" link + hint text
         rx.vstack(
             rx.text(
                 "Bạn không biết?",
@@ -288,7 +290,7 @@ def trac_nghiem_section():
                 ),
                 color="white",
                 border_radius="12px",
-                padding="0.6rem 1.4rem",
+                padding="0.6rem 1.2rem",
                 _hover={"bg": "#4338CA"},
                 cursor=rx.cond(
                     FolderState.selected_answer != "",
@@ -378,81 +380,7 @@ def test_run_modal():
                         trac_nghiem_section(),
                         rx.cond(
                             FolderState.test_mode == "dung_sai",
-                            # True/False mode — two-column question + large choice buttons
-                            rx.vstack(
-                                rx.hstack(
-                                    rx.vstack(
-                                        rx.text("Định nghĩa", color="#6B7280", font_weight="600"),
-                                        rx.box(
-                                            rx.text(FolderState.current_question_display, font_size="1.6rem", font_weight="700", color="#111827"),
-                                            padding="1.5rem",
-                                            bg="white",
-                                            border_radius="16px",
-                                            border="1px solid #F1F5F9",
-                                            width="100%",
-                                            min_height="140px",
-                                        ),
-                                        spacing="3",
-                                        flex="1",
-                                    ),
-                                    rx.box(width="1px", bg="#E5E7EB", height="100%"),
-                                    rx.vstack(
-                                        rx.text("Thuật ngữ", color="#6B7280", font_weight="600", align_self="flex-end"),
-                                        rx.box(
-                                            rx.text(FolderState.dung_sai_candidate, font_size="1.4rem", font_weight="700", color="#111827", text_align="right"),
-                                            padding="1rem",
-                                            bg="white",
-                                            border_radius="16px",
-                                            border="1px solid #F1F5F9",
-                                            width="100%",
-                                            min_height="140px",
-                                            align_self="flex-end",
-                                        ),
-                                        spacing="3",
-                                        flex="1",
-                                    ),
-                                    spacing="6",
-                                    width="100%",
-                                ),
-                                rx.hstack(
-                                    rx.button(
-                                        "Đúng",
-                                        on_click=lambda: FolderState.set_selected_answer("Đúng"),
-                                        bg=rx.cond(FolderState.selected_answer == "Đúng", "#F8FAFF", "white"),
-                                        border=rx.cond(FolderState.selected_answer == "Đúng", "2px solid #4F46E5", "1px solid #E5E7EB"),
-                                        color="#111827",
-                                        border_radius="14px",
-                                        padding="1.1rem 1.4rem",
-                                        width="100%",
-                                    ),
-                                    rx.button(
-                                        "Sai",
-                                        on_click=lambda: FolderState.set_selected_answer("Sai"),
-                                        bg=rx.cond(FolderState.selected_answer == "Sai", "#FFF5F5", "white"),
-                                        border=rx.cond(FolderState.selected_answer == "Sai", "2px solid #DC2626", "1px solid #E5E7EB"),
-                                        color="#111827",
-                                        border_radius="14px",
-                                        padding="1.1rem 1.4rem",
-                                        width="100%",
-                                    ),
-                                    spacing="4",
-                                    width="100%",
-                                ),
-                                rx.hstack(
-                                    rx.text("Bạn không biết?", color="#4F46E5", font_weight="600", cursor="pointer", on_click=lambda: FolderState.set_selected_answer(FolderState.correct_answer), _hover={"text_decoration": "underline"}),
-                                    rx.spacer(),
-                                    rx.text(FolderState.current_test_index + 1, "/", FolderState.test_question_count, color="#6B7280", font_weight="600"),
-                                ),
-                                rx.hstack(
-                                    rx.button("Đóng", on_click=FolderState.close_test, bg="#F3F4F6", color="#374151", border_radius="12px", padding="0.6rem 1.2rem", _hover={"bg": "#E5E7EB"}),
-                                    rx.spacer(),
-                                    rx.button("Tiếp", on_click=FolderState.next_test_question, bg=rx.cond(FolderState.selected_answer != "", "#4F46E5", "#C7D2FE"), color="white", border_radius="999px", padding="0.8rem 1.2rem", _hover={"bg": "#4338CA"}, cursor=rx.cond(FolderState.selected_answer != "", "pointer", "not-allowed")),
-                                    width="100%",
-                                    align="center",
-                                ),
-                                spacing="5",
-                                width="100%",
-                            ),
+                            true_false_section(),   # Sử dụng component riêng
                             rx.cond(
                                 FolderState.test_mode == "tu_luan",
                                 # Essay mode with CHECK button and feedback
@@ -542,8 +470,15 @@ def test_run_modal():
                                         rx.box(),
                                     ),
                                     rx.hstack(
-                                        rx.button("Đóng", on_click=FolderState.close_test, bg="#F3F4F6", color="#374151", border_radius="12px", padding="0.6rem 1.2rem", _hover={"bg": "#E5E7EB"}),
-                                        # Nút Kiểm tra
+                                        rx.button(
+                                            "Đóng",
+                                            on_click=FolderState.close_test,
+                                            bg="#F3F4F6",
+                                            color="#374151",
+                                            border_radius="12px",
+                                            padding="0.6rem 1.2rem",
+                                            _hover={"bg": "#E5E7EB"},
+                                        ),
                                         rx.button(
                                             "Kiểm tra",
                                             on_click=FolderState.check_current_answer,
@@ -559,10 +494,8 @@ def test_run_modal():
                                             on_click=FolderState.next_test_question,
                                             bg=rx.cond(FolderState.written_answer != "", "#4F46E5", "#C7D2FE"),
                                             color="white",
-                                            # width="56px",
-                                            # height="56px",
-                                            padding="0.6rem 1.2rem",
                                             border_radius="12px",
+                                            padding="0.6rem 1.2rem",
                                             _hover={"bg": "#4338CA"},
                                             cursor=rx.cond(FolderState.written_answer != "", "pointer", "not-allowed"),
                                         ),
