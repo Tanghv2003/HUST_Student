@@ -1,6 +1,9 @@
 import reflex as rx
 
+from HUST_Student.components.folder.blast_overlay import blast_overlay
+from HUST_Student.components.folder.blocks_overlay import blocks_overlay
 from HUST_Student.components.folder.flashcard_overlay import flashcard_overlay
+from HUST_Student.components.folder.match_overlay import match_overlay
 from HUST_Student.components.folder.set_options_modal import set_options_modal
 from HUST_Student.components.folder.studyset_card import studyset_card
 from HUST_Student.components.learn.overlay import learn_overlay
@@ -19,6 +22,9 @@ def folder_detail_page():
         test_run_modal(),
         result_overlay(),
         flashcard_overlay(),
+        match_overlay(),
+        blast_overlay(),
+        blocks_overlay(),
         learn_overlay(),
         rx.vstack(
             rx.text(

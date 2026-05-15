@@ -32,6 +32,14 @@ class NavigationState(rx.State):
         self.current_page = "classes"
 
     # =========================
+    # CONVERSATION PRACTICE
+    # =========================
+
+    def go_conversation(self):
+
+        self.current_page = "conversation"
+
+    # =========================
     # FOLDER DETAIL
     # =========================
 

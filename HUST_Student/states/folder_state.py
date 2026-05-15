@@ -4,6 +4,7 @@ import reflex as rx
 
 from HUST_Student.core.folder_tree import find_folder_path
 from HUST_Student.models import AnswerRecord, StudySet, WordPair
+from HUST_Student.models.mini_game import MatchTile
 from HUST_Student.services.folder_service import load_folders
 from HUST_Student.services.studyset_service import load_studyset_detail, load_studysets
 from HUST_Student.states.learn_state import LearnState
@@ -27,6 +28,38 @@ class FolderState(rx.State):
     show_test: bool = False
     show_result: bool = False
     show_flashcards: bool = False
+
+    show_match: bool = False
+    show_blast: bool = False
+    show_blocks: bool = False
+    ui_lang: str = "vi"
+
+    MAX_MATCH_PAIRS: int = 12
+    BLAST_CARD_CAP: int = 28
+    BLAST_START_LIVES: int = 5
+
+    match_tiles: list[MatchTile] = []
+    match_selected_index: int = -1
+    match_total_pairs: int = 0
+    match_pairs_done: int = 0
+
+    blast_order: list[int] = []
+    blast_pos: int = 0
+    blast_input: str = ""
+    blast_feedback: str = ""
+    blast_streak: int = 0
+    blast_best_streak: int = 0
+    blast_correct: int = 0
+    blast_wrong: int = 0
+    blast_lives: int = 5
+    blast_phase: str = "play"
+
+    blocks_deck: list[int] = []
+    blocks_input: str = ""
+    blocks_feedback: str = ""
+    blocks_cleared: int = 0
+    blocks_wrong: int = 0
+    blocks_phase: str = "play"
 
     test_question_count: int = 10
     test_mode: str = "trac_nghiem"
@@ -146,6 +179,272 @@ class FolderState(rx.State):
         self.selected_set = None
         self.current_word_index = 0
         self.is_flipped = False
+
+    def set_ui_lang(self, value):
+        if value is None:
+            return
+        self.ui_lang = str(value)
+
+    def _mini_prompt_answer(self, w: WordPair) -> tuple[str, str]:
+        if self.answer_language == "Foreign":
+            return w.back, w.front
+        return w.front, w.back
+
+    def start_match(self):
+        if not self.selected_set or not self.selected_set.words:
+            return
+        words = self.selected_set.words
+        n_pairs = min(self.MAX_MATCH_PAIRS, len(words))
+        pick = random.sample(range(len(words)), n_pairs)
+        tiles: list[MatchTile] = []
+        tid = 0
+        for pid, wi in enumerate(pick):
+            w = words[wi]
+            tiles.append(MatchTile(tile_id=tid, pair_id=pid, text=w.front, matched=False))
+            tid += 1
+            tiles.append(MatchTile(tile_id=tid, pair_id=pid, text=w.back, matched=False))
+            tid += 1
+        random.shuffle(tiles)
+        self.match_tiles = tiles
+        self.match_selected_index = -1
+        self.match_total_pairs = n_pairs
+        self.match_pairs_done = 0
+        self.show_match = True
+        self.show_set_options = False
+
+    def close_match(self):
+        self.show_match = False
+        self.match_tiles = []
+        self.match_selected_index = -1
+        self.match_total_pairs = 0
+        self.match_pairs_done = 0
+        self.selected_set = None
+
+    def match_pick(self, tile_id: int):
+        tlist = list(self.match_tiles)
+        index = next((i for i, t in enumerate(tlist) if t.tile_id == tile_id), -1)
+        if index < 0:
+            return
+        tile = tlist[index]
+        if tile.matched:
+            return
+        sel = self.match_selected_index
+        if sel < 0:
+            self.match_selected_index = index
+            return
+        if sel == index:
+            self.match_selected_index = -1
+            return
+        other = tlist[sel]
+        if other.matched:
+            self.match_selected_index = index
+            return
+        if tile.pair_id == other.pair_id:
+            tlist[sel] = MatchTile(
+                tile_id=other.tile_id,
+                pair_id=other.pair_id,
+                text=other.text,
+                matched=True,
+            )
+            tlist[index] = MatchTile(
+                tile_id=tile.tile_id,
+                pair_id=tile.pair_id,
+                text=tile.text,
+                matched=True,
+            )
+            self.match_tiles = tlist
+            self.match_pairs_done = self.match_pairs_done + 1
+            self.match_selected_index = -1
+        else:
+            self.match_selected_index = -1
+
+    def restart_match(self):
+        if self.selected_set and self.selected_set.words:
+            self.start_match()
+
+    def start_blast(self):
+        if not self.selected_set or not self.selected_set.words:
+            return
+        words = self.selected_set.words
+        order = list(range(len(words)))
+        random.shuffle(order)
+        if len(order) > self.BLAST_CARD_CAP:
+            order = order[: self.BLAST_CARD_CAP]
+        self.blast_order = order
+        self.blast_pos = 0
+        self.blast_input = ""
+        self.blast_feedback = ""
+        self.blast_streak = 0
+        self.blast_best_streak = 0
+        self.blast_correct = 0
+        self.blast_wrong = 0
+        self.blast_lives = self.BLAST_START_LIVES
+        self.blast_phase = "play"
+        self.show_blast = True
+        self.show_set_options = False
+
+    def close_blast(self):
+        self.show_blast = False
+        self.blast_order = []
+        self.blast_pos = 0
+        self.blast_input = ""
+        self.blast_feedback = ""
+        self.blast_phase = "play"
+        self.selected_set = None
+
+    def restart_blast(self):
+        if self.selected_set and self.selected_set.words:
+            self.start_blast()
+
+    def set_blast_input(self, text: str):
+        self.blast_input = str(text) if text is not None else ""
+
+    def submit_blast(self):
+        if self.blast_phase != "play" or not self.selected_set or not self.blast_order:
+            return
+        if self.blast_pos >= len(self.blast_order):
+            self.blast_phase = "complete"
+            return
+        w = self.selected_set.words[self.blast_order[self.blast_pos]]
+        _, expected = self._mini_prompt_answer(w)
+        user = (self.blast_input or "").strip().lower()
+        exp = (expected or "").strip().lower()
+        if not user:
+            return
+        if user == exp:
+            self.blast_correct += 1
+            self.blast_streak += 1
+            if self.blast_streak > self.blast_best_streak:
+                self.blast_best_streak = self.blast_streak
+            self.blast_input = ""
+            self.blast_feedback = ""
+            self.blast_pos += 1
+            if self.blast_pos >= len(self.blast_order):
+                self.blast_phase = "complete"
+        else:
+            self.blast_wrong += 1
+            self.blast_streak = 0
+            self.blast_lives -= 1
+            self.blast_input = ""
+            if self.blast_lives <= 0:
+                self.blast_phase = "complete"
+
+    def start_blocks(self):
+        if not self.selected_set or not self.selected_set.words:
+            return
+        words = self.selected_set.words
+        deck = list(range(len(words)))
+        random.shuffle(deck)
+        cap = self.MAX_MATCH_PAIRS * 2
+        if len(deck) > cap:
+            deck = deck[:cap]
+        self.blocks_deck = deck
+        self.blocks_input = ""
+        self.blocks_feedback = ""
+        self.blocks_cleared = 0
+        self.blocks_wrong = 0
+        self.blocks_phase = "play"
+        self.show_blocks = True
+        self.show_set_options = False
+
+    def close_blocks(self):
+        self.show_blocks = False
+        self.blocks_deck = []
+        self.blocks_input = ""
+        self.blocks_feedback = ""
+        self.blocks_phase = "play"
+        self.selected_set = None
+
+    def restart_blocks(self):
+        if self.selected_set and self.selected_set.words:
+            self.start_blocks()
+
+    def set_blocks_input(self, text: str):
+        self.blocks_input = str(text) if text is not None else ""
+
+    def submit_blocks(self):
+        if self.blocks_phase != "play" or not self.selected_set or not self.blocks_deck:
+            if not self.blocks_deck:
+                self.blocks_phase = "complete"
+            return
+        top = self.blocks_deck[0]
+        w = self.selected_set.words[top]
+        _, expected = self._mini_prompt_answer(w)
+        user = (self.blocks_input or "").strip().lower()
+        exp = (expected or "").strip().lower()
+        if not user:
+            return
+        deck = list(self.blocks_deck)
+        if user == exp:
+            deck.pop(0)
+            self.blocks_deck = deck
+            self.blocks_cleared += 1
+            self.blocks_input = ""
+            self.blocks_feedback = ""
+            if not deck:
+                self.blocks_phase = "complete"
+        else:
+            first = deck.pop(0)
+            deck.append(first)
+            self.blocks_deck = deck
+            self.blocks_wrong += 1
+            self.blocks_input = ""
+            self.blocks_feedback = "wrong"
+
+    @rx.var
+    def blast_prompt_text(self) -> str:
+        if (
+            not self.selected_set
+            or not self.blast_order
+            or self.blast_pos >= len(self.blast_order)
+            or self.blast_phase != "play"
+        ):
+            return ""
+        w = self.selected_set.words[self.blast_order[self.blast_pos]]
+        prompt, _ = self._mini_prompt_answer(w)
+        return prompt
+
+    @rx.var
+    def blast_progress(self) -> str:
+        if not self.blast_order:
+            return "0/0"
+        n = len(self.blast_order)
+        cur = min(self.blast_pos + 1, n) if self.blast_phase == "play" else n
+        return f"{cur}/{n}"
+
+    @rx.var
+    def blocks_top_prompt(self) -> str:
+        if not self.selected_set or not self.blocks_deck or self.blocks_phase != "play":
+            return ""
+        w = self.selected_set.words[self.blocks_deck[0]]
+        prompt, _ = self._mini_prompt_answer(w)
+        return prompt
+
+    @rx.var
+    def blocks_remaining(self) -> int:
+        return len(self.blocks_deck)
+
+    @rx.var
+    def match_all_matched(self) -> bool:
+        return self.match_total_pairs > 0 and self.match_pairs_done >= self.match_total_pairs
+
+    @rx.var
+    def match_selected_tile_id(self) -> int:
+        if self.match_selected_index < 0 or self.match_selected_index >= len(self.match_tiles):
+            return -1
+        return self.match_tiles[self.match_selected_index].tile_id
+
+    @rx.var
+    def blast_won(self) -> bool:
+        if self.blast_phase != "complete" or not self.blast_order:
+            return False
+        return self.blast_pos >= len(self.blast_order)
+
+    @rx.var
+    def blast_lost(self) -> bool:
+        if self.blast_phase != "complete" or not self.blast_order:
+            return False
+        return self.blast_pos < len(self.blast_order) and self.blast_lives <= 0
 
     @rx.event
     async def start_learn_mode(self):

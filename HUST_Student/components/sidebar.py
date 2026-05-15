@@ -64,6 +64,12 @@ def sidebar():
                 NavigationState.go_library,
             ),
             sidebar_item(
+                "message-circle",
+                "Luyện hội thoại",
+                NavigationState.current_page == "conversation",
+                NavigationState.go_conversation,
+            ),
+            sidebar_item(
                 "graduation_cap",
                 "Lớp học của tôi",
                 NavigationState.current_page == "classes",
