@@ -1,10 +1,22 @@
 [
-  {
-    "foreign": "Book",
-    "japanese": "本"
-  },
-  {
-    "foreign": "Water",
-    "japanese": "水"
-  }
+  { "foreign": "Sun", "native": "太陽" },
+  { "foreign": "Moon", "native": "月" },
+  { "foreign": "Fire", "native": "火" },
+  { "foreign": "Wood", "native": "木" },
+  { "foreign": "Gold", "native": "金" },
+  { "foreign": "Earth", "native": "土" },
+  { "foreign": "Sky", "native": "空" },
+  { "foreign": "Mountain", "native": "山" },
+  { "foreign": "River", "native": "川" },
+  { "foreign": "Ocean", "native": "海" },
+  { "foreign": "Rain", "native": "雨" },
+  { "foreign": "Snow", "native": "雪" },
+  { "foreign": "Wind", "native": "風" },
+  { "foreign": "Cat", "native": "猫" },
+  { "foreign": "Dog", "native": "犬" },
+  { "foreign": "Bird", "native": "鳥" },
+  { "foreign": "Fish", "native": "魚" },
+  { "foreign": "Hand", "native": "手" },
+  { "foreign": "Eye", "native": "目" },
+  { "foreign": "Heart", "native": "心" }
 ]
