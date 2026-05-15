@@ -48,6 +48,12 @@ class FolderState(rx.State):
     current_options: list[str] = []
     correct_answer: str = ""
     selected_answer: str = ""
+    # Dùng cho chế độ đúng/sai
+    dung_sai_candidate: str = ""
+
+    # Dùng cho chế độ tự luận
+    written_answer: str = ""
+    check_feedback: str = ""   # Thông báo kết quả kiểm tra (chỉ dùng cho tự luận)
 
     current_test_index: int = 0
     shuffled_indices: list[int] = []   # thứ tự câu hỏi đã xáo trộn
@@ -63,10 +69,12 @@ class FolderState(rx.State):
     # ── Helpers ──────────────────────────────────────────────────────────────
 
     def _build_options(self):
-        """Build 4 shuffled answer options for current test question."""
+        """Build answer options for multiple choice or handle true/false and essay."""
         if not self.selected_set or not self.selected_set.words:
             self.current_options = []
             self.correct_answer = ""
+            self.dung_sai_candidate = ""
+            self.check_feedback = ""
             return
 
         words = self.selected_set.words
@@ -76,10 +84,7 @@ class FolderState(rx.State):
             idx = self.current_test_index % len(words)
         current = words[idx]
 
-        # front = nghĩa (foreign/english) — dùng làm câu hỏi mặc định
-        # back  = chữ Nhật (native)       — dùng làm đáp án mặc định
-        # "Cả hai"/"Native": hỏi front → đáp án back
-        # "Foreign":  hỏi back  → đáp án front
+        # Determine correct answer based on answer_language
         if self.answer_language == "Foreign":
             correct = current.front
             get_ans = lambda w: w.front
@@ -87,19 +92,38 @@ class FolderState(rx.State):
             correct = current.back
             get_ans = lambda w: w.back
 
-        self.correct_answer = correct
+        # ----- True/False mode -----
+        if self.test_mode == "dung_sai":
+            other_words = [w for i, w in enumerate(words) if i != idx]
+            candidate = correct
+            if other_words and random.random() < 0.5:
+                candidate = get_ans(random.choice(other_words))
+            self.dung_sai_candidate = candidate
+            self.correct_answer = "Đúng" if candidate == correct else "Sai"
+            self.current_options = []
+            self.check_feedback = ""
+            return
 
+        # ----- Essay mode -----
+        if self.test_mode == "tu_luan":
+            self.correct_answer = correct
+            self.current_options = []       # no options needed
+            self.dung_sai_candidate = ""
+            self.check_feedback = ""        # Xóa feedback khi sang câu mới
+            return
+
+        # ----- Multiple choice (default) -----
+        self.correct_answer = correct
         other_words = [w for i, w in enumerate(words) if i != idx]
         sample_count = min(3, len(other_words))
         distractors_words = random.sample(other_words, sample_count)
         distractors = [get_ans(w) for w in distractors_words]
-
         while len(distractors) < 3:
             distractors.append("—")
-
         options = [correct] + distractors
         random.shuffle(options)
         self.current_options = options
+        self.check_feedback = ""
 
     @rx.var
     def current_question_text(self) -> str:
@@ -127,8 +151,6 @@ class FolderState(rx.State):
         else:
             idx = self.current_test_index % len(words)
         current = words[idx]
-        # Foreign mode: hỏi bằng native (back), đáp án là front
-        # Native/Cả hai: hỏi bằng foreign (front), đáp án là back
         if self.answer_language == "Foreign":
             return current.back
         return current.front
@@ -240,6 +262,8 @@ class FolderState(rx.State):
             self.show_result = False
             self.current_test_index = 0
             self.selected_answer = ""
+            self.written_answer = ""
+            self.check_feedback = ""
             self.test_question_count = len(self.selected_set.words)
             self.answer_records = []
             self.score_correct = 0
@@ -255,49 +279,101 @@ class FolderState(rx.State):
         self.show_result = False
         self.current_test_index = 0
         self.selected_answer = ""
+        self.written_answer = ""
+        self.check_feedback = ""
         self.current_options = []
         self.correct_answer = ""
+        self.dung_sai_candidate = ""
         self.answer_records = []
         self.shuffled_indices = []
+
+    # ── Kiểm tra đáp án tự luận (không lưu vào records) ──────────────────────
+    def check_current_answer(self):
+        """Kiểm tra câu trả lời tự luận hiện tại và hiển thị đáp án đúng."""
+        if self.test_mode != "tu_luan":
+            return
+        if not self.written_answer:
+            self.check_feedback = "❗ Vui lòng nhập câu trả lời."
+            return
+        user_ans = self.written_answer.strip().lower()
+        correct_ans = self.correct_answer.strip().lower()
+        is_correct = (user_ans == correct_ans)
+        result = "✅ Đúng" if is_correct else "❌ Sai"
+        self.check_feedback = f"📖 Đáp án đúng: {self.correct_answer} | Bạn trả lời: {self.written_answer} | {result}"
 
     def next_test_question(self):
         if not self.selected_set or not self.selected_set.words:
             return
-        if self.selected_answer == "":
-            return
 
-        # Lưu kết quả câu hiện tại
-        question_text = self._get_question_text()
-        is_correct = self.selected_answer == self.correct_answer
-        record = AnswerRecord(
-            question=question_text,
-            correct=self.correct_answer,
-            chosen=self.selected_answer,
-            is_correct=is_correct,
-        )
-        self.answer_records = self.answer_records + [record]
-
-        if is_correct:
-            self.score_correct += 1
+        # Validate answer based on mode
+        if self.test_mode == "tu_luan":
+            if not self.written_answer:
+                self.check_feedback = "❗ Vui lòng nhập câu trả lời trước khi tiếp tục."
+                return
         else:
-            self.score_wrong += 1
+            if self.selected_answer == "":
+                return
 
-        # Kiểm tra đã hết câu chưa
+        question_text = self._get_question_text()
+
+        # ----- Essay mode -----
+        if self.test_mode == "tu_luan":
+            # So sánh và lưu kết quả
+            user_ans = self.written_answer.strip().lower()
+            correct_ans = self.correct_answer.strip().lower()
+            is_correct = (user_ans == correct_ans)
+
+            record = AnswerRecord(
+                question=question_text,
+                correct=self.correct_answer,
+                chosen=self.written_answer,
+                is_correct=is_correct,
+            )
+            self.answer_records = self.answer_records + [record]
+            if is_correct:
+                self.score_correct += 1
+            else:
+                self.score_wrong += 1
+
+        # ----- True/False or Multiple choice -----
+        else:
+            is_correct = (self.selected_answer == self.correct_answer)
+            record = AnswerRecord(
+                question=question_text,
+                correct=self.correct_answer,
+                chosen=self.selected_answer,
+                is_correct=is_correct,
+            )
+            self.answer_records = self.answer_records + [record]
+            if is_correct:
+                self.score_correct += 1
+            else:
+                self.score_wrong += 1
+
+        # Move to next question or finish
         next_index = self.current_test_index + 1
         if next_index >= self.test_question_count:
-            # Hiện màn hình kết quả
             self.show_test = False
             self.show_result = True
+            self.check_feedback = ""  # Xóa feedback khi kết thúc
             return
 
         self.current_test_index = next_index
         self.selected_answer = ""
+        self.written_answer = ""
+        self.check_feedback = ""  # Xóa feedback cho câu mới
         self._build_options()
 
     def set_selected_answer(self, answer: str):
         if self.selected_answer != "":
             return
         self.selected_answer = str(answer) if answer is not None else ""
+
+    def set_written_answer(self, text: str):
+        self.written_answer = str(text) if text is not None else ""
+        # Xóa feedback cũ khi người dùng bắt đầu sửa câu trả lời
+        if self.check_feedback:
+            self.check_feedback = ""
 
     def retry_wrong_only(self):
         """Làm lại chỉ các câu sai."""
@@ -318,6 +394,8 @@ class FolderState(rx.State):
         self.show_test = True
         self.current_test_index = 0
         self.selected_answer = ""
+        self.written_answer = ""
+        self.check_feedback = ""
         self.test_question_count = len(self.selected_set.words)
         self.answer_records = []
         self.score_correct = 0
@@ -333,6 +411,8 @@ class FolderState(rx.State):
         self.show_test = True
         self.current_test_index = 0
         self.selected_answer = ""
+        self.written_answer = ""
+        self.check_feedback = ""
         self.answer_records = []
         self.score_correct = 0
         self.score_wrong = 0
