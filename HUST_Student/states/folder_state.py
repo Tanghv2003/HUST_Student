@@ -159,7 +159,14 @@ class FolderState(rx.State):
         """Get the question text for the current index (dùng nội bộ)."""
         return self.current_question_text
 
-    # ── Folder loading ────────────────────────────────────────────────────────
+    def _check_answer(self, user_answer: str) -> bool:
+        """Check if user answer matches correct answer (cho tự luận & đúng/sai)."""
+        # Chuẩn hóa: xóa khoảng trắng thừa và chuyển thành lowercase
+        normalized_user = user_answer.strip().lower()
+        normalized_correct = self.correct_answer.strip().lower()
+        return normalized_user == normalized_correct
+
+    # ── Folder loading ───────────────────────────────────────────────────────────
 
     def open_folder(self, folder_name: str):
         data = load_folders()
@@ -217,7 +224,7 @@ class FolderState(rx.State):
                 self.show_set_options = True
                 break
 
-    # ── Test options ──────────────────────────────────────────────────────────
+    # ── Test options ────────────────────────────────────────────────────────────
 
     def open_test_options(self):
         if self.selected_set:
@@ -253,7 +260,7 @@ class FolderState(rx.State):
             return
         self.answer_language = str(value)
 
-    # ── Test run ──────────────────────────────────────────────────────────────
+    # ── Test run ─────────────────────────────────────────────────────────────────
 
     def start_test(self):
         if self.selected_set and self.selected_set.words:
@@ -358,6 +365,7 @@ class FolderState(rx.State):
             self.check_feedback = ""  # Xóa feedback khi kết thúc
             return
 
+        # Chuyển sang câu tiếp theo
         self.current_test_index = next_index
         self.selected_answer = ""
         self.written_answer = ""
@@ -424,7 +432,7 @@ class FolderState(rx.State):
     def set_show_wrong_only(self, value: bool):
         self.show_wrong_only = value
 
-    # ── Flashcards ────────────────────────────────────────────────────────────
+    # ── Flashcards ─────────────────────────────────────────────────────────────
 
     def start_flashcards(self):
         if self.selected_set and self.selected_set.words:
@@ -456,7 +464,7 @@ class FolderState(rx.State):
         self.current_word_index = 0
         self.is_flipped = False
 
-    # ── Modals ────────────────────────────────────────────────────────────────
+    # ── Modals ──────────────────────────────────────────────────────────────────
 
     def close_set_options(self):
         self.show_set_options = False
