@@ -241,16 +241,29 @@ def trac_nghiem_section():
             width="100%",
         ),
 
-        # "Bạn không biết?" link
-        rx.text(
-            "Bạn không biết?",
-            color="#4F46E5",
-            font_weight="600",
-            font_size="0.9rem",
-            cursor="pointer",
-            align_self="center",
-            on_click=lambda: FolderState.set_selected_answer(FolderState.correct_answer),
-            _hover={"text_decoration": "underline"},
+        # "Bạn không biết?" link + hint text (chỉ hiển thị, không tự động chọn)
+        rx.vstack(
+            rx.text(
+                "Bạn không biết?",
+                color="#4F46E5",
+                font_weight="600",
+                font_size="0.9rem",
+                cursor="pointer",
+                align_self="center",
+                on_click=FolderState.show_hint,
+                _hover={"text_decoration": "underline"},
+            ),
+            rx.cond(
+                FolderState.hint_text != "",
+                rx.text(
+                    FolderState.hint_text,
+                    font_size="0.85rem",
+                    color="#6B7280",
+                    text_align="center",
+                ),
+            ),
+            spacing="1",
+            align="center",
         ),
 
         # Nav buttons
@@ -546,9 +559,10 @@ def test_run_modal():
                                             on_click=FolderState.next_test_question,
                                             bg=rx.cond(FolderState.written_answer != "", "#4F46E5", "#C7D2FE"),
                                             color="white",
-                                            width="56px",
-                                            height="56px",
-                                            border_radius="999px",
+                                            # width="56px",
+                                            # height="56px",
+                                            padding="0.6rem 1.2rem",
+                                            border_radius="12px",
                                             _hover={"bg": "#4338CA"},
                                             cursor=rx.cond(FolderState.written_answer != "", "pointer", "not-allowed"),
                                         ),
