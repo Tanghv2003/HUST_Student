@@ -159,25 +159,8 @@ def answer_option_button(option: str):
 
 def trac_nghiem_section():
     """Full multiple-choice section using rx.foreach on FolderState.current_options."""
-    current_word = rx.cond(
-        FolderState.selected_set,
-        FolderState.selected_set.words[FolderState.current_test_index],
-        None,
-    )
 
-    # answer_language == "Foreign"  → câu hỏi là native, đáp án là foreign (back),  đáp án là tiếng Việt (front)
-    # answer_language == "Native"   → câu hỏi là foreign, đáp án là native (front), đáp án là tiếng Nhật (back)
-    # answer_language == "Cả hai"      → giống "Native": câu hỏi là tiếng Việt, đáp án tiếng Nhật
-    question_text = rx.cond(
-        current_word,
-        rx.cond(
-            FolderState.answer_language == "Foreign",
-            current_word.back,   # hỏi bằng tiếng Nhật
-            current_word.front,  # hỏi bằng tiếng Việt (Tiếng Nhật hoặc Cả hai)
-        ),
-        "—",
-    )
-
+    # Câu hỏi và label lấy từ computed var — đã tính đúng theo shuffled_indices
     question_label = rx.cond(
         FolderState.answer_language == "Foreign",
         "Native",        # câu hỏi là chữ native
@@ -221,10 +204,10 @@ def trac_nghiem_section():
             size="1",
         ),
 
-        # Question card
+        # Question card — dùng computed var thay vì words[current_test_index]
         rx.box(
             rx.text(
-                question_text,
+                FolderState.current_question_display,
                 font_size="1.4rem",
                 font_weight="600",
                 color="#111827",

@@ -50,6 +50,7 @@ class FolderState(rx.State):
     selected_answer: str = ""
 
     current_test_index: int = 0
+    shuffled_indices: list[int] = []   # thứ tự câu hỏi đã xáo trộn
     current_word_index: int = 0
     is_flipped: bool = False
 
@@ -69,7 +70,10 @@ class FolderState(rx.State):
             return
 
         words = self.selected_set.words
-        idx = self.current_test_index % len(words)
+        if self.shuffled_indices and self.current_test_index < len(self.shuffled_indices):
+            idx = self.shuffled_indices[self.current_test_index]
+        else:
+            idx = self.current_test_index % len(words)
         current = words[idx]
 
         # front = nghĩa (foreign/english) — dùng làm câu hỏi mặc định
@@ -97,16 +101,41 @@ class FolderState(rx.State):
         random.shuffle(options)
         self.current_options = options
 
-    def _get_question_text(self) -> str:
-        """Get the question text for the current index."""
+    @rx.var
+    def current_question_text(self) -> str:
+        """Nội dung câu hỏi dùng để lưu vào answer_records (phần không hiển thị)."""
         if not self.selected_set or not self.selected_set.words:
             return ""
         words = self.selected_set.words
-        idx = self.current_test_index % len(words)
+        if self.shuffled_indices and self.current_test_index < len(self.shuffled_indices):
+            idx = self.shuffled_indices[self.current_test_index]
+        else:
+            idx = self.current_test_index % len(words)
         current = words[idx]
         if self.answer_language == "Foreign":
             return current.back
         return current.front
+
+    @rx.var
+    def current_question_display(self) -> str:
+        """Nội dung câu hỏi hiển thị trên UI (đảo ngược với đáp án)."""
+        if not self.selected_set or not self.selected_set.words:
+            return "—"
+        words = self.selected_set.words
+        if self.shuffled_indices and self.current_test_index < len(self.shuffled_indices):
+            idx = self.shuffled_indices[self.current_test_index]
+        else:
+            idx = self.current_test_index % len(words)
+        current = words[idx]
+        # Foreign mode: hỏi bằng native (back), đáp án là front
+        # Native/Cả hai: hỏi bằng foreign (front), đáp án là back
+        if self.answer_language == "Foreign":
+            return current.back
+        return current.front
+
+    def _get_question_text(self) -> str:
+        """Get the question text for the current index (dùng nội bộ)."""
+        return self.current_question_text
 
     # ── Folder loading ────────────────────────────────────────────────────────
 
@@ -216,6 +245,9 @@ class FolderState(rx.State):
             self.score_correct = 0
             self.score_wrong = 0
             self.show_wrong_only = False
+            indices = list(range(self.test_question_count))
+            random.shuffle(indices)
+            self.shuffled_indices = indices
             self._build_options()
 
     def close_test(self):
@@ -226,6 +258,7 @@ class FolderState(rx.State):
         self.current_options = []
         self.correct_answer = ""
         self.answer_records = []
+        self.shuffled_indices = []
 
     def next_test_question(self):
         if not self.selected_set or not self.selected_set.words:
@@ -289,6 +322,9 @@ class FolderState(rx.State):
         self.answer_records = []
         self.score_correct = 0
         self.score_wrong = 0
+        indices = list(range(self.test_question_count))
+        random.shuffle(indices)
+        self.shuffled_indices = indices
         self._build_options()
 
     def retry_all(self):
@@ -300,6 +336,9 @@ class FolderState(rx.State):
         self.answer_records = []
         self.score_correct = 0
         self.score_wrong = 0
+        indices = list(range(self.test_question_count))
+        random.shuffle(indices)
+        self.shuffled_indices = indices
         self._build_options()
 
     def set_show_wrong_only(self, value: bool):
