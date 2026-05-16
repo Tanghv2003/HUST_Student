@@ -14,6 +14,11 @@ class LearnState(rx.State):
     # phase: "preview" | "practice" | "batch_review" | "round_review" | "complete"
     phase: str = "preview"
 
+    # ── Hướng hỏi-đáp ─────────────────────────────────────────────
+    # "native_to_foreign": hỏi native (front), đáp foreign (back) — mặc định
+    # "foreign_to_native": hỏi foreign (back), đáp native (front)
+    answer_language: str = "native_to_foreign"
+
     # ── Batch config ───────────────────────────────────────────────
     BATCH_SIZE: int = 5     # số từ MỚI mỗi lô
     # Sau khi sai: chèn ôn lại sau N thẻ khác (spaced repetition trong phiên — kiểu Quizlet Learn)
@@ -65,8 +70,9 @@ class LearnState(rx.State):
     # SETUP
     # ═══════════════════════════════════════════════════════════════
 
-    def init_learn(self, words: list[dict], title: str):
+    def init_learn(self, words: list[dict], title: str, answer_language: str = "native_to_foreign"):
         self.set_title = title
+        self.answer_language = answer_language
         self.cards = [LearnCard(front=w["front"], back=w["back"]) for w in words]
         self.show_learn = True
         self.round_number = 1
@@ -82,19 +88,30 @@ class LearnState(rx.State):
 
         self._load_next_batch()
 
+    def set_answer_language(self, value: str):
+        """Đổi hướng hỏi-đáp trong phiên học."""
+        if value in ("native_to_foreign", "foreign_to_native"):
+            self.answer_language = value
+
+    # ── Helpers: lấy prompt / đáp án theo hướng ──────────────────
+
+    def _get_prompt(self, card: LearnCard) -> str:
+        """Câu hỏi hiển thị cho người dùng."""
+        if self.answer_language == "foreign_to_native":
+            return card.back   # hỏi foreign (back)
+        return card.front      # hỏi native (front) — mặc định
+
+    def _get_answer(self, card: LearnCard) -> str:
+        """Đáp án đúng cần gõ/chọn."""
+        if self.answer_language == "foreign_to_native":
+            return card.front  # đáp native (front)
+        return card.back       # đáp foreign (back) — mặc định
+
     # ═══════════════════════════════════════════════════════════════
     # BATCH LOADING
     # ═══════════════════════════════════════════════════════════════
 
     def _load_next_batch(self):
-        """
-        Luồng tích lũy:
-          Lô 1:  5 từ mới  +  0 từ cũ  → preview 5,  practice 5
-          Lô 2:  5 từ mới  +  5 từ cũ  → preview 5,  practice 10
-          Lô 3:  5 từ mới  + 10 từ cũ  → preview 5,  practice 15
-          Lô N:  5 từ mới  + (N-1)*5 từ cũ
-          (Lô cuối có thể ít hơn 5 từ mới nếu không đủ)
-        """
         total = len(self.all_indices)
         start = self.introduced_count
         end = min(start + self.BATCH_SIZE, total)
@@ -104,7 +121,6 @@ class LearnState(rx.State):
             self._end_round()
             return
 
-        # Từ cũ = tất cả đã giới thiệu trước lô này
         old_indices = self.all_indices[0:start]
 
         self.current_new_indices = list(new_indices)
@@ -115,12 +131,10 @@ class LearnState(rx.State):
         self.typed_answer = ""
         self.selected_answer = ""
 
-        # Preview chỉ từ mới
         self.preview_cards = list(new_indices)
         self.preview_pos = 0
         self.is_preview_flipped = False
 
-        # Practice: từ mới + từ cũ
         self._build_practice_queue(list(new_indices), list(old_indices))
 
         self.phase = "preview"
@@ -136,11 +150,6 @@ class LearnState(rx.State):
                 self.cards[idx] = card
 
     def _build_practice_queue(self, new_indices: list, old_indices: list):
-        """
-        - Thẻ mới: luôn type, xáo trộn trong nhóm.
-        - Thẻ ôn: ưu tiên thẻ sai nhiều / stage thấp trước; xen kẽ với thẻ mới (interleaving).
-        - Xáo trộn nhẹ theo từng khối để không dính cụm một loại.
-        """
         practice_new: list[PracticeItem] = [
             PracticeItem(card_index=idx, mode="type", is_new=True)
             for idx in new_indices
@@ -183,19 +192,13 @@ class LearnState(rx.State):
         self.practice_pos = 0
 
     def _insert_spaced_review(self, card_idx: int):
-        """Chèn ôn lại thẻ vừa sai sau SESSION_SRS_GAP thẻ (lặp ngắt quãng trong phiên)."""
-        repeat = PracticeItem(
-            card_index=card_idx,
-            mode="type",
-            is_new=False,
-        )
+        repeat = PracticeItem(card_index=card_idx, mode="type", is_new=False)
         q = list(self.practice_queue)
         insert_at = min(self.practice_pos + self.SESSION_SRS_GAP, len(q))
         q.insert(insert_at, repeat)
         self.practice_queue = q
 
     def _continue_after_answer(self):
-        """Tiếp sau feedback: nếu sai thì chèn ôn SRS vào hàng đợi."""
         if not self.show_feedback:
             return
         if self.practice_pos >= len(self.practice_queue):
@@ -216,13 +219,12 @@ class LearnState(rx.State):
 
     def _load_preview_card(self):
         if self.preview_pos >= len(self.preview_cards):
-            # Hết preview → cập nhật introduced_count rồi sang practice
             self.introduced_count += len(self.current_new_indices)
             self.phase = "practice"
             self._load_practice_item()
             return
         card_idx = self.preview_cards[self.preview_pos]
-        self.correct_answer = self.cards[card_idx].back
+        self.correct_answer = self._get_answer(self.cards[card_idx])
         self.is_preview_flipped = False
 
     def flip_preview(self):
@@ -264,13 +266,13 @@ class LearnState(rx.State):
             return
 
         item = self.practice_queue[self.practice_pos]
-        self.correct_answer = self.cards[item.card_index].back
+        self.correct_answer = self._get_answer(self.cards[item.card_index])
         if item.mode == "choice":
             self._build_choices(item.card_index)
 
     def _build_choices(self, card_idx: int):
-        correct = self.cards[card_idx].back
-        others = [c.back for i, c in enumerate(self.cards) if i != card_idx]
+        correct = self._get_answer(self.cards[card_idx])
+        others = [self._get_answer(c) for i, c in enumerate(self.cards) if i != card_idx]
         sample = random.sample(others, min(3, len(others)))
         while len(sample) < 3:
             sample.append("—")
@@ -310,12 +312,13 @@ class LearnState(rx.State):
             return
         item = self.practice_queue[self.practice_pos]
         card = self.cards[item.card_index]
-        is_correct = self.typed_answer.strip().lower() == card.back.strip().lower()
+        correct = self._get_answer(card)
+        is_correct = self.typed_answer.strip().lower() == correct.strip().lower()
         self.show_feedback = True
         self.feedback_correct = is_correct
         self.feedback_message = (
-            f"✅ Chính xác! Đáp án: {card.back}" if is_correct
-            else f"❌ Đáp án đúng: {card.back}"
+            f"✅ Chính xác! Đáp án: {correct}" if is_correct
+            else f"❌ Đáp án đúng: {correct}"
         )
         self._record_answer(item.card_index, is_correct)
 
@@ -331,13 +334,14 @@ class LearnState(rx.State):
             return
         item = self.practice_queue[self.practice_pos]
         card = self.cards[item.card_index]
-        is_correct = option == card.back
+        correct = self._get_answer(card)
+        is_correct = option == correct
         self.selected_answer = option
         self.show_feedback = True
         self.feedback_correct = is_correct
         self.feedback_message = (
             "✅ Chính xác!" if is_correct
-            else f"❌ Đáp án đúng: {card.back}"
+            else f"❌ Đáp án đúng: {correct}"
         )
         self._record_answer(item.card_index, is_correct)
 
@@ -349,7 +353,6 @@ class LearnState(rx.State):
     # ═══════════════════════════════════════════════════════════════
 
     def _end_batch(self):
-        """Hết practice: nếu có sai → batch_review (gõ lại), không thì lô tiếp."""
         wrong = list(set(self.batch_wrong))
         if wrong:
             review: list[PracticeItem] = [
@@ -366,8 +369,6 @@ class LearnState(rx.State):
             self._load_next_batch()
 
     def finish_batch_review(self):
-        """Gọi sau khi hết practice trong batch_review → sang lô tiếp."""
-        # _end_batch sẽ tự gọi _load_next_batch vì batch_wrong đã rỗng
         self._load_next_batch()
 
     # ═══════════════════════════════════════════════════════════════
@@ -383,7 +384,6 @@ class LearnState(rx.State):
         self._update_counts()
 
     def continue_round_review(self):
-        """Vòng mới: chỉ học lại các thẻ chưa thành thạo, tích lũy lại từ đầu."""
         self.round_number += 1
         not_mastered = [i for i, c in enumerate(self.cards) if c.stage < 4]
         random.shuffle(not_mastered)
@@ -413,6 +413,7 @@ class LearnState(rx.State):
         self.show_feedback = False
         self.introduced_count = 0
         self.batch_number = 0
+        self.answer_language = "native_to_foreign"
 
     # ═══════════════════════════════════════════════════════════════
     # HELPERS
@@ -429,7 +430,6 @@ class LearnState(rx.State):
 
     @rx.var
     def session_srs_hint(self) -> str:
-        """Mô tả ngắn SRS trong phiên (ôn sai xen kẽ)."""
         if self.phase not in ("practice", "batch_review"):
             return ""
         return (
@@ -438,7 +438,22 @@ class LearnState(rx.State):
         )
 
     @rx.var
-    def current_card_front(self) -> str:
+    def prompt_label(self) -> str:
+        """Nhãn cho ô câu hỏi (hiển thị trong overlay)."""
+        if self.answer_language == "foreign_to_native":
+            return "Thuật ngữ"
+        return "Nghĩa"
+
+    @rx.var
+    def answer_label(self) -> str:
+        """Nhãn cho ô đáp án (hiển thị trong overlay)."""
+        if self.answer_language == "foreign_to_native":
+            return "Nghĩa"
+        return "Thuật ngữ"
+
+    @rx.var
+    def current_card_prompt(self) -> str:
+        """Câu hỏi hiển thị (đã xét hướng hỏi-đáp)."""
         if self.phase == "preview":
             if self.preview_pos >= len(self.preview_cards):
                 return ""
@@ -449,21 +464,37 @@ class LearnState(rx.State):
             idx = self.practice_queue[self.practice_pos].card_index
         else:
             return ""
-        return self.cards[idx].front if idx < len(self.cards) else ""
+        if idx >= len(self.cards):
+            return ""
+        card = self.cards[idx]
+        return self._get_prompt(card)
+
+    @rx.var
+    def current_card_answer_text(self) -> str:
+        """Đáp án hiển thị khi lật thẻ preview (đã xét hướng)."""
+        if self.phase == "preview":
+            if self.preview_pos >= len(self.preview_cards):
+                return ""
+            idx = self.preview_cards[self.preview_pos]
+        elif self.phase in ("practice", "batch_review"):
+            if self.practice_pos >= len(self.practice_queue):
+                return ""
+            idx = self.practice_queue[self.practice_pos].card_index
+        else:
+            return ""
+        if idx >= len(self.cards):
+            return ""
+        card = self.cards[idx]
+        return self._get_answer(card)
+
+    # Giữ tương thích ngược với overlay cũ (current_card_front / back)
+    @rx.var
+    def current_card_front(self) -> str:
+        return self.current_card_prompt
 
     @rx.var
     def current_card_back(self) -> str:
-        if self.phase == "preview":
-            if self.preview_pos >= len(self.preview_cards):
-                return ""
-            idx = self.preview_cards[self.preview_pos]
-        elif self.phase in ("practice", "batch_review"):
-            if self.practice_pos >= len(self.practice_queue):
-                return ""
-            idx = self.practice_queue[self.practice_pos].card_index
-        else:
-            return ""
-        return self.cards[idx].back if idx < len(self.cards) else ""
+        return self.current_card_answer_text
 
     @rx.var
     def current_practice_mode(self) -> str:
@@ -487,7 +518,6 @@ class LearnState(rx.State):
 
     @rx.var
     def batch_composition_label(self) -> str:
-        """Ví dụ: '5 từ mới · 10 từ ôn lại'"""
         new_count = len(self.current_new_indices)
         old_count = len(self.current_old_indices)
         if old_count == 0:
@@ -506,7 +536,6 @@ class LearnState(rx.State):
 
     @rx.var
     def batch_progress_pct(self) -> int:
-        """% tiến độ trong lô hiện tại."""
         preview_total = len(self.preview_cards)
         practice_total = len(self.practice_queue)
         total_steps = preview_total + practice_total
@@ -522,7 +551,6 @@ class LearnState(rx.State):
 
     @rx.var
     def total_progress_pct(self) -> int:
-        """% tổng: bao nhiêu từ đã được giới thiệu / tổng số từ."""
         total = len(self.all_indices)
         if total == 0:
             return 0

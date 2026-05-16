@@ -439,8 +439,16 @@ class FolderState(rx.State):
         self.show_set_options = False
         words = [{"front": w.front, "back": w.back} for w in self.selected_set.words]
         title = self.selected_set.title
+        # Ánh xạ answer_language của FolderState → LearnState
+        # FolderState: "Cả hai" | "Native" | "Foreign"
+        # LearnState:  "native_to_foreign" | "foreign_to_native"
+        if self.answer_language == "Foreign":
+            learn_direction = "foreign_to_native"
+        else:
+            # "Native" hoặc "Cả hai" → hỏi native (front), đáp foreign (back)
+            learn_direction = "native_to_foreign"
         learn = await self.get_state(LearnState)
-        learn.init_learn(words, title)
+        learn.init_learn(words, title, answer_language=learn_direction)
 
     def open_test_options(self):
         if self.selected_set:

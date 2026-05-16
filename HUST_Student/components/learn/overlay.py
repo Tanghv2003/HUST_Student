@@ -10,7 +10,6 @@ from HUST_Student.states.learn_state import LearnState
 
 def _progress_bar():
     return rx.vstack(
-        # Thống kê từng loại
         rx.hstack(
             rx.hstack(
                 rx.box(width="10px", height="10px", border_radius="999px", bg="#16A34A"),
@@ -32,7 +31,6 @@ def _progress_bar():
             ),
             spacing="5",
         ),
-        # Tiến độ lô hiện tại (dày, màu indigo)
         rx.box(
             rx.box(
                 height="100%",
@@ -43,7 +41,6 @@ def _progress_bar():
             ),
             width="100%", height="8px", bg=T.BORDER_LIGHT, border_radius="999px", overflow="hidden",
         ),
-        # Tiến độ tổng thể (mỏng, màu xanh)
         rx.box(
             rx.box(
                 height="100%",
@@ -93,7 +90,6 @@ def _phase_badge():
 
 
 def _new_tag():
-    """Badge 'MỚI' nhỏ hiện khi từ hiện tại là từ mới."""
     return rx.cond(
         LearnState.current_item_is_new,
         rx.box(
@@ -105,13 +101,49 @@ def _new_tag():
     )
 
 
+def _direction_toggle():
+    is_ntf = LearnState.answer_language == "native_to_foreign"
+    return rx.hstack(
+        rx.text("Hỏi:", font_size="0.7rem", font_weight="500", color=T.TEXT_MUTED),
+        rx.hstack(
+            rx.box(
+                rx.text("F", font_size="0.7rem", font_weight="500",
+                        color=rx.cond(is_ntf, "white", T.TEXT_MUTED),
+                        white_space="nowrap"),
+                padding="3px 8px",
+                border_radius="999px",
+                bg=rx.cond(is_ntf, T.PRIMARY, "transparent"),
+                cursor="pointer",
+                on_click=lambda: LearnState.set_answer_language("native_to_foreign"),
+                transition="all 0.15s ease",
+            ),
+            rx.box(
+                rx.text("N", font_size="0.7rem", font_weight="500",
+                        color=rx.cond(~is_ntf, "white", T.TEXT_MUTED),
+                        white_space="nowrap"),
+                padding="3px 8px",
+                border_radius="999px",
+                bg=rx.cond(~is_ntf, T.PRIMARY, "transparent"),
+                cursor="pointer",
+                on_click=lambda: LearnState.set_answer_language("foreign_to_native"),
+                transition="all 0.15s ease",
+            ),
+            spacing="0",
+            bg=T.BORDER_LIGHT,
+            border=f"0.5px solid {T.BORDER}",
+            border_radius="999px",
+            padding="2px",
+        ),
+        spacing="2",
+        align="center",
+    )
+
 # ═══════════════════════════════════════════════════════════════════
 # PHASE: PREVIEW
 # ═══════════════════════════════════════════════════════════════════
 
 def preview_phase():
     return rx.vstack(
-        # Batch info header
         rx.hstack(
             rx.box(
                 rx.text(LearnState.batch_label,
@@ -123,11 +155,14 @@ def preview_phase():
             spacing="2", align="center",
         ),
 
-        # Flashcard
         rx.box(
             rx.vstack(
                 rx.text(
-                    rx.cond(LearnState.is_preview_flipped, "Thuật ngữ", "Nghĩa"),
+                    rx.cond(
+                        LearnState.is_preview_flipped,
+                        LearnState.answer_label,
+                        LearnState.prompt_label,
+                    ),
                     font_size="0.78rem", font_weight="700", color=T.PRIMARY,
                     text_transform="uppercase", letter_spacing="0.08em",
                 ),
@@ -188,8 +223,11 @@ def _question_box(accent_bg: str, accent_border: str):
     return rx.box(
         rx.vstack(
             rx.hstack(
-                rx.text("Nghĩa", font_size="0.78rem", font_weight="700", color="#9CA3AF",
-                        text_transform="uppercase", letter_spacing="0.08em"),
+                rx.text(
+                    LearnState.prompt_label,  # ← dùng computed var thay vì hardcode "Nghĩa"
+                    font_size="0.78rem", font_weight="700", color="#9CA3AF",
+                    text_transform="uppercase", letter_spacing="0.08em",
+                ),
                 _new_tag(),
                 spacing="2", align="center",
             ),
@@ -230,7 +268,14 @@ def type_practice():
                 spacing="3", width="100%",
             ),
             rx.vstack(
-                rx.text("Gõ thuật ngữ", font_size="0.85rem", color="#6B7280", font_weight="500"),
+                rx.text(
+                    rx.cond(
+                        LearnState.answer_language == "native_to_foreign",
+                        "Gõ thuật ngữ",
+                        "Gõ nghĩa",
+                    ),
+                    font_size="0.85rem", color="#6B7280", font_weight="500",
+                ),
                 rx.hstack(
                     rx.input(
                         value=LearnState.typed_answer,
@@ -311,7 +356,14 @@ def _choice_btn(option: str):
 def choice_practice():
     return rx.vstack(
         _question_box(T.QUESTION_BOX_ALT_BG, T.QUESTION_BOX_ALT_BORDER),
-        rx.text("Chọn thuật ngữ đúng", font_size="0.82rem", color="#6B7280", font_weight="500"),
+        rx.text(
+            rx.cond(
+                LearnState.answer_language == "native_to_foreign",
+                "Chọn thuật ngữ đúng",
+                "Chọn nghĩa đúng",
+            ),
+            font_size="0.82rem", color="#6B7280", font_weight="500",
+        ),
         rx.grid(
             rx.foreach(LearnState.choice_options, _choice_btn),
             template_columns="repeat(2, minmax(0, 1fr))",
@@ -346,7 +398,6 @@ def practice_phase():
 # ═══════════════════════════════════════════════════════════════════
 
 def batch_review_phase():
-    """Ôn lại thẻ sai trong lô — luôn dùng type."""
     return rx.vstack(
         rx.hstack(
             rx.icon("alert-triangle", size=20, color="#F59E0B"),
@@ -547,6 +598,12 @@ def learn_overlay():
                             spacing="1", align="start",
                         ),
                         rx.spacer(),
+                        # ── Toggle hướng hỏi-đáp ──────────────
+                        rx.cond(
+                            LearnState.phase != "complete",
+                            _direction_toggle(),
+                            rx.box(),
+                        ),
                         rx.button(
                             rx.icon("x", size=18),
                             on_click=LearnState.close_learn,
@@ -554,7 +611,7 @@ def learn_overlay():
                             border_radius="8px", padding="0.4rem",
                             _hover={"bg": "#F3F4F6"},
                         ),
-                        width="100%", align="center",
+                        width="100%", align="center", spacing="3",
                     ),
 
                     # Progress bars
@@ -571,7 +628,7 @@ def learn_overlay():
                     spacing="5", padding="1.8rem 2rem 2rem", width="100%",
                 ),
                 bg="white", border_radius=T.RADIUS_XL,
-                width="560px", max_width="min(560px, calc(100vw - 2.5rem))",
+                width="580px", max_width="min(580px, calc(100vw - 2.5rem))",
                 max_height=T.MODAL_CONTENT_MAX_HEIGHT,
                 min_height="0",
                 overflow_y="auto",
