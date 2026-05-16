@@ -3,8 +3,10 @@ import random
 import reflex as rx
 
 from HUST_Student.core.folder_tree import find_folder_path
-from HUST_Student.models import AnswerRecord, StudySet, WordPair
+from HUST_Student.models.card import WordPair
 from HUST_Student.models.mini_game import MatchTile
+from HUST_Student.models.studyset import StudySet
+from HUST_Student.models.test import AnswerRecord
 from HUST_Student.services.folder_service import load_folders
 from HUST_Student.services.studyset_service import load_studyset_detail, load_studysets
 from HUST_Student.states.learn_state import LearnState
@@ -126,14 +128,14 @@ class FolderState(rx.State):
         for item in sets_data:
             study_set = StudySet(
                 title=item["title"],
-                terms=item.get("terms", 0),
                 file=item["file"],
             )
             try:
                 detail_data = load_studyset_detail(study_set.file)
                 study_set.terms = len(detail_data)
+                study_set.words = [_word_pair_from_raw(w) for w in detail_data]
             except FileNotFoundError:
-                pass
+                study_set.terms = 0
             current_sets.append(study_set)
         self.current_sets = current_sets
 
@@ -141,12 +143,6 @@ class FolderState(rx.State):
         for study_set in self.current_sets:
             if study_set.title == set_title:
                 self.selected_set = study_set
-                try:
-                    detail_data = load_studyset_detail(study_set.file)
-                    study_set.words = [_word_pair_from_raw(word) for word in detail_data]
-                    study_set.terms = len(detail_data)
-                except FileNotFoundError:
-                    study_set.words = []
                 self.show_set_options = True
                 break
 
@@ -240,18 +236,8 @@ class FolderState(rx.State):
             self.match_selected_index = index
             return
         if tile.pair_id == other.pair_id:
-            tlist[sel] = MatchTile(
-                tile_id=other.tile_id,
-                pair_id=other.pair_id,
-                text=other.text,
-                matched=True,
-            )
-            tlist[index] = MatchTile(
-                tile_id=tile.tile_id,
-                pair_id=tile.pair_id,
-                text=tile.text,
-                matched=True,
-            )
+            tlist[sel] = MatchTile(tile_id=other.tile_id, pair_id=other.pair_id, text=other.text, matched=True)
+            tlist[index] = MatchTile(tile_id=tile.tile_id, pair_id=tile.pair_id, text=tile.text, matched=True)
             self.match_tiles = tlist
             self.match_pairs_done = self.match_pairs_done + 1
             self.match_selected_index = -1
@@ -269,7 +255,7 @@ class FolderState(rx.State):
         order = list(range(len(words)))
         random.shuffle(order)
         if len(order) > self.BLAST_CARD_CAP:
-            order = order[: self.BLAST_CARD_CAP]
+            order = order[:self.BLAST_CARD_CAP]
         self.blast_order = order
         self.blast_pos = 0
         self.blast_input = ""

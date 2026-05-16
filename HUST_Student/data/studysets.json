@@ -1,64 +1,25 @@
 {
   "Tiếng Nhật": [
-    {
-      "title": "Kanji N5 Tổng Hợp",
-      "terms": 120,
-      "file": "Tieng_Nhat-Kanji_N5.json"
-    }
+    { "title": "Kanji N5 Tổng Hợp", "file": "nihongo/kanji/Kanji_N5.json" }
   ],
   "Tiếng Nhật/DAICHI/Bài 21": [
-    {
-      "title": "Từ vựng Bài 21",
-      "terms": 45,
-      "file": "Tieng_Nhat-DAICHI-Bai_21-Tu_vung.json"
-    },
-    {
-      "title": "Ngữ pháp Bài 21",
-      "terms": 15,
-      "file": "Tieng_Nhat-DAICHI-Bai_21-Ngu_phap.json"
-    }
+    { "title": "Từ vựng Bài 21", "file": "nihongo/daichi/Bai_21-Tu_vung.json" },
+    { "title": "Ngữ pháp Bài 21", "file": "nihongo/daichi/Bai_21-Ngu_phap.json" }
   ],
   "Tiếng Nhật/DAICHI/Bài 22": [
-    {
-      "title": "Từ vựng Bài 22",
-      "terms": 45,
-      "file": "Tieng_Nhat-DAICHI-Bai_22-Tu_vung.json"
-    },
-    {
-      "title": "Ngữ pháp Bài 22",
-      "terms": 15,
-      "file": "Tieng_Nhat-DAICHI-Bai_22-Ngu_phap.json"
-    }
+    { "title": "Từ vựng Bài 22", "file": "nihongo/daichi/Bai_22-Tu_vung.json" },
+    { "title": "Ngữ pháp Bài 22", "file": "nihongo/daichi/Bai_22-Ngu_phap.json" }
   ],
   "Tiếng Nhật/DAICHI/Bài 23": [
-    {
-      "title": "Từ vựng Bài 23",
-      "terms": 45,
-      "file": "Tieng_Nhat-DAICHI-Bai_23-Tu_vung.json"
-    },
-    {
-      "title": "Ngữ pháp Bài 23",
-      "terms": 15,
-      "file": "Tieng_Nhat-DAICHI-Bai_23-Ngu_phap.json"
-    }
+    { "title": "Từ vựng Bài 23", "file": "nihongo/daichi/Bai_23-Tu_vung.json" },
+    { "title": "Ngữ pháp Bài 23", "file": "nihongo/daichi/Bai_23-Ngu_phap.json" }
   ],
   "Tiếng Nhật/DAICHI/Bài 24": [
-    {
-      "title": "Từ vựng Bài 24",
-      "terms": 45,
-      "file": "Tieng_Nhat-DAICHI-Bai_24-Tu_vung.json"
-    },
-    {
-      "title": "Ngữ pháp Bài 24",
-      "terms": 15,
-      "file": "Tieng_Nhat-DAICHI-Bai_24-Ngu_phap.json"
-    }
+    { "title": "Từ vựng Bài 24", "file": "nihongo/daichi/Bai_24-Tu_vung.json" },
+    { "title": "Ngữ pháp Bài 24", "file": "nihongo/daichi/Bai_24-Ngu_phap.json" }
   ],
   "Toeic": [
-    {
-      "title": "Toeic Listening",
-      "terms": 300,
-      "file": "Toeic-Listening.json"
-    }
+    { "title": "Toeic Listening", "file": "Toeic-Listening.json" }
   ]
 }
+
