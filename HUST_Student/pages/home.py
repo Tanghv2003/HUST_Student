@@ -14,17 +14,78 @@ from HUST_Student.states.navigation_state import NavigationState
 
 def homepage_content():
     return rx.vstack(
-        rx.text("Trang chủ", font_size="2rem", font_weight="700", color=T.TEXT_PRIMARY),
-        rx.text(
-            "Chọn Thư viện, Luyện hội thoại hoặc Lớp học từ thanh bên để bắt đầu.",
-            color=T.TEXT_SECONDARY,
-            font_size="1rem",
-            margin_top="0.5rem",
+        rx.vstack(
+            rx.text(
+                "Chào mừng trở lại! 👋",
+                font_size="1.75rem",
+                font_weight="800",
+                color=T.TEXT_PRIMARY,
+                letter_spacing="-0.02em",
+            ),
+            rx.text(
+                "Chọn Thư viện, Luyện hội thoại hoặc Lớp học từ thanh bên để bắt đầu.",
+                color=T.TEXT_SECONDARY,
+                font_size="0.95rem",
+            ),
+            spacing="2",
+            align="start",
         ),
+        # Quick stats cards
+        rx.hstack(
+            rx.box(
+                rx.vstack(
+                    rx.icon("book", size=24, color=T.PRIMARY),
+                    rx.text("Học phần", font_size="0.8rem", color=T.TEXT_SECONDARY, font_weight="500"),
+                    rx.text("4", font_size="1.5rem", font_weight="800", color=T.TEXT_PRIMARY),
+                    spacing="2",
+                    align="center",
+                ),
+                bg=T.SURFACE,
+                border=f"1px solid {T.BORDER}",
+                border_radius=T.RADIUS_LG,
+                padding="1.25rem",
+                flex="1",
+                text_align="center",
+                box_shadow=T.SHADOW_CARD,
+            ),
+            rx.box(
+                rx.vstack(
+                    rx.icon("graduation-cap", size=24, color=T.SUCCESS),
+                    rx.text("Lớp học", font_size="0.8rem", color=T.TEXT_SECONDARY, font_weight="500"),
+                    rx.text("4", font_size="1.5rem", font_weight="800", color=T.TEXT_PRIMARY),
+                    spacing="2",
+                    align="center",
+                ),
+                bg=T.SURFACE,
+                border=f"1px solid {T.BORDER}",
+                border_radius=T.RADIUS_LG,
+                padding="1.25rem",
+                flex="1",
+                text_align="center",
+                box_shadow=T.SHADOW_CARD,
+            ),
+            rx.box(
+                rx.vstack(
+                    rx.icon("zap", size=24, color=T.WARN),
+                    rx.text("Chuỗi học", font_size="0.8rem", color=T.TEXT_SECONDARY, font_weight="500"),
+                    rx.text("7 ngày", font_size="1.5rem", font_weight="800", color=T.TEXT_PRIMARY),
+                    spacing="2",
+                    align="center",
+                ),
+                bg=T.SURFACE,
+                border=f"1px solid {T.BORDER}",
+                border_radius=T.RADIUS_LG,
+                padding="1.25rem",
+                flex="1",
+                text_align="center",
+                box_shadow=T.SHADOW_CARD,
+            ),
+            spacing="4",
+            width="100%",
+        ),
+        spacing="6",
         width="100%",
         align="start",
-        spacing="2",
-        padding_top="0.5rem",
     )
 
 
@@ -51,16 +112,31 @@ def content_router():
 def home():
     return rx.box(
         sidebar(),
+        # Main content area — fixed height, no page scroll
         rx.box(
             rx.vstack(
                 topbar(),
-                content_router(),
-                spacing="8",
+                rx.box(
+                    content_router(),
+                    flex="1",
+                    width="100%",
+                    overflow_y="auto",
+                    padding_top="0.25rem",
+                ),
+                spacing="0",
                 width="100%",
+                height="100%",
+                gap="0",
             ),
-            margin_left="280px",
-            padding="1.75rem 2.25rem",
+            margin_left="260px",
+            padding="1.5rem 2rem 1rem",
             bg=T.PAGE_BG,
-            min_height="100vh",
+            height="100vh",
+            overflow="hidden",
+            display="flex",
+            flex_direction="column",
         ),
+        position="relative",
+        width="100%",
+        min_height="100vh",
     )

@@ -17,6 +17,7 @@ from HUST_Student.states.navigation_state import NavigationState
 
 def folder_detail_page():
     return rx.vstack(
+        # Overlays / modals
         set_options_modal(),
         test_options_modal(),
         test_run_modal(),
@@ -26,31 +27,61 @@ def folder_detail_page():
         blast_overlay(),
         blocks_overlay(),
         learn_overlay(),
-        rx.vstack(
+
+        # Header
+        rx.hstack(
+            rx.vstack(
+                rx.hstack(
+                    rx.icon("folder-open", size=18, color=T.WARN),
+                    rx.text(
+                        NavigationState.current_folder,
+                        font_size="1.4rem",
+                        font_weight="800",
+                        color=T.TEXT_PRIMARY,
+                        letter_spacing="-0.02em",
+                    ),
+                    spacing="2",
+                    align="center",
+                ),
+                rx.text(
+                    "Chọn học phần để bắt đầu học",
+                    font_size="0.85rem",
+                    color=T.TEXT_SECONDARY,
+                ),
+                spacing="1",
+                align="start",
+            ),
+            rx.spacer(),
             rx.text(
-                NavigationState.current_folder,
-                font_size="2rem",
-                font_weight="800",
-                color=T.TEXT_PRIMARY,
-                letter_spacing="-0.02em",
+                rx.foreach(
+                    FolderState.current_sets,
+                    lambda _: rx.fragment(),
+                ),
+                font_size="0.8rem",
+                color=T.TEXT_MUTED,
             ),
-            rx.text(
-                "Chọn một học phần để học hoặc kiểm tra.",
-                font_size="0.95rem",
-                color=T.TEXT_SECONDARY,
-            ),
-            spacing="1",
-            align="start",
             width="100%",
+            align="center",
         ),
-        rx.vstack(
-            rx.foreach(
-                FolderState.current_sets,
-                lambda item: studyset_card(item.title, item.terms),
+
+        # Studysets grid — 2 columns, compact cards
+        rx.box(
+            rx.grid(
+                rx.foreach(
+                    FolderState.current_sets,
+                    lambda item: studyset_card(item.title, item.terms),
+                ),
+                template_columns="repeat(2, minmax(0, 1fr))",
+                gap="3",
+                width="100%",
             ),
-            spacing="4",
             width="100%",
+            overflow_y="auto",
+            flex="1",
         ),
+
         width="100%",
-        spacing="6",
+        height="100%",
+        spacing="4",
+        align="start",
     )

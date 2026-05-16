@@ -1,14 +1,21 @@
 {
   "Tiếng Nhật": {
     "folders": {
-      "Tiếng Nhật 1": {
+      "DAICHI": {
         "folders": {
-          "Kanji": {
+          "Bài 21": {
             "folders": {}
           },
-          "Ngữ pháp": {
+          "Bài 22": {
+            "folders": {}
+          },
+          "Bài 23": {
+            "folders": {}
+          },
+          "Bài 24": {
             "folders": {}
           }
+
         }
       }
     }
