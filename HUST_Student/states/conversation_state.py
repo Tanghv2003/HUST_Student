@@ -65,9 +65,11 @@ async def _call_gemini(
 ) -> str:
     """
     Gọi Gemini API (gemini-2.0-flash — miễn phí 1500 req/ngày).
+    Tích hợp vòng lặp tự động thử lại khi gặp lỗi nghẽn hoặc Rate Limit (429).
     history: [{"role": "user"|"model", "parts": [{"text": "..."}]}]
     """
     import httpx
+    import asyncio
 
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models"
@@ -85,10 +87,29 @@ async def _call_gemini(
         },
     }
 
+    max_retries = 3
     async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(url, json=payload)
-        resp.raise_for_status()
-        data = resp.json()
+        for attempt in range(max_retries):
+            try:
+                resp = await client.post(url, json=payload)
+                
+                # Nếu dính giới hạn 429 (Too Many Requests) từ Google
+                if resp.status_code == 429:
+                    if attempt < max_retries - 1:
+                        # Chờ thời gian tăng dần: Lần 1 chờ 2s, Lần 2 chờ 4s... sau đó thử lại
+                        await asyncio.sleep((attempt + 1) * 2)
+                        continue
+                    else:
+                        raise ValueError("Hệ thống AI đang quá tải lượt yêu cầu (Lỗi 429). Vui lòng đợi khoảng 1 phút rồi nhấn gửi lại.")
+                
+                resp.raise_for_status()
+                data = resp.json()
+                break
+            except httpx.RequestError as e:
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(2)
+                    continue
+                raise e
 
     # Trích text từ response
     try:
