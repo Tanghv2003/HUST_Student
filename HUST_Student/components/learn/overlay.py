@@ -224,7 +224,7 @@ def _question_box(accent_bg: str, accent_border: str):
         rx.vstack(
             rx.hstack(
                 rx.text(
-                    LearnState.prompt_label,  # ← dùng computed var thay vì hardcode "Nghĩa"
+                    LearnState.prompt_label,
                     font_size="0.78rem", font_weight="700", color="#9CA3AF",
                     text_transform="uppercase", letter_spacing="0.08em",
                 ),
@@ -247,15 +247,62 @@ def type_practice():
         rx.cond(
             LearnState.show_feedback,
             rx.vstack(
-                rx.box(
-                    rx.text(LearnState.feedback_message, font_size="1rem", font_weight="600",
-                            text_align="center",
-                            color=rx.cond(LearnState.feedback_correct, "#15803D", "#B91C1C")),
-                    width="100%", padding="1rem 1.2rem",
-                    bg=rx.cond(LearnState.feedback_correct, "#F0FDF4", "#FFF5F5"),
-                    border=rx.cond(LearnState.feedback_correct,
-                                   "1.5px solid #BBF7D0", "1.5px solid #FECACA"),
-                    border_radius="14px",
+                rx.cond(
+                    LearnState.feedback_correct,
+                    # ── Đúng: hiện 1 dòng gọn ──
+                    rx.box(
+                        rx.hstack(
+                            rx.icon("check-circle", size=18, color="#15803D"),
+                            rx.text(
+                                LearnState.feedback_message,
+                                font_size="1rem", font_weight="600", color="#15803D",
+                            ),
+                            spacing="2", align="center", justify="center",
+                        ),
+                        width="100%", padding="1rem 1.2rem",
+                        bg="#F0FDF4", border="1.5px solid #BBF7D0",
+                        border_radius="14px",
+                    ),
+                    # ── Sai: hiện đáp án người dùng (gạch ngang đỏ) + đáp án đúng (xanh) ──
+                    rx.box(
+                        rx.vstack(
+                            rx.hstack(
+                                rx.icon("x-circle", size=15, color="#B91C1C"),
+                                rx.text(
+                                    "Bạn đã nhập:",
+                                    font_size="0.72rem", font_weight="700", color="#B91C1C",
+                                    text_transform="uppercase", letter_spacing="0.05em",
+                                ),
+                                spacing="2", align="center",
+                            ),
+                            rx.text(
+                                LearnState.user_answer,
+                                font_size="1.15rem", font_weight="700",
+                                color="#B91C1C", text_align="center",
+                                text_decoration="line-through",
+                                opacity="0.85",
+                            ),
+                            rx.box(height="1px", width="100%", bg="#FECACA", margin_y="0.25rem"),
+                            rx.hstack(
+                                rx.icon("check-circle", size=15, color="#15803D"),
+                                rx.text(
+                                    "Đáp án đúng:",
+                                    font_size="0.72rem", font_weight="700", color="#15803D",
+                                    text_transform="uppercase", letter_spacing="0.05em",
+                                ),
+                                spacing="2", align="center",
+                            ),
+                            rx.text(
+                                LearnState.correct_answer,
+                                font_size="1.3rem", font_weight="800",
+                                color="#15803D", text_align="center",
+                            ),
+                            spacing="1", align="center", width="100%",
+                        ),
+                        width="100%", padding="1rem 1.2rem",
+                        bg="#FFF5F5", border="1.5px solid #FECACA",
+                        border_radius="14px",
+                    ),
                 ),
                 rx.button(
                     "Tiếp theo →",
@@ -598,7 +645,6 @@ def learn_overlay():
                             spacing="1", align="start",
                         ),
                         rx.spacer(),
-                        # ── Toggle hướng hỏi-đáp ──────────────
                         rx.cond(
                             LearnState.phase != "complete",
                             _direction_toggle(),

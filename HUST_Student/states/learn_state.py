@@ -15,26 +15,20 @@ class LearnState(rx.State):
     phase: str = "preview"
 
     # ── Hướng hỏi-đáp ─────────────────────────────────────────────
-    # "native_to_foreign": hỏi native (front), đáp foreign (back) — mặc định
-    # "foreign_to_native": hỏi foreign (back), đáp native (front)
     answer_language: str = "native_to_foreign"
 
     # ── Batch config ───────────────────────────────────────────────
-    BATCH_SIZE: int = 5     # số từ MỚI mỗi lô
-    # Sau khi sai: chèn ôn lại sau N thẻ khác (spaced repetition trong phiên — kiểu Quizlet Learn)
+    BATCH_SIZE: int = 5
     SESSION_SRS_GAP: int = 3
 
     # ── Tracking tích lũy ─────────────────────────────────────────
-    # Toàn bộ thứ tự đã shuffle một lần, không đổi trong suốt round
     all_indices: list[int] = []
-    # Bao nhiêu từ đã được giới thiệu (đã qua preview ít nhất 1 lần)
     introduced_count: int = 0
-    # Lô hiện tại
     batch_number: int = 0
     current_new_indices: list[int] = []
     current_old_indices: list[int] = []
 
-    # ── Preview (chỉ từ MỚI) ──────────────────────────────────────
+    # ── Preview ──────────────────────────────────────────────────
     preview_cards: list[int] = []
     preview_pos: int = 0
     is_preview_flipped: bool = False
@@ -49,6 +43,7 @@ class LearnState(rx.State):
 
     # ── Trả lời ───────────────────────────────────────────────────
     typed_answer: str = ""
+    user_answer: str = ""      # ← lưu đáp án người dùng đã gõ để hiển thị trong feedback
     selected_answer: str = ""
     choice_options: list[str] = []
     correct_answer: str = ""
@@ -89,23 +84,20 @@ class LearnState(rx.State):
         self._load_next_batch()
 
     def set_answer_language(self, value: str):
-        """Đổi hướng hỏi-đáp trong phiên học."""
         if value in ("native_to_foreign", "foreign_to_native"):
             self.answer_language = value
 
-    # ── Helpers: lấy prompt / đáp án theo hướng ──────────────────
+    # ── Helpers ──────────────────────────────────────────────────
 
     def _get_prompt(self, card: LearnCard) -> str:
-        """Câu hỏi hiển thị cho người dùng."""
         if self.answer_language == "foreign_to_native":
-            return card.back   # hỏi foreign (back)
-        return card.front      # hỏi native (front) — mặc định
+            return card.back
+        return card.front
 
     def _get_answer(self, card: LearnCard) -> str:
-        """Đáp án đúng cần gõ/chọn."""
         if self.answer_language == "foreign_to_native":
-            return card.front  # đáp native (front)
-        return card.back       # đáp foreign (back) — mặc định
+            return card.front
+        return card.back
 
     # ═══════════════════════════════════════════════════════════════
     # BATCH LOADING
@@ -129,6 +121,7 @@ class LearnState(rx.State):
         self.batch_wrong = []
         self.show_feedback = False
         self.typed_answer = ""
+        self.user_answer = ""
         self.selected_answer = ""
 
         self.preview_cards = list(new_indices)
@@ -207,6 +200,7 @@ class LearnState(rx.State):
         was_wrong = not self.feedback_correct
         self.show_feedback = False
         self.typed_answer = ""
+        self.user_answer = ""       # ← clear sau khi tiếp tục
         self.selected_answer = ""
         self.practice_pos += 1
         if was_wrong:
@@ -257,6 +251,7 @@ class LearnState(rx.State):
 
     def _load_practice_item(self):
         self.typed_answer = ""
+        self.user_answer = ""
         self.selected_answer = ""
         self.show_feedback = False
         self.feedback_message = ""
@@ -314,6 +309,7 @@ class LearnState(rx.State):
         card = self.cards[item.card_index]
         correct = self._get_answer(card)
         is_correct = self.typed_answer.strip().lower() == correct.strip().lower()
+        self.user_answer = self.typed_answer.strip()   # ← lưu trước khi clear
         self.show_feedback = True
         self.feedback_correct = is_correct
         self.feedback_message = (
@@ -409,6 +405,7 @@ class LearnState(rx.State):
         self.batch_wrong = []
         self.phase = "preview"
         self.typed_answer = ""
+        self.user_answer = ""
         self.selected_answer = ""
         self.show_feedback = False
         self.introduced_count = 0
@@ -439,21 +436,18 @@ class LearnState(rx.State):
 
     @rx.var
     def prompt_label(self) -> str:
-        """Nhãn cho ô câu hỏi (hiển thị trong overlay)."""
         if self.answer_language == "foreign_to_native":
             return "Thuật ngữ"
         return "Nghĩa"
 
     @rx.var
     def answer_label(self) -> str:
-        """Nhãn cho ô đáp án (hiển thị trong overlay)."""
         if self.answer_language == "foreign_to_native":
             return "Nghĩa"
         return "Thuật ngữ"
 
     @rx.var
     def current_card_prompt(self) -> str:
-        """Câu hỏi hiển thị (đã xét hướng hỏi-đáp)."""
         if self.phase == "preview":
             if self.preview_pos >= len(self.preview_cards):
                 return ""
@@ -471,7 +465,6 @@ class LearnState(rx.State):
 
     @rx.var
     def current_card_answer_text(self) -> str:
-        """Đáp án hiển thị khi lật thẻ preview (đã xét hướng)."""
         if self.phase == "preview":
             if self.preview_pos >= len(self.preview_cards):
                 return ""
@@ -487,7 +480,6 @@ class LearnState(rx.State):
         card = self.cards[idx]
         return self._get_answer(card)
 
-    # Giữ tương thích ngược với overlay cũ (current_card_front / back)
     @rx.var
     def current_card_front(self) -> str:
         return self.current_card_prompt
