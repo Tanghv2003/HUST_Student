@@ -2,8 +2,7 @@ import reflex as rx
 
 from HUST_Student.components.ui import theme as T
 from HUST_Student.states.library_state import LibraryState
-from HUST_Student.services.folder_service import load_folders
-from HUST_Student.components.folder_tree import folder_node
+from HUST_Student.components.folder.folder_manager_panel import folder_manager_panel
 
 
 def library_tab(text: str, active, on_click):
@@ -79,21 +78,9 @@ def lop_hoc_content():
 
 
 def thu_muc_content():
-    """Cây thư mục — hiển thị accordion với studysets inline."""
-    try:
-        data = load_folders()
-    except Exception:
-        data = {}
-
+    """Quản lý thư mục — thêm, sửa, xóa folder và folder con."""
     return rx.box(
-        rx.vstack(
-            *[
-                folder_node(folder_name, children)
-                for folder_name, children in data.items()
-            ],
-            spacing="1",
-            width="100%",
-        ),
+        folder_manager_panel(),
         width="100%",
         overflow_y="auto",
     )

@@ -2,12 +2,10 @@ import random
 
 import reflex as rx
 
-from HUST_Student.core.folder_tree import find_folder_path
 from HUST_Student.models.card import WordPair
 from HUST_Student.models.mini_game import MatchTile
 from HUST_Student.models.studyset import StudySet
 from HUST_Student.models.test import AnswerRecord
-from HUST_Student.services.folder_service import load_folders
 from HUST_Student.services.studyset_service import load_studyset_detail, load_studysets
 from HUST_Student.states.learn_state import LearnState
 
@@ -113,17 +111,16 @@ class FolderState(rx.State):
             return current.back
         return current.front
 
-    def open_folder(self, folder_name: str):
-        data = load_folders()
-        self.current_folder = folder_name
+    def open_folder_path(self, path_key: str):
+        """Mở folder theo đường dẫn đầy đủ (vd: Tiếng Nhật/DAICHI/Bài 21)."""
+        self.current_folder = path_key.split("/")[-1] if path_key else ""
         self.current_sets = []
 
-        folder_path = find_folder_path(data, folder_name)
-        if not folder_path:
+        if not path_key:
             return
 
         studysets = load_studysets()
-        sets_data = studysets.get(folder_path, [])
+        sets_data = studysets.get(path_key, [])
         current_sets = []
         for item in sets_data:
             study_set = StudySet(

@@ -27,14 +27,9 @@ def sidebar_item(icon: str, text: str, active, on_click):
 
 
 def _library_tree_section():
-    """Section cây thư mục trong sidebar — chỉ hiện khi đang ở library/folder."""
-    from HUST_Student.components.folder_tree import folder_node
-    from HUST_Student.services.folder_service import load_folders
-
-    try:
-        data = load_folders()
-    except Exception:
-        data = {}
+    """Section cây thư mục trong sidebar — reactive qua TreeState."""
+    from HUST_Student.components.folder_tree import sidebar_folder_tree
+    from HUST_Student.states.tree_state import TreeState
 
     return rx.cond(
         (NavigationState.current_page == "library")
@@ -51,17 +46,11 @@ def _library_tree_section():
                 padding_y="0.25rem",
             ),
             rx.box(
-                rx.vstack(
-                    *[
-                        folder_node(name, children)
-                        for name, children in data.items()
-                    ],
-                    spacing="0",
-                    width="100%",
-                ),
+                sidebar_folder_tree(),
                 width="100%",
                 overflow_y="auto",
                 max_height="calc(100vh - 320px)",
+                on_mount=TreeState.reload_sidebar,
             ),
             spacing="0",
             width="100%",

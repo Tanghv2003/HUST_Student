@@ -3,11 +3,22 @@
     "folders": {
       "DAICHI": {
         "folders": {
-          "Bài 21": { "folders": {} },
-          "Bài 22": { "folders": {} },
-          "Bài 23": { "folders": {} },
-          "Bài 24": { "folders": {} }
+          "Bài 21": {
+            "folders": {}
+          },
+          "Bài 22": {
+            "folders": {}
+          },
+          "Bài 23": {
+            "folders": {}
+          },
+          "Bài 24": {
+            "folders": {}
+          }
         }
+      },
+      "TEST": {
+        "folders": {}
       }
     }
   },

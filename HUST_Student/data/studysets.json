@@ -1,25 +1,60 @@
 {
   "Tiếng Nhật": [
-    { "title": "Kanji N5 Tổng Hợp", "file": "nihongo/kanji/Kanji_N5.json" }
+    {
+      "title": "Kanji N5 Tổng Hợp",
+      "file": "nihongo/kanji/Kanji_N5.json"
+    }
   ],
   "Tiếng Nhật/DAICHI/Bài 21": [
-    { "title": "Từ vựng Bài 21", "file": "nihongo/daichi/Bai_21-Tu_vung.json" },
-    { "title": "Mở rộng  bài 21", "file": "nihongo/daichi/Bai_21-mr.json" }
+    {
+      "title": "Từ vựng Bài 21",
+      "file": "nihongo/daichi/Bai_21-Tu_vung.json"
+    },
+    {
+      "title": "Mở rộng  bài 21",
+      "file": "nihongo/daichi/Bai_21-mr.json"
+    }
   ],
   "Tiếng Nhật/DAICHI/Bài 22": [
-    { "title": "Từ vựng Bài 22", "file": "nihongo/daichi/Bai_22-Tu_vung.json" },
-    { "title": "Mở rộng  bài 22", "file": "nihongo/daichi/Bai_22-mr.json" }
+    {
+      "title": "Từ vựng Bài 22",
+      "file": "nihongo/daichi/Bai_22-Tu_vung.json"
+    },
+    {
+      "title": "Mở rộng  bài 22",
+      "file": "nihongo/daichi/Bai_22-mr.json"
+    }
   ],
   "Tiếng Nhật/DAICHI/Bài 23": [
-    { "title": "Từ vựng Bài 23", "file": "nihongo/daichi/Bai_23-Tu_vung.json" },
-    { "title": "Mở rộng  bài 23", "file": "nihongo/daichi/Bai_23-mr.json" }
+    {
+      "title": "Từ vựng Bài 23",
+      "file": "nihongo/daichi/Bai_23-Tu_vung.json"
+    },
+    {
+      "title": "Mở rộng  bài 23",
+      "file": "nihongo/daichi/Bai_23-mr.json"
+    }
   ],
   "Tiếng Nhật/DAICHI/Bài 24": [
-    { "title": "Từ vựng Bài 24", "file": "nihongo/daichi/Bai_24-Tu_vung.json" },
-    { "title": "Mở rộng  bài 24", "file": "nihongo/daichi/Bai_24-mr.json" }
+    {
+      "title": "Từ vựng Bài 24",
+      "file": "nihongo/daichi/Bai_24-Tu_vung.json"
+    },
+    {
+      "title": "Mở rộng  bài 24",
+      "file": "nihongo/daichi/Bai_24-mr.json"
+    }
   ],
   "Toeic": [
-    { "title": "Toeic Listening", "file": "Toeic-Listening.json" }
+    {
+      "title": "Toeic Listening",
+      "file": "Toeic-Listening.json"
+    }
+  ],
+  "Tiếng Nhật/TEST": [
+    {
+      "title": "a",
+      "file": "nihongo/kanji/Kanji_N5.json"
+    }
   ]
 }
-
