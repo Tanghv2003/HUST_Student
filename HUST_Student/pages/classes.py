@@ -4,6 +4,7 @@ from pathlib import Path
 import reflex as rx
 
 from HUST_Student.components.ui import theme as T
+from HUST_Student.states.class_manager_state import ClassManagerState
 from HUST_Student.states.kanji_state import ClassesTabState, ClassTreeState, KanjiItem, KanjiState
 
 
@@ -649,55 +650,32 @@ def _selected_class_detail():
 # ─────────────────────────────────────────────────────────────────
 
 def classes_tab_content():
-    try:
-        data = _load_classes()
-    except Exception:
-        data = {}
+    from HUST_Student.components.classes.class_manager_panel import class_manager_panel
+    from HUST_Student.components.classes.class_tree_sidebar import class_sidebar_tree
+    from HUST_Student.states.class_manager_state import ClassManagerState
+    from HUST_Student.states.kanji_state import ClassTreeState
 
     return rx.hstack(
-        # ── Cột trái: cây lớp học ──────────────────────────────
         rx.box(
             rx.vstack(
-                rx.hstack(
-                    rx.icon("layout-list", size=14, color=T.PRIMARY),
-                    rx.text(
-                        "LỚP HỌC",
-                        font_size="0.65rem",
-                        font_weight="700",
-                        color=T.TEXT_MUTED,
-                        letter_spacing="0.1em",
-                    ),
-                    rx.spacer(),
-                    rx.button(
-                        rx.icon("plus", size=14),
-                        bg="transparent",
-                        color=T.PRIMARY,
-                        border_radius=T.RADIUS_SM,
-                        padding="0.25rem",
-                        _hover={"bg": T.PRIMARY_TINT},
-                        title="Tạo lớp mới",
-                    ),
-                    width="100%",
-                    align="center",
-                    padding_x="0.9rem",
-                    padding_y="0.5rem",
+                rx.text(
+                    "LỚP HỌC",
+                    font_size="0.65rem",
+                    font_weight="700",
+                    color=T.TEXT_MUTED,
+                    letter_spacing="0.1em",
+                    padding_x="0.75rem",
+                    padding_top="0.5rem",
                 ),
                 rx.box(
-                    rx.vstack(
-                        *[
-                            _class_node(cls_name, cls_data)
-                            for cls_name, cls_data in data.items()
-                        ],
-                        spacing="0",
-                        width="100%",
-                    ),
+                    class_sidebar_tree(),
                     width="100%",
                     overflow_y="auto",
                     max_height="calc(100vh - 340px)",
+                    on_mount=ClassTreeState.reload_class_tree,
                 ),
                 spacing="0",
                 width="100%",
-                align="start",
             ),
             width="240px",
             flex_shrink="0",
@@ -706,14 +684,11 @@ def classes_tab_content():
             border_radius=T.RADIUS_LG,
             overflow="hidden",
         ),
-
-        # ── Cột phải: chi tiết lớp đã chọn ────────────────────
         rx.box(
-            _selected_class_detail(),
+            class_manager_panel(),
             flex="1",
             min_width="0",
         ),
-
         spacing="4",
         width="100%",
         align="start",
@@ -774,12 +749,8 @@ def classes_page():
             ),
             rx.spacer(),
             rx.button(
-                rx.hstack(
-                    rx.icon("plus", size=15),
-                    rx.text("Tạo lớp", font_size="0.875rem", font_weight="600"),
-                    spacing="2",
-                    align="center",
-                ),
+                "Thêm lớp gốc",
+                on_click=ClassManagerState.open_add_subclass_dialog,
                 bg=T.PRIMARY,
                 color="white",
                 border_radius=T.RADIUS_MD,

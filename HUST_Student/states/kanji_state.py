@@ -165,19 +165,62 @@ class ClassesTabState(rx.State):
 
 
 class ClassTreeState(rx.State):
-    """Quản lý trạng thái cây lớp học — mở/đóng accordion tương tự TreeState của folder."""
+    """Cây lớp học sidebar — reactive với classes.json & class_lessons.json."""
 
     open_classes: list[str] = []
+    current_path_key: str = ""
     current_class: str = ""
+    all_sidebar_rows: list[dict] = []
+    visible_sidebar_rows: list[dict] = []
+
+    def _refresh_visible(self):
+        open_set = set(self.open_classes)
+        self.visible_sidebar_rows = [
+            row
+            for row in self.all_sidebar_rows
+            if row["level"] == 0 or row["parent_tree_key"] in open_set
+        ]
+
+    def reload_class_tree(self):
+        from HUST_Student.services.class_service import build_class_sidebar_rows, load_classes
+        from HUST_Student.services.class_lesson_service import load_class_lessons
+
+        classes = load_classes()
+        lessons = load_class_lessons()
+        self.all_sidebar_rows = build_class_sidebar_rows(classes, lessons)
+        self._refresh_visible()
 
     def toggle_class(self, key: str):
         if key in self.open_classes:
             self.open_classes = [k for k in self.open_classes if k != key]
         else:
-            self.open_classes = self.open_classes + [key]
+            self.open_classes = [*self.open_classes, key]
+        self._refresh_visible()
 
-    def select_class(self, name: str):
-        self.current_class = name
+    def expand_class(self, key: str):
+        if key not in self.open_classes:
+            self.open_classes = [*self.open_classes, key]
+            self._refresh_visible()
+
+    def expand_path(self, path_key: str):
+        if not path_key:
+            return
+        from HUST_Student.services.class_service import path_to_key, path_to_list
+
+        parts = path_to_list(path_key)
+        for i in range(len(parts)):
+            partial = path_to_key(parts[: i + 1])
+            name = parts[i]
+            self.expand_class(f"{name}::{partial}")
+
+    def set_active_path(self, path_key: str):
+        self.current_path_key = path_key or ""
+        parts = path_key.split("/") if path_key else []
+        self.current_class = parts[-1] if parts else ""
 
     def collapse_all(self):
         self.open_classes = []
+        self._refresh_visible()
+
+    def select_class(self, name: str):
+        self.current_class = name

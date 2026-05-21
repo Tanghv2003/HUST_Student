@@ -18,8 +18,13 @@ class NavigationState(rx.State):
         tree = await self.get_state(TreeState)
         tree.reload_sidebar()
 
-    def go_classes(self):
+    @rx.event
+    async def go_classes(self):
+        from HUST_Student.states.kanji_state import ClassTreeState
+
         self.current_page = "classes"
+        tree = await self.get_state(ClassTreeState)
+        tree.reload_class_tree()
 
     def go_conversation(self):
         self.current_page = "conversation"

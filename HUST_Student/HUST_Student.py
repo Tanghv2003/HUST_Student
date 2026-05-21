@@ -1,5 +1,6 @@
 import reflex as rx
 
+from HUST_Student.states.class_manager_state import ClassManagerState  # noqa: F401
 from HUST_Student.states.conversation_state import ConversationState  # noqa: F401
 from HUST_Student.states.folder_manager_state import FolderManagerState  # noqa: F401
 from HUST_Student.states.folder_state import FolderState  # noqa: F401
