@@ -1,0 +1,104 @@
+{
+  "Tiếng Nhật N5": {
+    "icon": "graduation-cap",
+    "color": "#23B26D",
+    "students": 42,
+    "classes": {
+      "Nhóm A": {
+        "icon": "users",
+        "color": "#23B26D",
+        "students": 15,
+        "classes": {
+          "Ca sáng": {
+            "icon": "sun",
+            "color": "#23B26D",
+            "students": 8,
+            "classes": {}
+          },
+          "Ca chiều": {
+            "icon": "sunset",
+            "color": "#23B26D",
+            "students": 7,
+            "classes": {}
+          }
+        }
+      },
+      "Nhóm B": {
+        "icon": "users",
+        "color": "#23B26D",
+        "students": 27,
+        "classes": {}
+      }
+    }
+  },
+  "Toeic 700+": {
+    "icon": "graduation-cap",
+    "color": "#4257B2",
+    "students": 28,
+    "classes": {
+      "Listening": {
+        "icon": "headphones",
+        "color": "#4257B2",
+        "students": 28,
+        "classes": {
+          "Part 1-2": {
+            "icon": "mic",
+            "color": "#4257B2",
+            "students": 28,
+            "classes": {}
+          },
+          "Part 3-4": {
+            "icon": "mic-2",
+            "color": "#4257B2",
+            "students": 28,
+            "classes": {}
+          }
+        }
+      },
+      "Reading": {
+        "icon": "book-open",
+        "color": "#4257B2",
+        "students": 28,
+        "classes": {
+          "Part 5-6": {
+            "icon": "file-text",
+            "color": "#4257B2",
+            "students": 28,
+            "classes": {}
+          },
+          "Part 7": {
+            "icon": "file-text",
+            "color": "#4257B2",
+            "students": 28,
+            "classes": {}
+          }
+        }
+      }
+    }
+  },
+  "Kanji N4": {
+    "icon": "graduation-cap",
+    "color": "#E879F9",
+    "students": 35,
+    "classes": {
+      "Bài 1-5": {
+        "icon": "book",
+        "color": "#E879F9",
+        "students": 35,
+        "classes": {}
+      },
+      "Bài 6-10": {
+        "icon": "book",
+        "color": "#E879F9",
+        "students": 35,
+        "classes": {}
+      }
+    }
+  },
+  "Ngữ pháp N3": {
+    "icon": "graduation-cap",
+    "color": "#FF9B37",
+    "students": 19,
+    "classes": {}
+  }
+}

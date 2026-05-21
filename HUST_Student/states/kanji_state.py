@@ -15,6 +15,68 @@ def _load_kanji_data() -> list[dict]:
         return []
 
 
+def _load_classes_data() -> dict:
+    """Load classes tree data from JSON file."""
+    data_path = Path(__file__).resolve().parent.parent / "data" / "classes.json"
+    try:
+        with open(data_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        # Fallback structure nếu file chưa tồn tại
+        return {
+            "Tiếng Nhật N5": {
+                "icon": "graduation-cap",
+                "color": "#23B26D",
+                "students": 42,
+                "classes": {
+                    "Nhóm A": {
+                        "icon": "users",
+                        "color": "#23B26D",
+                        "students": 15,
+                        "classes": {}
+                    },
+                    "Nhóm B": {
+                        "icon": "users",
+                        "color": "#23B26D",
+                        "students": 27,
+                        "classes": {}
+                    }
+                }
+            },
+            "Toeic 700+": {
+                "icon": "graduation-cap",
+                "color": "#4257B2",
+                "students": 28,
+                "classes": {
+                    "Listening": {
+                        "icon": "headphones",
+                        "color": "#4257B2",
+                        "students": 28,
+                        "classes": {}
+                    },
+                    "Reading": {
+                        "icon": "book-open",
+                        "color": "#4257B2",
+                        "students": 28,
+                        "classes": {}
+                    }
+                }
+            },
+            "Kanji N4": {
+                "icon": "graduation-cap",
+                "color": "#E879F9",
+                "students": 35,
+                "classes": {}
+            },
+            "Ngữ pháp N3": {
+                "icon": "graduation-cap",
+                "color": "#FF9B37",
+                "students": 19,
+                "classes": {}
+            }
+        }
+
+
 class KanjiItem(BaseModel):
     kanji: str = ""
     meaning: str = ""
@@ -100,3 +162,22 @@ class ClassesTabState(rx.State):
 
     def set_tab(self, tab: str):
         self.active_tab = tab
+
+
+class ClassTreeState(rx.State):
+    """Quản lý trạng thái cây lớp học — mở/đóng accordion tương tự TreeState của folder."""
+
+    open_classes: list[str] = []
+    current_class: str = ""
+
+    def toggle_class(self, key: str):
+        if key in self.open_classes:
+            self.open_classes = [k for k in self.open_classes if k != key]
+        else:
+            self.open_classes = self.open_classes + [key]
+
+    def select_class(self, name: str):
+        self.current_class = name
+
+    def collapse_all(self):
+        self.open_classes = []

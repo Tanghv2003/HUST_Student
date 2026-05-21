@@ -1,7 +1,23 @@
+import json
+from pathlib import Path
+
 import reflex as rx
 
 from HUST_Student.components.ui import theme as T
-from HUST_Student.states.kanji_state import ClassesTabState, KanjiItem, KanjiState
+from HUST_Student.states.kanji_state import ClassesTabState, ClassTreeState, KanjiItem, KanjiState
+
+
+# ─────────────────────────────────────────────────────────────────
+# HELPERS — load classes data
+# ─────────────────────────────────────────────────────────────────
+
+def _load_classes() -> dict:
+    data_path = Path(__file__).resolve().parent.parent / "data" / "classes.json"
+    try:
+        with open(data_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -15,7 +31,6 @@ def kanji_detail_overlay():
         rx.box(
             rx.box(
                 rx.vstack(
-                    # Close button row
                     rx.hstack(
                         rx.spacer(),
                         rx.button(
@@ -29,8 +44,6 @@ def kanji_detail_overlay():
                         ),
                         width="100%",
                     ),
-
-                    # Big kanji display
                     rx.box(
                         rx.text(
                             rx.cond(k, k.kanji, ""),
@@ -49,8 +62,6 @@ def kanji_detail_overlay():
                         border_radius=T.RADIUS_XL,
                         border=f"2px solid {T.PRIMARY_LIGHT}",
                     ),
-
-                    # Meaning
                     rx.text(
                         rx.cond(k, k.meaning, ""),
                         font_size="1.5rem",
@@ -59,8 +70,6 @@ def kanji_detail_overlay():
                         text_align="center",
                         letter_spacing="-0.02em",
                     ),
-
-                    # Stroke count badge
                     rx.hstack(
                         rx.icon("pen-line", size=13, color=T.TEXT_MUTED),
                         rx.text(
@@ -76,12 +85,8 @@ def kanji_detail_overlay():
                         padding="0.25rem 0.75rem",
                         border_radius="999px",
                     ),
-
                     rx.divider(),
-
-                    # Readings side by side
                     rx.grid(
-                        # Onyomi
                         rx.vstack(
                             rx.hstack(
                                 rx.box(
@@ -118,8 +123,6 @@ def kanji_detail_overlay():
                             align="start",
                             width="100%",
                         ),
-
-                        # Kunyomi
                         rx.vstack(
                             rx.hstack(
                                 rx.box(
@@ -156,13 +159,10 @@ def kanji_detail_overlay():
                             align="start",
                             width="100%",
                         ),
-
                         template_columns="repeat(2, minmax(0, 1fr))",
                         gap="4",
                         width="100%",
                     ),
-
-                    # Start learning button
                     rx.button(
                         rx.hstack(
                             rx.icon("play", size=16),
@@ -178,7 +178,6 @@ def kanji_detail_overlay():
                         _hover={"bg": T.PRIMARY_HOVER},
                         on_click=KanjiState.close_detail,
                     ),
-
                     spacing="5",
                     width="100%",
                     padding="1.5rem 2rem 2rem",
@@ -284,8 +283,6 @@ def _lesson_chip(ln: int):
 def kanji_page():
     return rx.vstack(
         kanji_detail_overlay(),
-
-        # Header
         rx.hstack(
             rx.hstack(
                 rx.text(
@@ -325,10 +322,7 @@ def kanji_page():
             width="100%",
             align="center",
         ),
-
-        # Lesson filter chips
         rx.hstack(
-            # "Tất cả" chip
             rx.box(
                 rx.text(
                     "Tất cả",
@@ -362,8 +356,6 @@ def kanji_page():
             padding_y="0.25rem",
             width="100%",
         ),
-
-        # Kanji grid — flat, filtered by lesson
         rx.cond(
             KanjiState.filtered_kanji.length() > 0,
             rx.box(
@@ -388,7 +380,6 @@ def kanji_page():
                 width="100%",
             ),
         ),
-
         spacing="4",
         width="100%",
         align="start",
@@ -397,87 +388,332 @@ def kanji_page():
 
 
 # ─────────────────────────────────────────────────────────────────
-# CLASS CARD
+# CLASS TREE — Node (đệ quy bằng render tĩnh tối đa 3 cấp)
 # ─────────────────────────────────────────────────────────────────
 
-def class_card(title: str, students: str, color: str, icon: str = "users"):
+def _class_student_badge(count: int, color: str):
     return rx.box(
-        rx.vstack(
-            rx.hstack(
-                rx.box(
-                    rx.icon(icon, size=16, color=color),
-                    bg=color + "18",
-                    border_radius=T.RADIUS_MD,
-                    padding="0.5rem",
-                    display="flex",
-                    align_items="center",
-                    justify_content="center",
-                ),
-                rx.spacer(),
-                rx.box(
-                    width="8px",
-                    height="8px",
-                    border_radius="999px",
-                    bg=T.SUCCESS,
-                    box_shadow=f"0 0 0 3px {T.SUCCESS}22",
-                ),
-                width="100%",
-                align="center",
-            ),
-            rx.vstack(
-                rx.text(title, font_weight="700", font_size="1rem",
-                        color=T.TEXT_PRIMARY, no_of_lines=1),
-                rx.text(students, color=T.TEXT_SECONDARY, font_size="0.82rem"),
-                spacing="1",
-                align="start",
-            ),
-            rx.hstack(
-                rx.button(
-                    "Vào lớp",
-                    bg=color,
-                    color="white",
-                    font_weight="600",
-                    font_size="0.8rem",
-                    border_radius=T.RADIUS_MD,
-                    padding_x="1rem",
-                    height="32px",
-                    _hover={"opacity": "0.88", "cursor": "pointer"},
-                ),
-                rx.spacer(),
-                rx.icon("arrow-right", size=16, color=T.TEXT_MUTED),
-                width="100%",
-                align="center",
-            ),
-            spacing="3",
-            align="start",
-            width="100%",
-        ),
-        bg=T.SURFACE,
-        border=f"1px solid {T.BORDER}",
-        border_radius=T.RADIUS_LG,
-        padding="1.1rem 1.2rem",
-        box_shadow=T.SHADOW_CARD,
-        transition="all 0.12s ease",
-        _hover={
-            "box_shadow": T.SHADOW_CARD_HOVER,
-            "border_color": color,
-            "transform": "translateY(-1px)",
-        },
-        cursor="pointer",
+        rx.text(f"{count}", font_size="0.65rem", color=T.TEXT_MUTED,
+                font_weight="600", line_height="1"),
+        rx.text(" học viên", font_size="0.65rem", color=T.TEXT_MUTED, line_height="1"),
+        display="flex",
+        align_items="center",
+        bg=T.BORDER_LIGHT,
+        padding="0.1rem 0.4rem",
+        border_radius="999px",
+        flex_shrink="0",
     )
 
 
-def classes_tab_content():
-    return rx.vstack(
-        rx.grid(
-            class_card("Tiếng Nhật N5", "42 học viên", "#23B26D", "users"),
-            class_card("Toeic 700+", "28 học viên", T.PRIMARY, "users"),
-            class_card("Kanji N4", "35 học viên", "#E879F9", "users"),
-            class_card("Ngữ pháp N3", "19 học viên", T.WARN, "users"),
-            template_columns="repeat(2, minmax(0, 1fr))",
-            gap="4",
+def _class_leaf_pill(name: str, color: str, students: int, indent: int = 0):
+    """Nút lá — không có con."""
+    is_active = ClassTreeState.current_class == name
+    return rx.hstack(
+        rx.box(width=f"{indent}px", flex_shrink="0"),
+        rx.hstack(
+            rx.box(width="2px", min_height="24px", bg=color + "44",
+                   border_radius="999px", flex_shrink="0"),
+            rx.hstack(
+                rx.icon("users", size=12, color=color),
+                rx.text(
+                    name,
+                    font_size="0.8rem",
+                    font_weight="500",
+                    color=rx.cond(is_active, T.PRIMARY, T.TEXT_SECONDARY),
+                    flex="1",
+                    no_of_lines=1,
+                ),
+                rx.box(
+                    rx.text(f"{students}", font_size="0.65rem",
+                            color=T.TEXT_MUTED, line_height="1"),
+                    bg=T.BORDER_LIGHT,
+                    padding="0.1rem 0.4rem",
+                    border_radius="999px",
+                ),
+                spacing="2",
+                align="center",
+                width="100%",
+                padding="0.3rem 0.5rem",
+                border_radius=T.RADIUS_MD,
+                cursor="pointer",
+                bg=rx.cond(is_active, T.PRIMARY_TINT, "transparent"),
+                transition="background 0.12s",
+                _hover={"bg": T.PRIMARY_TINT},
+                on_click=lambda: ClassTreeState.select_class(name),
+            ),
+            spacing="2",
+            align="stretch",
             width="100%",
         ),
+        spacing="0",
+        width="100%",
+    )
+
+
+def _class_node(
+    name: str,
+    data: dict,
+    level: int = 0,
+    parent_path: str = "",
+):
+    """
+    Render một node lớp học với các con (tối đa 3 cấp).
+    level=0: lớp gốc, level=1: lớp con, level=2: lớp cháu (lá).
+    """
+    sub_classes = data.get("classes", {})
+    color = data.get("color", T.PRIMARY)
+    students = data.get("students", 0)
+    indent = level * 16
+
+    tree_key = f"{parent_path}/{name}" if parent_path else name
+    is_open = ClassTreeState.open_classes.contains(tree_key)
+    is_active = ClassTreeState.current_class == name
+    has_children = bool(sub_classes)
+
+    # ── Header row ─────────────────────────────────────────────
+    header = rx.hstack(
+        rx.box(width=f"{indent}px", flex_shrink="0") if indent > 0 else rx.fragment(),
+        rx.hstack(
+            rx.cond(
+                has_children,
+                rx.cond(
+                    is_open,
+                    rx.icon("chevron-down", size=12, color=T.TEXT_MUTED),
+                    rx.icon("chevron-right", size=12, color=T.TEXT_MUTED),
+                ),
+                rx.box(width="12px"),
+            ),
+            rx.box(
+                rx.icon(
+                    data.get("icon", "graduation-cap"),
+                    size=14,
+                    color=color,
+                ),
+                bg=color + "18",
+                border_radius=T.RADIUS_MD,
+                padding="0.3rem",
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                flex_shrink="0",
+            ),
+            rx.text(
+                name,
+                font_weight=rx.cond(is_active, "700", "600"),
+                color=rx.cond(is_active, T.PRIMARY, T.TEXT_PRIMARY),
+                font_size="0.875rem",
+                flex="1",
+                no_of_lines=1,
+            ),
+            rx.box(
+                rx.text(f"{students}", font_size="0.65rem",
+                        color=T.TEXT_MUTED, line_height="1"),
+                bg=T.BORDER_LIGHT,
+                padding="0.1rem 0.45rem",
+                border_radius="999px",
+                flex_shrink="0",
+            ),
+            spacing="2",
+            align="center",
+            flex="1",
+            padding="0.5rem 0.65rem",
+            border_radius=T.RADIUS_MD,
+            cursor="pointer",
+            bg=rx.cond(is_active, T.PRIMARY_TINT, "transparent"),
+            transition="background 0.12s",
+            _hover={"bg": T.PRIMARY_TINT},
+            on_click=lambda: [
+                ClassTreeState.toggle_class(tree_key),
+                ClassTreeState.select_class(name),
+            ],
+        ),
+        spacing="0",
+        align="center",
+        width="100%",
+    )
+
+    # ── Children (render tĩnh tối đa 2 cấp con) ────────────────
+    children_nodes = (
+        rx.vstack(
+            *[
+                _class_node(child_name, child_data, level + 1, tree_key)
+                for child_name, child_data in sub_classes.items()
+            ],
+            spacing="0",
+            width="100%",
+        )
+        if sub_classes
+        else rx.box()
+    )
+
+    expanded = rx.cond(
+        is_open,
+        children_nodes,
+        rx.box(),
+    )
+
+    return rx.vstack(header, expanded, spacing="0", align="start", width="100%")
+
+
+# ─────────────────────────────────────────────────────────────────
+# CLASS DETAIL PANEL — hiện khi chọn một lớp
+# ─────────────────────────────────────────────────────────────────
+
+def _selected_class_detail():
+    return rx.cond(
+        ClassTreeState.current_class != "",
+        rx.box(
+            rx.vstack(
+                rx.hstack(
+                    rx.icon("graduation-cap", size=18, color=T.PRIMARY),
+                    rx.text(
+                        ClassTreeState.current_class,
+                        font_size="1.1rem",
+                        font_weight="700",
+                        color=T.TEXT_PRIMARY,
+                    ),
+                    spacing="2",
+                    align="center",
+                ),
+                rx.text(
+                    "Chọn lớp từ cây bên trái để xem chi tiết.",
+                    font_size="0.85rem",
+                    color=T.TEXT_SECONDARY,
+                ),
+                rx.hstack(
+                    rx.button(
+                        rx.hstack(
+                            rx.icon("play", size=14),
+                            rx.text("Vào lớp", font_size="0.85rem", font_weight="600"),
+                            spacing="2",
+                            align="center",
+                        ),
+                        bg=T.PRIMARY,
+                        color="white",
+                        border_radius=T.RADIUS_MD,
+                        padding_x="1.1rem",
+                        height="34px",
+                        _hover={"bg": T.PRIMARY_HOVER},
+                    ),
+                    rx.button(
+                        rx.hstack(
+                            rx.icon("users", size=14),
+                            rx.text("Thành viên", font_size="0.85rem", font_weight="600"),
+                            spacing="2",
+                            align="center",
+                        ),
+                        bg=T.SURFACE,
+                        color=T.TEXT_PRIMARY,
+                        border=f"1px solid {T.BORDER}",
+                        border_radius=T.RADIUS_MD,
+                        padding_x="1.1rem",
+                        height="34px",
+                        _hover={"bg": T.BORDER_LIGHT},
+                    ),
+                    spacing="2",
+                ),
+                spacing="3",
+                align="start",
+                width="100%",
+            ),
+            padding="1.25rem",
+            bg=T.SURFACE,
+            border=f"1px solid {T.BORDER}",
+            border_radius=T.RADIUS_LG,
+            box_shadow=T.SHADOW_CARD,
+            width="100%",
+        ),
+        rx.box(
+            rx.vstack(
+                rx.icon("mouse-pointer-click", size=32, color=T.BORDER),
+                rx.text(
+                    "Chọn một lớp học từ cây bên trái",
+                    font_size="0.9rem",
+                    color=T.TEXT_MUTED,
+                    text_align="center",
+                ),
+                spacing="2",
+                align="center",
+            ),
+            padding="2rem",
+            width="100%",
+            display="flex",
+            align_items="center",
+            justify_content="center",
+        ),
+    )
+
+
+# ─────────────────────────────────────────────────────────────────
+# CLASSES TAB CONTENT — layout 2 cột: cây trái, chi tiết phải
+# ─────────────────────────────────────────────────────────────────
+
+def classes_tab_content():
+    try:
+        data = _load_classes()
+    except Exception:
+        data = {}
+
+    return rx.hstack(
+        # ── Cột trái: cây lớp học ──────────────────────────────
+        rx.box(
+            rx.vstack(
+                rx.hstack(
+                    rx.icon("layout-list", size=14, color=T.PRIMARY),
+                    rx.text(
+                        "LỚP HỌC",
+                        font_size="0.65rem",
+                        font_weight="700",
+                        color=T.TEXT_MUTED,
+                        letter_spacing="0.1em",
+                    ),
+                    rx.spacer(),
+                    rx.button(
+                        rx.icon("plus", size=14),
+                        bg="transparent",
+                        color=T.PRIMARY,
+                        border_radius=T.RADIUS_SM,
+                        padding="0.25rem",
+                        _hover={"bg": T.PRIMARY_TINT},
+                        title="Tạo lớp mới",
+                    ),
+                    width="100%",
+                    align="center",
+                    padding_x="0.9rem",
+                    padding_y="0.5rem",
+                ),
+                rx.box(
+                    rx.vstack(
+                        *[
+                            _class_node(cls_name, cls_data)
+                            for cls_name, cls_data in data.items()
+                        ],
+                        spacing="0",
+                        width="100%",
+                    ),
+                    width="100%",
+                    overflow_y="auto",
+                    max_height="calc(100vh - 340px)",
+                ),
+                spacing="0",
+                width="100%",
+                align="start",
+            ),
+            width="240px",
+            flex_shrink="0",
+            bg=T.SURFACE,
+            border=f"1px solid {T.BORDER_LIGHT}",
+            border_radius=T.RADIUS_LG,
+            overflow="hidden",
+        ),
+
+        # ── Cột phải: chi tiết lớp đã chọn ────────────────────
+        rx.box(
+            _selected_class_detail(),
+            flex="1",
+            min_width="0",
+        ),
+
         spacing="4",
         width="100%",
         align="start",
@@ -555,33 +791,11 @@ def classes_page():
             align="center",
         ),
 
-        # Tab switcher
-        rx.hstack(
-            _tab(
-                "Lớp học của tôi", "graduation-cap",
-                ClassesTabState.active_tab == "lop_hoc",
-                lambda: ClassesTabState.set_tab("lop_hoc"),
-            ),
-            _tab(
-                "Kanji N5", "book-open",
-                ClassesTabState.active_tab == "kanji",
-                lambda: ClassesTabState.set_tab("kanji"),
-            ),
-            spacing="2",
-            width="100%",
-            overflow_x="auto",
-            padding_bottom="0.25rem",
-        ),
-
         rx.divider(),
 
         # Content
         rx.box(
-            rx.cond(
-                ClassesTabState.active_tab == "kanji",
-                kanji_page(),
-                classes_tab_content(),
-            ),
+            classes_tab_content(),
             width="100%",
             flex="1",
             overflow_y="auto",

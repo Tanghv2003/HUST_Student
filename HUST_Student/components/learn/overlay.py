@@ -249,7 +249,7 @@ def type_practice():
             rx.vstack(
                 rx.cond(
                     LearnState.feedback_correct,
-                    # ── Đúng: hiện 1 dòng gọn ──
+                    # ── Đúng ──
                     rx.box(
                         rx.hstack(
                             rx.icon("check-circle", size=18, color="#15803D"),
@@ -263,7 +263,7 @@ def type_practice():
                         bg="#F0FDF4", border="1.5px solid #BBF7D0",
                         border_radius="14px",
                     ),
-                    # ── Sai: hiện đáp án người dùng (gạch ngang đỏ) + đáp án đúng (xanh) ──
+                    # ── Sai ──
                     rx.box(
                         rx.vstack(
                             rx.hstack(
@@ -304,6 +304,7 @@ def type_practice():
                         border_radius="14px",
                     ),
                 ),
+                # Nút Tiếp theo — cũng lắng nghe Enter
                 rx.button(
                     "Tiếp theo →",
                     on_click=LearnState.continue_after_type,
@@ -314,6 +315,7 @@ def type_practice():
                 ),
                 spacing="3", width="100%",
             ),
+            # ── Input box ──
             rx.vstack(
                 rx.text(
                     rx.cond(
@@ -327,7 +329,9 @@ def type_practice():
                     rx.input(
                         value=LearnState.typed_answer,
                         on_change=LearnState.set_typed_answer,
-                        placeholder="Nhập đáp án...",
+                        # ← THÊM: nhấn Enter để submit
+                        on_key_down=LearnState.handle_type_key,
+                        placeholder="Nhập đáp án... (Enter để gửi)",
                         width="100%", height="52px",
                         bg="white", border="2px solid #E5E7EB", border_radius="12px",
                         font_size="1.05rem", padding="0 1rem",

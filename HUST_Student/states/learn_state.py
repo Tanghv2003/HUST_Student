@@ -43,7 +43,7 @@ class LearnState(rx.State):
 
     # ── Trả lời ───────────────────────────────────────────────────
     typed_answer: str = ""
-    user_answer: str = ""      # ← lưu đáp án người dùng đã gõ để hiển thị trong feedback
+    user_answer: str = ""      # lưu đáp án người dùng đã gõ để hiển thị trong feedback
     selected_answer: str = ""
     choice_options: list[str] = []
     correct_answer: str = ""
@@ -200,7 +200,7 @@ class LearnState(rx.State):
         was_wrong = not self.feedback_correct
         self.show_feedback = False
         self.typed_answer = ""
-        self.user_answer = ""       # ← clear sau khi tiếp tục
+        self.user_answer = ""
         self.selected_answer = ""
         self.practice_pos += 1
         if was_wrong:
@@ -300,7 +300,20 @@ class LearnState(rx.State):
     def set_typed_answer(self, text: str):
         self.typed_answer = str(text) if text else ""
 
-    def submit_typed(self):
+    def handle_type_key(self, key: str):
+        """Xử lý phím Enter trong ô nhập đáp án:
+        - Nếu chưa submit → submit đáp án
+        - Nếu đã hiển thị feedback → tiếp tục câu tiếp theo
+        """
+        if key != "Enter":
+            return
+        if self.show_feedback:
+            self._continue_after_answer()
+        else:
+            self._do_submit_typed()
+
+    def _do_submit_typed(self):
+        """Logic submit đáp án (dùng chung cho nút bấm và Enter)."""
         if not self.typed_answer.strip() or self.show_feedback:
             return
         if self.practice_pos >= len(self.practice_queue):
@@ -309,7 +322,7 @@ class LearnState(rx.State):
         card = self.cards[item.card_index]
         correct = self._get_answer(card)
         is_correct = self.typed_answer.strip().lower() == correct.strip().lower()
-        self.user_answer = self.typed_answer.strip()   # ← lưu trước khi clear
+        self.user_answer = self.typed_answer.strip()
         self.show_feedback = True
         self.feedback_correct = is_correct
         self.feedback_message = (
@@ -317,6 +330,9 @@ class LearnState(rx.State):
             else f"❌ Đáp án đúng: {correct}"
         )
         self._record_answer(item.card_index, is_correct)
+
+    def submit_typed(self):
+        self._do_submit_typed()
 
     def continue_after_type(self):
         self._continue_after_answer()
