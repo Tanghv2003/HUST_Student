@@ -16,6 +16,13 @@
             "folders": {}
           }
         }
+      },
+      "Test": {
+        "folders": {
+          "a": {
+            "folders": {}
+          }
+        }
       }
     }
   },

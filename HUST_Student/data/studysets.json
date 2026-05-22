@@ -50,5 +50,11 @@
       "title": "Toeic Listening",
       "file": "Toeic-Listening.json"
     }
+  ],
+  "Tiếng Nhật/Test/a": [
+    {
+      "title": "test a",
+      "file": "nihongo/kanji/Kanji_N5.json"
+    }
   ]
 }
