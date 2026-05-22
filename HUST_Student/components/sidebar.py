@@ -60,6 +60,39 @@ def _library_tree_section():
     )
 
 
+def _classes_tree_section():
+    """Section cây lớp học trong sidebar — reactive qua ClassTreeState."""
+    from HUST_Student.components.classes.class_tree_sidebar import class_sidebar_tree
+    from HUST_Student.states.kanji_state import ClassTreeState
+
+    return rx.cond(
+        NavigationState.current_page == "classes",
+        rx.vstack(
+            rx.box(height="1px", width="100%", bg=T.BORDER_LIGHT, margin_y="0.25rem"),
+            rx.text(
+                "LỚP HỌC",
+                font_size="0.65rem",
+                font_weight="700",
+                color=T.TEXT_MUTED,
+                letter_spacing="0.1em",
+                padding_x="0.9rem",
+                padding_y="0.25rem",
+            ),
+            rx.box(
+                class_sidebar_tree(),
+                width="100%",
+                overflow_y="auto",
+                max_height="calc(100vh - 320px)",
+                on_mount=ClassTreeState.reload_class_tree,
+            ),
+            spacing="0",
+            width="100%",
+            align="start",
+        ),
+        rx.box(),
+    )
+
+
 def sidebar():
     return rx.vstack(
         # Logo
@@ -115,16 +148,28 @@ def sidebar():
             width="100%",
         ),
 
-        # Folder tree (chỉ hiện trong library)
+        # Cây thư mục (chỉ hiện trong library / folder_detail)
         _library_tree_section(),
+
+        # Cây lớp học (chỉ hiện trong classes)
+        _classes_tree_section(),
 
         rx.spacer(),
 
-        # Bottom: upgrade badge nhỏ
+        # Bottom: upgrade badge
         rx.box(
             rx.vstack(
-                rx.text("Nâng cấp Pro", font_size="0.8rem", font_weight="700", color=T.UPGRADE_TEXT),
-                rx.text("Dùng thử 7 ngày miễn phí", font_size="0.72rem", color=T.TEXT_SECONDARY),
+                rx.text(
+                    "Nâng cấp Pro",
+                    font_size="0.8rem",
+                    font_weight="700",
+                    color=T.UPGRADE_TEXT,
+                ),
+                rx.text(
+                    "Dùng thử 7 ngày miễn phí",
+                    font_size="0.72rem",
+                    color=T.TEXT_SECONDARY,
+                ),
                 spacing="0",
                 align="start",
             ),

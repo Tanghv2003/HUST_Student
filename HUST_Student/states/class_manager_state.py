@@ -1,13 +1,17 @@
+"""
+class_manager_state.py — Quản lý lớp học + ghim bài giảng.
+"""
+
 import reflex as rx
 
 from HUST_Student.services.class_service import (
-    load_classes,
-    flatten_class_tree,
-    path_to_list,
-    path_to_key,
-    rename_class,
-    delete_class,
     add_subclass,
+    delete_class,
+    flatten_class_tree,
+    load_classes,
+    path_to_key,
+    path_to_list,
+    rename_class,
 )
 from HUST_Student.services.class_lesson_service import (
     add_lesson,
@@ -18,13 +22,17 @@ from HUST_Student.services.class_lesson_service import (
 
 
 class ClassManagerState(rx.State):
-    """Quản lý lớp học — lớp chứa lớp con; bài giảng JSON trong class_lessons.json."""
+    """Quản lý lớp học — CRUD lớp + bài giảng + ghim, đồng bộ sidebar."""
 
     selected_path_key: str = ""
     current_class_name: str = "Gốc"
 
     tree_rows: list[dict] = []
     class_lessons: list[dict] = []
+
+    # Pinned lessons (runtime, không persist)
+    # Mỗi item: {title, file, terms_label, path_key, class_path, pin_key}
+    pinned_lessons: list[dict] = []
 
     show_rename_dialog: bool = False
     show_add_subclass_dialog: bool = False
@@ -39,6 +47,8 @@ class ClassManagerState(rx.State):
     message: str = ""
     message_type: str = ""
 
+    # ── Computed ─────────────────────────────────────────────────
+
     @rx.var
     def is_at_root(self) -> bool:
         return self.selected_path_key == ""
@@ -47,17 +57,27 @@ class ClassManagerState(rx.State):
     def breadcrumb(self) -> str:
         if not self.selected_path_key:
             return "Gốc"
-        return self.selected_path_key.replace("/", " / ")
+        return self.selected_path_key.replace("/", " › ")
 
     @rx.var
     def class_summary(self) -> str:
         if self.is_at_root:
-            return "Thêm lớp học gốc hoặc chọn lớp trong cây"
-        return f"{len(self.class_lessons)} bài giảng trong lớp này"
+            return "Thêm lớp gốc hoặc chọn lớp trong cây"
+        n = len(self.class_lessons)
+        return "Chưa có bài giảng nào" if n == 0 else f"{n} bài giảng"
 
-    async def _sync_class_tree(self):
+    @rx.var
+    def has_pinned(self) -> bool:
+        return len(self.pinned_lessons) > 0
+
+    @rx.var
+    def pinned_count(self) -> int:
+        return len(self.pinned_lessons)
+
+    # ── Helpers ──────────────────────────────────────────────────
+
+    async def _sync_sidebar(self):
         from HUST_Student.states.kanji_state import ClassTreeState
-
         tree = await self.get_state(ClassTreeState)
         tree.reload_class_tree()
         if self.selected_path_key:
@@ -73,49 +93,131 @@ class ClassManagerState(rx.State):
         if not self.selected_path_key:
             self.class_lessons = []
             return
+        raw = get_lessons_for_path(self.selected_path_key)
+        pinned_keys = {p["pin_key"] for p in self.pinned_lessons}
         self.class_lessons = [
             {
                 "title": item.get("title", ""),
                 "file": item.get("file", ""),
                 "terms": item.get("terms", 0),
                 "terms_label": f"{item.get('terms', 0)} mục",
+                "pin_key": f"{self.selected_path_key}::{item.get('title', '')}",
+                "is_pinned": f"{self.selected_path_key}::{item.get('title', '')}" in pinned_keys,
             }
-            for item in get_lessons_for_path(self.selected_path_key)
+            for item in raw
         ]
 
-    def _load_selected_class(self):
+    def _reload_local(self):
         self._rebuild_tree()
-        if not self.selected_path_key:
+        if self.selected_path_key:
+            path = path_to_list(self.selected_path_key)
+            self.current_class_name = path[-1] if path else "Gốc"
+        else:
             self.current_class_name = "Gốc"
-            self._load_lessons()
-            return
-        path = path_to_list(self.selected_path_key)
-        self.current_class_name = path[-1]
         self._load_lessons()
+
+    def _set_message(self, msg: str, msg_type: str = "success"):
+        self.message = msg
+        self.message_type = msg_type
+
+    def _class_display_path(self) -> str:
+        if not self.selected_path_key:
+            return "Gốc"
+        return self.selected_path_key.replace("/", " › ")
+
+    # ── Selection ────────────────────────────────────────────────
 
     @rx.event
     async def load_current_class(self, class_path: list[str] | None = None):
-        if class_path is None or not class_path:
-            self.selected_path_key = ""
-        else:
+        if class_path:
             self.selected_path_key = path_to_key(class_path)
-        self._load_selected_class()
-        await self._sync_class_tree()
+        else:
+            self.selected_path_key = ""
+        self._reload_local()
+        await self._sync_sidebar()
 
     def apply_selection(self, path_key: str):
         self.selected_path_key = str(path_key) if path_key else ""
-        self._load_selected_class()
+        self._reload_local()
 
     @rx.event
     async def select_class(self, path_key: str):
         self.apply_selection(path_key)
-        await self._sync_class_tree()
+        await self._sync_sidebar()
+
+    # ── Pin / Unpin ───────────────────────────────────────────────
+
+    def toggle_pin_lesson(self, pin_key: str):
+        existing = [p for p in self.pinned_lessons if p["pin_key"] == pin_key]
+        if existing:
+            self.pinned_lessons = [p for p in self.pinned_lessons if p["pin_key"] != pin_key]
+        else:
+            lesson = next((l for l in self.class_lessons if l["pin_key"] == pin_key), None)
+            if lesson:
+                self.pinned_lessons = list(self.pinned_lessons) + [
+                    {
+                        "title": lesson["title"],
+                        "file": lesson["file"],
+                        "terms_label": lesson["terms_label"],
+                        "path_key": self.selected_path_key,
+                        "class_path": self._class_display_path(),
+                        "pin_key": pin_key,
+                    }
+                ]
+        self._refresh_pin_flags()
+
+    def unpin_lesson(self, pin_key: str):
+        self.pinned_lessons = [p for p in self.pinned_lessons if p["pin_key"] != pin_key]
+        self._refresh_pin_flags()
+
+    def _refresh_pin_flags(self):
+        pinned_keys = {p["pin_key"] for p in self.pinned_lessons}
+        self.class_lessons = [
+            {**l, "is_pinned": l["pin_key"] in pinned_keys}
+            for l in self.class_lessons
+        ]
+
+    def clear_all_pins(self):
+        self.pinned_lessons = []
+        self._refresh_pin_flags()
+
+    # ── Add subclass ──────────────────────────────────────────────
+
+    def open_add_subclass_dialog(self):
+        self.new_subclass_name = ""
+        self.show_add_subclass_dialog = True
+        self.message = ""
+
+    def close_add_subclass_dialog(self):
+        self.show_add_subclass_dialog = False
+        self.new_subclass_name = ""
+
+    def set_new_subclass_name(self, value: str):
+        self.new_subclass_name = str(value) if value else ""
+
+    @rx.event
+    async def confirm_add_subclass(self):
+        name = self.new_subclass_name.strip()
+        if not name:
+            self._set_message("❌ Tên lớp không được để trống.", "error")
+            return
+        if add_subclass(path_to_list(self.selected_path_key), name):
+            self._set_message(f"✅ Đã thêm lớp '{name}'")
+            self.close_add_subclass_dialog()
+            self._reload_local()
+            await self._sync_sidebar()
+        else:
+            self._set_message(f"❌ Lớp '{name}' đã tồn tại hoặc có lỗi.", "error")
+
+    # ── Rename class ──────────────────────────────────────────────
 
     def open_rename_dialog(self):
         if self.is_at_root:
+            self._set_message("❌ Chọn một lớp để đổi tên.", "error")
             return
         self.new_class_name = self.current_class_name
         self.show_rename_dialog = True
+        self.message = ""
 
     def close_rename_dialog(self):
         self.show_rename_dialog = False
@@ -127,35 +229,44 @@ class ClassManagerState(rx.State):
     @rx.event
     async def confirm_rename_class(self):
         if self.is_at_root:
-            self.message = "❌ Chọn một lớp để đổi tên"
-            self.message_type = "error"
+            self._set_message("❌ Không thể đổi tên thư mục gốc.", "error")
             return
-        if not self.new_class_name.strip():
-            self.message = "❌ Tên lớp không được để trống"
-            self.message_type = "error"
-            return
-
         path = path_to_list(self.selected_path_key)
         new_name = self.new_class_name.strip()
+        if not new_name:
+            self._set_message("❌ Tên mới không được để trống.", "error")
+            return
         if new_name == path[-1]:
             self.close_rename_dialog()
             return
-
         if rename_class(path, new_name):
-            self.selected_path_key = path_to_key([*path[:-1], new_name])
-            self.message = f"✅ Đổi tên lớp: {new_name}"
-            self.message_type = "success"
+            old_key = self.selected_path_key
+            new_key = path_to_key([*path[:-1], new_name])
+            self.selected_path_key = new_key
+            # Cập nhật pin_key của pinned lessons
+            self.pinned_lessons = [
+                {**p,
+                 "path_key": p["path_key"].replace(old_key, new_key, 1),
+                 "class_path": p["class_path"].replace(path[-1], new_name, 1),
+                 "pin_key": p["pin_key"].replace(old_key, new_key, 1),
+                } if p["path_key"].startswith(old_key) else p
+                for p in self.pinned_lessons
+            ]
+            self._set_message(f"✅ Đã đổi tên thành '{new_name}'")
             self.close_rename_dialog()
-            self._load_selected_class()
-            await self._sync_class_tree()
+            self._reload_local()
+            await self._sync_sidebar()
         else:
-            self.message = "❌ Lỗi đổi tên (có thể trùng tên)"
-            self.message_type = "error"
+            self._set_message("❌ Lỗi đổi tên (có thể trùng tên).", "error")
+
+    # ── Delete class ──────────────────────────────────────────────
 
     def open_delete_confirmation(self):
         if self.is_at_root:
+            self._set_message("❌ Chọn một lớp để xoá.", "error")
             return
         self.show_delete_confirmation = True
+        self.message = ""
 
     def close_delete_confirmation(self):
         self.show_delete_confirmation = False
@@ -163,63 +274,36 @@ class ClassManagerState(rx.State):
     @rx.event
     async def confirm_delete_class(self):
         if self.is_at_root:
-            self.message = "❌ Chọn một lớp để xóa"
-            self.message_type = "error"
+            self._set_message("❌ Không thể xoá thư mục gốc.", "error")
             self.close_delete_confirmation()
             return
-
         path = path_to_list(self.selected_path_key)
         parent_key = path_to_key(path[:-1])
-
+        deleted_key = self.selected_path_key
         if delete_class(path):
-            self.message = "✅ Xóa lớp thành công"
-            self.message_type = "success"
+            self.pinned_lessons = [
+                p for p in self.pinned_lessons
+                if not p["path_key"].startswith(deleted_key)
+            ]
+            self._set_message(f"✅ Đã xoá lớp '{path[-1]}'")
             self.close_delete_confirmation()
             self.selected_path_key = parent_key
-            self._load_selected_class()
-            await self._sync_class_tree()
+            self._reload_local()
+            await self._sync_sidebar()
         else:
-            self.message = "❌ Lỗi khi xóa lớp"
-            self.message_type = "error"
+            self._set_message("❌ Lỗi khi xoá lớp.", "error")
             self.close_delete_confirmation()
 
-    def open_add_subclass_dialog(self):
-        self.new_subclass_name = ""
-        self.show_add_subclass_dialog = True
-
-    def close_add_subclass_dialog(self):
-        self.show_add_subclass_dialog = False
-        self.new_subclass_name = ""
-
-    def set_new_subclass_name(self, value: str):
-        self.new_subclass_name = str(value) if value else ""
-
-    @rx.event
-    async def confirm_add_subclass(self):
-        if not self.new_subclass_name.strip():
-            self.message = "❌ Tên lớp con không được để trống"
-            self.message_type = "error"
-            return
-
-        parent_path = path_to_list(self.selected_path_key)
-        name = self.new_subclass_name.strip()
-
-        if add_subclass(parent_path, name):
-            self.message = f"✅ Thêm lớp con '{name}' thành công"
-            self.message_type = "success"
-            self.close_add_subclass_dialog()
-            self._load_selected_class()
-            await self._sync_class_tree()
-        else:
-            self.message = "❌ Lỗi thêm lớp con (có thể trùng tên)"
-            self.message_type = "error"
+    # ── Add lesson ────────────────────────────────────────────────
 
     def open_add_lesson_dialog(self):
         if self.is_at_root:
+            self._set_message("❌ Chọn một lớp để thêm bài giảng.", "error")
             return
         self.new_lesson_title = ""
         self.new_lesson_file = ""
         self.show_add_lesson_dialog = True
+        self.message = ""
 
     def close_add_lesson_dialog(self):
         self.show_add_lesson_dialog = False
@@ -235,40 +319,38 @@ class ClassManagerState(rx.State):
     @rx.event
     async def confirm_add_lesson(self):
         if self.is_at_root:
-            self.message = "❌ Chọn lớp để thêm bài giảng"
-            self.message_type = "error"
+            self._set_message("❌ Chọn lớp để thêm bài giảng.", "error")
             return
-        if not self.new_lesson_title.strip() or not self.new_lesson_file.strip():
-            self.message = "❌ Tên và file JSON không được trống"
-            self.message_type = "error"
+        title = self.new_lesson_title.strip()
+        file_path = self.new_lesson_file.strip()
+        if not title:
+            self._set_message("❌ Tên bài giảng không được để trống.", "error")
             return
-
-        if add_lesson(
-            self.selected_path_key,
-            self.new_lesson_title.strip(),
-            self.new_lesson_file.strip(),
-        ):
-            self.message = "✅ Thêm bài giảng thành công"
-            self.message_type = "success"
+        if not file_path:
+            self._set_message("❌ Đường dẫn file không được để trống.", "error")
+            return
+        if add_lesson(self.selected_path_key, title, file_path):
+            self._set_message(f"✅ Đã thêm bài giảng '{title}'")
             self.close_add_lesson_dialog()
-            self._load_selected_class()
-            await self._sync_class_tree()
+            self._reload_local()
+            await self._sync_sidebar()
         else:
-            self.message = "❌ Không thể thêm (có thể trùng tên)"
-            self.message_type = "error"
+            self._set_message(f"❌ Bài giảng '{title}' đã tồn tại hoặc có lỗi.", "error")
+
+    # ── Remove lesson ─────────────────────────────────────────────
 
     @rx.event
     async def remove_lesson_item(self, title: str):
         if not self.selected_path_key:
             return
+        pin_key = f"{self.selected_path_key}::{title}"
+        self.pinned_lessons = [p for p in self.pinned_lessons if p["pin_key"] != pin_key]
         if remove_lesson(self.selected_path_key, title):
-            self.message = "✅ Đã xóa bài giảng"
-            self.message_type = "success"
-            self._load_selected_class()
-            await self._sync_class_tree()
+            self._set_message(f"✅ Đã xoá bài giảng '{title}'")
+            self._reload_local()
+            await self._sync_sidebar()
         else:
-            self.message = "❌ Lỗi khi xóa bài giảng"
-            self.message_type = "error"
+            self._set_message("❌ Lỗi khi xoá bài giảng.", "error")
 
     def clear_message(self):
         self.message = ""
