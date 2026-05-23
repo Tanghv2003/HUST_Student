@@ -1,11 +1,5 @@
 """
-class_manager_panel.py — UI panel quản lý lớp học.
-
-Chức năng:
-  • Thêm / đổi tên / xoá lớp học (đệ quy)
-  • Thêm / xoá bài giảng trong lớp
-  • Feedback toast tự động (success/error)
-  • Đồng bộ sidebar sau mọi thao tác
+class_manager_panel.py — UI panel quản lý lớp học + ghim lớp.
 """
 
 import reflex as rx
@@ -19,14 +13,7 @@ from HUST_Student.states.class_manager_state import ClassManagerState
 # SHARED COMPONENTS
 # ══════════════════════════════════════════════════════════════════
 
-def _action_btn(
-    icon: str,
-    label: str,
-    on_click,
-    *,
-    danger: bool = False,
-    disabled=False,
-):
+def _action_btn(icon: str, label: str, on_click, *, danger: bool = False, disabled=False):
     base_bg = T.DANGER_BG if danger else T.SURFACE
     base_color = T.DANGER if danger else T.TEXT_PRIMARY
     base_border = T.DANGER if danger else T.BORDER
@@ -36,12 +23,10 @@ def _action_btn(
         rx.hstack(
             rx.icon(icon, size=14),
             rx.text(label, font_size="0.8rem", font_weight="600"),
-            spacing="1",
-            align="center",
+            spacing="1", align="center",
         ),
         on_click=on_click,
-        bg=base_bg,
-        color=base_color,
+        bg=base_bg, color=base_color,
         border=f"1px solid {base_border}",
         border_radius=T.RADIUS_MD,
         padding="0.45rem 0.75rem",
@@ -51,16 +36,7 @@ def _action_btn(
     )
 
 
-def _simple_modal(
-    title: str,
-    show,
-    close_fn,
-    body,
-    confirm_label: str,
-    confirm_fn,
-    *,
-    confirm_danger: bool = False,
-):
+def _simple_modal(title, show, close_fn, body, confirm_label, confirm_fn, *, confirm_danger=False):
     confirm_bg = T.DANGER if confirm_danger else T.PRIMARY
     confirm_hover = "#c0392b" if confirm_danger else T.PRIMARY_HOVER
 
@@ -70,67 +46,34 @@ def _simple_modal(
             rx.box(
                 rx.vstack(
                     rx.hstack(
-                        rx.text(
-                            title,
-                            font_size="1.1rem",
-                            font_weight="800",
-                            color=T.TEXT_PRIMARY,
-                        ),
+                        rx.text(title, font_size="1.1rem", font_weight="800", color=T.TEXT_PRIMARY),
                         rx.spacer(),
                         modal_close_btn(close_fn),
-                        width="100%",
-                        align="center",
+                        width="100%", align="center",
                     ),
                     rx.divider(),
                     body,
                     rx.hstack(
-                        rx.button(
-                            "Hủy",
-                            on_click=close_fn,
-                            bg=T.BORDER_LIGHT,
-                            color=T.TEXT_PRIMARY,
-                            border_radius=T.RADIUS_MD,
-                            padding="0.5rem 1rem",
-                            font_weight="600",
-                            _hover={"bg": T.BORDER},
-                        ),
-                        rx.button(
-                            confirm_label,
-                            on_click=confirm_fn,
-                            bg=confirm_bg,
-                            color="white",
-                            border_radius=T.RADIUS_MD,
-                            padding="0.5rem 1rem",
-                            font_weight="700",
-                            _hover={"bg": confirm_hover},
-                        ),
-                        spacing="3",
-                        justify="end",
-                        width="100%",
+                        rx.button("Hủy", on_click=close_fn,
+                                  bg=T.BORDER_LIGHT, color=T.TEXT_PRIMARY,
+                                  border_radius=T.RADIUS_MD, padding="0.5rem 1rem",
+                                  font_weight="600", _hover={"bg": T.BORDER}),
+                        rx.button(confirm_label, on_click=confirm_fn,
+                                  bg=confirm_bg, color="white",
+                                  border_radius=T.RADIUS_MD, padding="0.5rem 1rem",
+                                  font_weight="700", _hover={"bg": confirm_hover}),
+                        spacing="3", justify="end", width="100%",
                     ),
-                    spacing="4",
-                    padding="1.5rem",
-                    width="100%",
+                    spacing="4", padding="1.5rem", width="100%",
                 ),
-                bg=T.SURFACE,
-                border_radius=T.RADIUS_XL,
-                width="460px",
-                max_width="min(460px, calc(100vw - 2.5rem))",
-                border=f"1px solid {T.BORDER}",
-                box_shadow=T.SHADOW_MODAL,
+                bg=T.SURFACE, border_radius=T.RADIUS_XL,
+                width="460px", max_width="min(460px, calc(100vw - 2.5rem))",
+                border=f"1px solid {T.BORDER}", box_shadow=T.SHADOW_MODAL,
                 on_click=rx.stop_propagation,
             ),
-            position="fixed",
-            top="0",
-            left="0",
-            right="0",
-            bottom="0",
-            display="flex",
-            align_items="center",
-            justify_content="center",
-            bg=T.OVERLAY_SCRIM,
-            z_index="1000",
-            padding="1.75rem 1.25rem",
+            position="fixed", top="0", left="0", right="0", bottom="0",
+            display="flex", align_items="center", justify_content="center",
+            bg=T.OVERLAY_SCRIM, z_index="1000", padding="1.75rem 1.25rem",
             on_click=close_fn,
         ),
         rx.box(),
@@ -149,43 +92,27 @@ def _add_subclass_modal():
         rx.vstack(
             rx.hstack(
                 rx.icon("folder", size=14, color=T.SUCCESS),
-                rx.text(
-                    ClassManagerState.breadcrumb,
-                    font_size="0.8rem",
-                    color=T.TEXT_MUTED,
-                    no_of_lines=1,
-                ),
-                spacing="2",
-                align="center",
+                rx.text(ClassManagerState.breadcrumb, font_size="0.8rem",
+                        color=T.TEXT_MUTED, no_of_lines=1),
+                spacing="2", align="center",
             ),
             rx.vstack(
-                rx.text(
-                    "Tên lớp con mới *",
-                    font_size="0.85rem",
-                    font_weight="600",
-                    color=T.TEXT_PRIMARY,
-                ),
+                rx.text("Tên lớp con mới *", font_size="0.85rem",
+                        font_weight="600", color=T.TEXT_PRIMARY),
                 rx.input(
                     value=ClassManagerState.new_subclass_name,
                     on_change=ClassManagerState.set_new_subclass_name,
                     placeholder="Ví dụ: Nhóm A, Ca sáng...",
-                    auto_focus=True,
-                    width="100%",
-                    border=f"1.5px solid {T.BORDER}",
-                    border_radius=T.RADIUS_MD,
-                    _focus={
-                        "border_color": T.PRIMARY,
-                        "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}",
-                    },
+                    auto_focus=True, width="100%",
+                    border=f"1.5px solid {T.BORDER}", border_radius=T.RADIUS_MD,
+                    _focus={"border_color": T.PRIMARY,
+                            "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}"},
                 ),
-                spacing="2",
-                width="100%",
+                spacing="2", width="100%",
             ),
-            spacing="3",
-            width="100%",
+            spacing="3", width="100%",
         ),
-        "Thêm",
-        ClassManagerState.confirm_add_subclass,
+        "Thêm", ClassManagerState.confirm_add_subclass,
     )
 
 
@@ -195,30 +122,18 @@ def _rename_modal():
         ClassManagerState.show_rename_dialog,
         ClassManagerState.close_rename_dialog,
         rx.vstack(
-            rx.text(
-                "Tên mới",
-                font_size="0.85rem",
-                font_weight="600",
-                color=T.TEXT_PRIMARY,
-            ),
+            rx.text("Tên mới", font_size="0.85rem", font_weight="600", color=T.TEXT_PRIMARY),
             rx.input(
                 value=ClassManagerState.new_class_name,
                 on_change=ClassManagerState.set_new_class_name,
-                placeholder="Nhập tên mới...",
-                auto_focus=True,
-                width="100%",
-                border=f"1.5px solid {T.BORDER}",
-                border_radius=T.RADIUS_MD,
-                _focus={
-                    "border_color": T.PRIMARY,
-                    "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}",
-                },
+                placeholder="Nhập tên mới...", auto_focus=True, width="100%",
+                border=f"1.5px solid {T.BORDER}", border_radius=T.RADIUS_MD,
+                _focus={"border_color": T.PRIMARY,
+                        "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}"},
             ),
-            spacing="2",
-            width="100%",
+            spacing="2", width="100%",
         ),
-        "Lưu",
-        ClassManagerState.confirm_rename_class,
+        "Lưu", ClassManagerState.confirm_rename_class,
     )
 
 
@@ -231,58 +146,32 @@ def _delete_class_modal():
             rx.hstack(
                 rx.box(
                     rx.icon("alert-triangle", size=20, color=T.DANGER),
-                    bg=T.DANGER_BG,
-                    border_radius=T.RADIUS_MD,
-                    padding="0.5rem",
-                    display="flex",
-                    align_items="center",
-                    justify_content="center",
+                    bg=T.DANGER_BG, border_radius=T.RADIUS_MD, padding="0.5rem",
+                    display="flex", align_items="center", justify_content="center",
                     flex_shrink="0",
                 ),
                 rx.vstack(
-                    rx.text(
-                        "Hành động không thể hoàn tác!",
-                        font_size="0.9rem",
-                        font_weight="700",
-                        color=T.DANGER,
-                    ),
-                    rx.text(
-                        "Tất cả lớp con và bài giảng bên trong sẽ bị xoá vĩnh viễn.",
-                        font_size="0.85rem",
-                        color=T.TEXT_SECONDARY,
-                        line_height="1.5",
-                    ),
-                    spacing="1",
-                    align="start",
+                    rx.text("Hành động không thể hoàn tác!", font_size="0.9rem",
+                            font_weight="700", color=T.DANGER),
+                    rx.text("Tất cả lớp con và bài giảng bên trong sẽ bị xoá vĩnh viễn.",
+                            font_size="0.85rem", color=T.TEXT_SECONDARY, line_height="1.5"),
+                    spacing="1", align="start",
                 ),
-                spacing="3",
-                align="start",
-                width="100%",
+                spacing="3", align="start", width="100%",
             ),
             rx.box(
                 rx.hstack(
                     rx.icon("graduation-cap", size=14, color=T.SUCCESS),
-                    rx.text(
-                        ClassManagerState.breadcrumb,
-                        font_size="0.85rem",
-                        font_weight="600",
-                        color=T.TEXT_PRIMARY,
-                        no_of_lines=2,
-                    ),
-                    spacing="2",
-                    align="center",
+                    rx.text(ClassManagerState.breadcrumb, font_size="0.85rem",
+                            font_weight="600", color=T.TEXT_PRIMARY, no_of_lines=2),
+                    spacing="2", align="center",
                 ),
-                padding="0.75rem 1rem",
-                bg=T.BORDER_LIGHT,
-                border_radius=T.RADIUS_MD,
-                width="100%",
+                padding="0.75rem 1rem", bg=T.BORDER_LIGHT,
+                border_radius=T.RADIUS_MD, width="100%",
             ),
-            spacing="3",
-            width="100%",
+            spacing="3", width="100%",
         ),
-        "Xoá",
-        ClassManagerState.confirm_delete_class,
-        confirm_danger=True,
+        "Xoá", ClassManagerState.confirm_delete_class, confirm_danger=True,
     )
 
 
@@ -294,79 +183,120 @@ def _add_lesson_modal():
         rx.vstack(
             rx.hstack(
                 rx.icon("graduation-cap", size=14, color=T.SUCCESS),
-                rx.text(
-                    ClassManagerState.breadcrumb,
-                    font_size="0.8rem",
-                    color=T.TEXT_MUTED,
-                    no_of_lines=1,
-                ),
-                spacing="2",
-                align="center",
+                rx.text(ClassManagerState.breadcrumb, font_size="0.8rem",
+                        color=T.TEXT_MUTED, no_of_lines=1),
+                spacing="2", align="center",
             ),
             rx.vstack(
-                rx.text(
-                    "Tên bài giảng *",
-                    font_size="0.85rem",
-                    font_weight="600",
-                    color=T.TEXT_PRIMARY,
-                ),
+                rx.text("Tên bài giảng *", font_size="0.85rem",
+                        font_weight="600", color=T.TEXT_PRIMARY),
                 rx.input(
                     value=ClassManagerState.new_lesson_title,
                     on_change=ClassManagerState.set_new_lesson_title,
-                    placeholder="Ví dụ: Buổi học số 1",
-                    auto_focus=True,
-                    width="100%",
-                    border=f"1.5px solid {T.BORDER}",
-                    border_radius=T.RADIUS_MD,
-                    _focus={
-                        "border_color": T.PRIMARY,
-                        "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}",
-                    },
+                    placeholder="Ví dụ: Buổi học số 1", auto_focus=True, width="100%",
+                    border=f"1.5px solid {T.BORDER}", border_radius=T.RADIUS_MD,
+                    _focus={"border_color": T.PRIMARY,
+                            "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}"},
                 ),
-                spacing="1",
-                width="100%",
+                spacing="1", width="100%",
             ),
             rx.vstack(
-                rx.text(
-                    "Đường dẫn file JSON *",
-                    font_size="0.85rem",
-                    font_weight="600",
-                    color=T.TEXT_PRIMARY,
-                ),
+                rx.text("Đường dẫn file JSON *", font_size="0.85rem",
+                        font_weight="600", color=T.TEXT_PRIMARY),
                 rx.input(
                     value=ClassManagerState.new_lesson_file,
                     on_change=ClassManagerState.set_new_lesson_file,
-                    placeholder="Ví dụ: nihongo/a.json",
-                    width="100%",
-                    border=f"1.5px solid {T.BORDER}",
-                    border_radius=T.RADIUS_MD,
-                    _focus={
-                        "border_color": T.PRIMARY,
-                        "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}",
-                    },
+                    placeholder="Ví dụ: nihongo/a.json", width="100%",
+                    border=f"1.5px solid {T.BORDER}", border_radius=T.RADIUS_MD,
+                    _focus={"border_color": T.PRIMARY,
+                            "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}"},
                 ),
-                rx.text(
-                    "Đường dẫn tương đối trong thư mục data/class/",
-                    font_size="0.75rem",
-                    color=T.TEXT_MUTED,
-                ),
-                spacing="1",
-                width="100%",
+                rx.text("Đường dẫn tương đối trong thư mục data/class/",
+                        font_size="0.75rem", color=T.TEXT_MUTED),
+                spacing="1", width="100%",
             ),
-            spacing="3",
-            width="100%",
+            spacing="3", width="100%",
         ),
-        "Thêm",
-        ClassManagerState.confirm_add_lesson,
+        "Thêm", ClassManagerState.confirm_add_lesson,
     )
 
 
 # ══════════════════════════════════════════════════════════════════
-# TREE ROW
+# PINNED CLASSES SECTION
+# ══════════════════════════════════════════════════════════════════
+
+def _pinned_class_chip(item: dict):
+    """Chip nhỏ cho lớp đã ghim."""
+    return rx.hstack(
+        rx.icon("graduation-cap", size=13, color=T.SUCCESS, flex_shrink="0"),
+        rx.vstack(
+            rx.text(item["name"], font_size="0.8rem", font_weight="700",
+                    color=T.TEXT_PRIMARY, no_of_lines=1),
+            rx.text(item["breadcrumb"], font_size="0.65rem", color=T.TEXT_MUTED,
+                    no_of_lines=1),
+            spacing="0", align="start", flex="1", min_width="0",
+        ),
+        rx.button(
+            rx.icon("x", size=12),
+            on_click=ClassManagerState.unpin_class(item["pin_key"]),
+            bg="transparent", color=T.TEXT_MUTED, padding="0.2rem",
+            border_radius=T.RADIUS_SM,
+            _hover={"bg": T.DANGER_BG, "color": T.DANGER},
+            flex_shrink="0",
+        ),
+        spacing="2", align="center",
+        padding="0.5rem 0.75rem",
+        bg=T.PRIMARY_TINT,
+        border=f"1.5px solid {T.PRIMARY_LIGHT}",
+        border_radius=T.RADIUS_MD,
+        cursor="pointer",
+        width="100%",
+        on_click=ClassManagerState.select_class(item["path_key"]),
+        _hover={"border_color": T.PRIMARY, "bg": "#e0e8ff"},
+        transition="all 0.1s ease",
+    )
+
+
+def _pinned_section():
+    return rx.cond(
+        ClassManagerState.has_pinned_classes,
+        rx.vstack(
+            rx.hstack(
+                rx.icon("pin", size=14, color=T.PRIMARY),
+                rx.text("Lớp đã ghim", font_size="0.85rem",
+                        font_weight="700", color=T.TEXT_PRIMARY),
+                rx.spacer(),
+                rx.button(
+                    rx.text("Bỏ hết", font_size="0.72rem", font_weight="600"),
+                    on_click=ClassManagerState.clear_all_pinned_classes,
+                    bg="transparent", color=T.TEXT_MUTED, padding="0.2rem 0.5rem",
+                    border_radius=T.RADIUS_SM,
+                    _hover={"color": T.DANGER, "bg": T.DANGER_BG},
+                ),
+                spacing="2", align="center", width="100%",
+            ),
+            rx.vstack(
+                rx.foreach(ClassManagerState.pinned_classes, _pinned_class_chip),
+                spacing="2", width="100%",
+            ),
+            padding="0.75rem 0.9rem",
+            bg=T.SURFACE,
+            border=f"1.5px solid {T.PRIMARY_LIGHT}",
+            border_radius=T.RADIUS_LG,
+            width="100%",
+            spacing="2",
+        ),
+        rx.box(),
+    )
+
+
+# ══════════════════════════════════════════════════════════════════
+# TREE ROW (có nút ghim bên phải)
 # ══════════════════════════════════════════════════════════════════
 
 def _tree_row(row: dict):
     is_selected = ClassManagerState.selected_path_key == row["path_key"]
+    is_pinned = row["is_pinned"]
 
     return rx.box(
         rx.hstack(
@@ -382,27 +312,40 @@ def _tree_row(row: dict):
                 ),
                 rx.cond(
                     row["subtitle"] != "",
-                    rx.text(
-                        row["subtitle"],
-                        font_size="0.68rem",
-                        color=T.TEXT_MUTED,
-                        no_of_lines=1,
-                    ),
+                    rx.text(row["subtitle"], font_size="0.68rem",
+                            color=T.TEXT_MUTED, no_of_lines=1),
                     rx.box(),
                 ),
-                spacing="0",
-                align="start",
-                flex="1",
-                min_width="0",
+                spacing="0", align="start", flex="1", min_width="0",
+            ),
+            # Nút ghim / bỏ ghim
+            rx.button(
+                rx.icon(
+                    rx.cond(is_pinned, "pin-off", "pin"),
+                    size=14,
+                    color=rx.cond(is_pinned, T.PRIMARY, T.TEXT_MUTED),
+                ),
+                on_click=[
+                    ClassManagerState.toggle_pin_class(row["path_key"]),
+                    rx.stop_propagation,
+                ],
+                bg="transparent",
+                padding="0.3rem",
+                border_radius=T.RADIUS_SM,
+                flex_shrink="0",
+                title=rx.cond(is_pinned, "Bỏ ghim", "Ghim lớp này"),
+                _hover=rx.cond(
+                    is_pinned,
+                    {"bg": T.DANGER_BG, "color": T.DANGER},
+                    {"bg": T.PRIMARY_TINT, "color": T.PRIMARY},
+                ),
             ),
             rx.cond(
                 is_selected,
                 rx.icon("check", size=14, color=T.PRIMARY, flex_shrink="0"),
                 rx.box(width="14px", flex_shrink="0"),
             ),
-            spacing="2",
-            align="center",
-            width="100%",
+            spacing="2", align="center", width="100%",
         ),
         width="100%",
         padding="0.5rem 0.65rem",
@@ -416,9 +359,7 @@ def _tree_row(row: dict):
         cursor="pointer",
         transition="all 0.1s ease",
         on_click=ClassManagerState.select_class(row["path_key"]),
-        _hover=rx.cond(
-            is_selected, {}, {"bg": T.PRIMARY_TINT, "border_color": T.PRIMARY}
-        ),
+        _hover=rx.cond(is_selected, {}, {"bg": T.PRIMARY_TINT, "border_color": T.PRIMARY}),
     )
 
 
@@ -431,65 +372,34 @@ def _lesson_row_item(item: dict):
         rx.hstack(
             rx.box(
                 rx.icon("book-open", size=14, color=T.PRIMARY),
-                bg=T.PRIMARY_TINT,
-                border_radius=T.RADIUS_SM,
-                padding="0.3rem",
-                display="flex",
-                align_items="center",
-                justify_content="center",
+                bg=T.PRIMARY_TINT, border_radius=T.RADIUS_SM, padding="0.3rem",
+                display="flex", align_items="center", justify_content="center",
                 flex_shrink="0",
             ),
             rx.vstack(
-                rx.text(
-                    item["title"],
-                    font_size="0.875rem",
-                    font_weight="600",
-                    color=T.TEXT_PRIMARY,
-                    no_of_lines=1,
-                ),
+                rx.text(item["title"], font_size="0.875rem", font_weight="600",
+                        color=T.TEXT_PRIMARY, no_of_lines=1),
                 rx.hstack(
-                    rx.text(
-                        item["file"],
-                        font_size="0.68rem",
-                        color=T.TEXT_MUTED,
-                        no_of_lines=1,
-                        flex="1",
-                    ),
-                    rx.text(
-                        item["terms_label"],
-                        font_size="0.68rem",
-                        color=T.TEXT_MUTED,
-                        white_space="nowrap",
-                        flex_shrink="0",
-                    ),
-                    width="100%",
-                    spacing="2",
-                    align="center",
+                    rx.text(item["file"], font_size="0.68rem", color=T.TEXT_MUTED,
+                            no_of_lines=1, flex="1"),
+                    rx.text(item["terms_label"], font_size="0.68rem", color=T.TEXT_MUTED,
+                            white_space="nowrap", flex_shrink="0"),
+                    width="100%", spacing="2", align="center",
                 ),
-                spacing="0",
-                align="start",
-                flex="1",
-                min_width="0",
+                spacing="0", align="start", flex="1", min_width="0",
             ),
             rx.button(
                 rx.icon("trash-2", size=13),
                 on_click=ClassManagerState.remove_lesson_item(item["title"]),
-                bg="transparent",
-                color=T.TEXT_MUTED,
-                padding="0.3rem",
+                bg="transparent", color=T.TEXT_MUTED, padding="0.3rem",
                 border_radius=T.RADIUS_SM,
                 _hover={"bg": T.DANGER_BG, "color": T.DANGER},
-                title="Xoá bài giảng",
                 flex_shrink="0",
             ),
-            spacing="3",
-            align="center",
-            width="100%",
+            spacing="3", align="center", width="100%",
         ),
-        width="100%",
-        padding="0.65rem 0.9rem",
-        bg=T.SURFACE,
-        border=f"1px solid {T.BORDER}",
+        width="100%", padding="0.65rem 0.9rem",
+        bg=T.SURFACE, border=f"1px solid {T.BORDER}",
         border_radius=T.RADIUS_MD,
         transition="border-color 0.1s ease",
         _hover={"border_color": T.PRIMARY},
@@ -506,56 +416,29 @@ def _message_toast():
         rx.box(
             rx.hstack(
                 rx.icon(
-                    rx.cond(
-                        ClassManagerState.message_type == "error",
-                        "alert-circle",
-                        "check-circle",
-                    ),
+                    rx.cond(ClassManagerState.message_type == "error",
+                            "alert-circle", "check-circle"),
                     size=16,
-                    color=rx.cond(
-                        ClassManagerState.message_type == "error",
-                        T.DANGER,
-                        T.SUCCESS,
-                    ),
+                    color=rx.cond(ClassManagerState.message_type == "error",
+                                  T.DANGER, T.SUCCESS),
                     flex_shrink="0",
                 ),
-                rx.text(
-                    ClassManagerState.message,
-                    font_size="0.85rem",
-                    font_weight="500",
-                    flex="1",
-                    color=rx.cond(
-                        ClassManagerState.message_type == "error",
-                        T.DANGER,
-                        T.SUCCESS,
-                    ),
-                ),
+                rx.text(ClassManagerState.message, font_size="0.85rem",
+                        font_weight="500", flex="1",
+                        color=rx.cond(ClassManagerState.message_type == "error",
+                                      T.DANGER, T.SUCCESS)),
                 rx.button(
                     rx.icon("x", size=14),
                     on_click=ClassManagerState.clear_message,
-                    bg="transparent",
-                    padding="0.2rem",
-                    color=T.TEXT_MUTED,
-                    _hover={"color": T.TEXT_PRIMARY},
-                    flex_shrink="0",
+                    bg="transparent", padding="0.2rem", color=T.TEXT_MUTED,
+                    _hover={"color": T.TEXT_PRIMARY}, flex_shrink="0",
                 ),
-                width="100%",
-                spacing="2",
-                align="center",
+                width="100%", spacing="2", align="center",
             ),
-            width="100%",
-            padding="0.65rem 0.9rem",
-            border_radius=T.RADIUS_MD,
-            bg=rx.cond(
-                ClassManagerState.message_type == "error",
-                T.DANGER_BG,
-                T.SUCCESS_BG,
-            ),
-            border=rx.cond(
-                ClassManagerState.message_type == "error",
-                f"1px solid {T.DANGER}",
-                f"1px solid {T.SUCCESS}",
-            ),
+            width="100%", padding="0.65rem 0.9rem", border_radius=T.RADIUS_MD,
+            bg=rx.cond(ClassManagerState.message_type == "error", T.DANGER_BG, T.SUCCESS_BG),
+            border=rx.cond(ClassManagerState.message_type == "error",
+                           f"1px solid {T.DANGER}", f"1px solid {T.SUCCESS}"),
         ),
         rx.box(),
     )
@@ -567,7 +450,6 @@ def _message_toast():
 
 def class_manager_panel():
     return rx.box(
-        # ── All modals ──────────────────────────────────────────
         _add_subclass_modal(),
         _rename_modal(),
         _delete_class_modal(),
@@ -577,46 +459,29 @@ def class_manager_panel():
             # ── Header ─────────────────────────────────────────
             rx.hstack(
                 rx.vstack(
-                    rx.text(
-                        "Quản lý lớp học",
-                        font_size="1rem",
-                        font_weight="700",
-                        color=T.TEXT_PRIMARY,
-                    ),
-                    rx.text(
-                        "Thêm, đổi tên hoặc xoá lớp và bài giảng",
-                        font_size="0.78rem",
-                        color=T.TEXT_MUTED,
-                    ),
-                    spacing="0",
-                    align="start",
+                    rx.text("Quản lý lớp học", font_size="1rem",
+                            font_weight="700", color=T.TEXT_PRIMARY),
+                    rx.text("Thêm, đổi tên hoặc xoá lớp và bài giảng",
+                            font_size="0.78rem", color=T.TEXT_MUTED),
+                    spacing="0", align="start",
                 ),
                 rx.spacer(),
                 rx.button(
-                    rx.hstack(
-                        rx.icon("home", size=13),
-                        rx.text("Gốc", font_size="0.8rem", font_weight="600"),
-                        spacing="1",
-                        align="center",
-                    ),
+                    rx.hstack(rx.icon("home", size=13),
+                              rx.text("Gốc", font_size="0.8rem", font_weight="600"),
+                              spacing="1", align="center"),
                     on_click=ClassManagerState.select_class(""),
-                    bg=rx.cond(
-                        ClassManagerState.is_at_root, T.PRIMARY, T.BORDER_LIGHT
-                    ),
-                    color=rx.cond(
-                        ClassManagerState.is_at_root, "white", T.TEXT_PRIMARY
-                    ),
-                    border_radius=T.RADIUS_MD,
-                    padding="0.4rem 0.85rem",
-                    _hover=rx.cond(
-                        ClassManagerState.is_at_root,
-                        {},
-                        {"bg": T.PRIMARY_TINT, "color": T.PRIMARY},
-                    ),
+                    bg=rx.cond(ClassManagerState.is_at_root, T.PRIMARY, T.BORDER_LIGHT),
+                    color=rx.cond(ClassManagerState.is_at_root, "white", T.TEXT_PRIMARY),
+                    border_radius=T.RADIUS_MD, padding="0.4rem 0.85rem",
+                    _hover=rx.cond(ClassManagerState.is_at_root, {},
+                                   {"bg": T.PRIMARY_TINT, "color": T.PRIMARY}),
                 ),
-                width="100%",
-                align="center",
+                width="100%", align="center",
             ),
+
+            # ── Pinned classes ──────────────────────────────────
+            _pinned_section(),
 
             # ── Breadcrumb + summary ────────────────────────────
             rx.box(
@@ -627,65 +492,36 @@ def class_manager_panel():
                         rx.icon("graduation-cap", size=16, color=T.SUCCESS),
                     ),
                     rx.vstack(
-                        rx.text(
-                            ClassManagerState.breadcrumb,
-                            font_size="0.9rem",
-                            font_weight="700",
-                            color=T.TEXT_PRIMARY,
-                            no_of_lines=2,
-                        ),
-                        rx.text(
-                            ClassManagerState.class_summary,
-                            font_size="0.75rem",
-                            color=T.TEXT_SECONDARY,
-                        ),
-                        spacing="0",
-                        align="start",
-                        flex="1",
+                        rx.text(ClassManagerState.breadcrumb, font_size="0.9rem",
+                                font_weight="700", color=T.TEXT_PRIMARY, no_of_lines=2),
+                        rx.text(ClassManagerState.class_summary, font_size="0.75rem",
+                                color=T.TEXT_SECONDARY),
+                        spacing="0", align="start", flex="1",
                     ),
-                    spacing="2",
-                    align="start",
-                    width="100%",
+                    spacing="2", align="start", width="100%",
                 ),
-                width="100%",
-                padding="0.7rem 0.9rem",
-                bg=T.BORDER_LIGHT,
-                border_radius=T.RADIUS_MD,
+                width="100%", padding="0.7rem 0.9rem",
+                bg=T.BORDER_LIGHT, border_radius=T.RADIUS_MD,
                 border=f"1px solid {T.BORDER}",
             ),
 
-            # ── Message toast ───────────────────────────────────
             _message_toast(),
 
             # ── Action buttons ──────────────────────────────────
             rx.grid(
-                _action_btn(
-                    "folder-plus",
-                    "Thêm lớp con",
-                    ClassManagerState.open_add_subclass_dialog,
-                ),
-                _action_btn(
-                    "pencil",
-                    "Đổi tên lớp",
-                    ClassManagerState.open_rename_dialog,
-                    disabled=ClassManagerState.is_at_root,
-                ),
-                _action_btn(
-                    "book-plus",
-                    "Thêm bài giảng",
-                    ClassManagerState.open_add_lesson_dialog,
-                    disabled=ClassManagerState.is_at_root,
-                ),
-                _action_btn(
-                    "trash-2",
-                    "Xoá lớp",
-                    ClassManagerState.open_delete_confirmation,
-                    danger=True,
-                    disabled=ClassManagerState.is_at_root,
-                ),
+                _action_btn("folder-plus", "Thêm lớp con",
+                            ClassManagerState.open_add_subclass_dialog),
+                _action_btn("pencil", "Đổi tên lớp",
+                            ClassManagerState.open_rename_dialog,
+                            disabled=ClassManagerState.is_at_root),
+                _action_btn("book-plus", "Thêm bài giảng",
+                            ClassManagerState.open_add_lesson_dialog,
+                            disabled=ClassManagerState.is_at_root),
+                _action_btn("trash-2", "Xoá lớp",
+                            ClassManagerState.open_delete_confirmation,
+                            danger=True, disabled=ClassManagerState.is_at_root),
                 grid_template_columns="repeat(2, 1fr)",
-                gap="2",
-                width="100%",
+                gap="2", width="100%",
             ),
 
             # ── Lessons in selected class ───────────────────────
@@ -694,54 +530,33 @@ def class_manager_panel():
                 rx.vstack(
                     rx.hstack(
                         rx.icon("book-open", size=15, color=T.PRIMARY),
-                        rx.text(
-                            "Bài giảng trong lớp này",
-                            font_size="0.85rem",
-                            font_weight="700",
-                            color=T.TEXT_PRIMARY,
-                        ),
-                        spacing="2",
-                        align="center",
+                        rx.text("Bài giảng trong lớp này", font_size="0.85rem",
+                                font_weight="700", color=T.TEXT_PRIMARY),
+                        spacing="2", align="center",
                     ),
                     rx.cond(
                         ClassManagerState.class_lessons.length() > 0,
                         rx.vstack(
-                            rx.foreach(
-                                ClassManagerState.class_lessons, _lesson_row_item
-                            ),
-                            spacing="2",
-                            width="100%",
+                            rx.foreach(ClassManagerState.class_lessons, _lesson_row_item),
+                            spacing="2", width="100%",
                         ),
                         rx.box(
                             rx.vstack(
                                 rx.icon("book-open", size=24, color=T.BORDER),
-                                rx.text(
-                                    "Chưa có bài giảng nào.",
-                                    font_size="0.82rem",
-                                    color=T.TEXT_MUTED,
-                                    text_align="center",
-                                ),
-                                rx.text(
-                                    "Nhấn «Thêm bài giảng» để thêm file JSON.",
-                                    font_size="0.78rem",
-                                    color=T.TEXT_MUTED,
-                                    text_align="center",
-                                ),
-                                spacing="1",
-                                align="center",
+                                rx.text("Chưa có bài giảng nào.", font_size="0.82rem",
+                                        color=T.TEXT_MUTED, text_align="center"),
+                                rx.text("Nhấn «Thêm bài giảng» để thêm file JSON.",
+                                        font_size="0.78rem", color=T.TEXT_MUTED,
+                                        text_align="center"),
+                                spacing="1", align="center",
                             ),
-                            padding="1.5rem",
-                            width="100%",
-                            display="flex",
-                            align_items="center",
-                            justify_content="center",
-                            bg=T.BORDER_LIGHT,
-                            border_radius=T.RADIUS_MD,
+                            padding="1.5rem", width="100%",
+                            display="flex", align_items="center", justify_content="center",
+                            bg=T.BORDER_LIGHT, border_radius=T.RADIUS_MD,
                             border=f"1px dashed {T.BORDER}",
                         ),
                     ),
-                    spacing="2",
-                    width="100%",
+                    spacing="2", width="100%",
                 ),
                 rx.box(),
             ),
@@ -750,72 +565,43 @@ def class_manager_panel():
             rx.vstack(
                 rx.hstack(
                     rx.icon("graduation-cap", size=15, color=T.SUCCESS),
-                    rx.text(
-                        "Toàn bộ lớp học",
-                        font_size="0.85rem",
-                        font_weight="700",
-                        color=T.TEXT_PRIMARY,
-                    ),
+                    rx.text("Toàn bộ lớp học", font_size="0.85rem",
+                            font_weight="700", color=T.TEXT_PRIMARY),
                     rx.spacer(),
-                    rx.text(
-                        ClassManagerState.tree_rows.length(),
-                        font_size="0.75rem",
-                        color=T.TEXT_MUTED,
-                        font_weight="600",
-                    ),
-                    spacing="2",
-                    align="center",
-                    width="100%",
+                    rx.text(ClassManagerState.tree_rows.length(),
+                            font_size="0.75rem", color=T.TEXT_MUTED, font_weight="600"),
+                    spacing="2", align="center", width="100%",
                 ),
                 rx.box(
                     rx.cond(
                         ClassManagerState.tree_rows.length() > 0,
                         rx.vstack(
                             rx.foreach(ClassManagerState.tree_rows, _tree_row),
-                            spacing="1",
-                            width="100%",
+                            spacing="1", width="100%",
                         ),
                         rx.box(
                             rx.vstack(
                                 rx.icon("folder-plus", size=28, color=T.BORDER),
-                                rx.text(
-                                    "Chưa có lớp học nào.",
-                                    font_size="0.85rem",
-                                    color=T.TEXT_MUTED,
-                                    text_align="center",
-                                ),
-                                rx.text(
-                                    "Nhấn «Thêm lớp con» để tạo lớp đầu tiên.",
-                                    font_size="0.78rem",
-                                    color=T.TEXT_MUTED,
-                                    text_align="center",
-                                ),
-                                spacing="2",
-                                align="center",
+                                rx.text("Chưa có lớp học nào.", font_size="0.85rem",
+                                        color=T.TEXT_MUTED, text_align="center"),
+                                rx.text("Nhấn «Thêm lớp con» để tạo lớp đầu tiên.",
+                                        font_size="0.78rem", color=T.TEXT_MUTED,
+                                        text_align="center"),
+                                spacing="2", align="center",
                             ),
-                            padding="2rem",
-                            width="100%",
-                            display="flex",
-                            align_items="center",
-                            justify_content="center",
+                            padding="2rem", width="100%",
+                            display="flex", align_items="center", justify_content="center",
                         ),
                     ),
-                    width="100%",
-                    max_height="380px",
-                    overflow_y="auto",
-                    border=f"1px solid {T.BORDER}",
-                    border_radius=T.RADIUS_LG,
-                    padding="0.5rem",
-                    bg=T.SURFACE,
+                    width="100%", max_height="380px", overflow_y="auto",
+                    border=f"1px solid {T.BORDER}", border_radius=T.RADIUS_LG,
+                    padding="0.5rem", bg=T.SURFACE,
                 ),
-                spacing="2",
-                width="100%",
+                spacing="2", width="100%",
             ),
 
-            spacing="3",
-            width="100%",
-            align="start",
+            spacing="3", width="100%", align="start",
         ),
         width="100%",
         on_mount=ClassManagerState.load_current_class,
-    )
+)

@@ -1,5 +1,5 @@
 """
-class_manager_state.py — Quản lý lớp học + ghim bài giảng.
+class_manager_state.py — Quản lý lớp học + ghim lớp.
 """
 
 import reflex as rx
@@ -22,7 +22,6 @@ from HUST_Student.services.class_lesson_service import (
 
 
 class ClassManagerState(rx.State):
-    """Quản lý lớp học — CRUD lớp + bài giảng + ghim, đồng bộ sidebar."""
 
     selected_path_key: str = ""
     current_class_name: str = "Gốc"
@@ -30,8 +29,11 @@ class ClassManagerState(rx.State):
     tree_rows: list[dict] = []
     class_lessons: list[dict] = []
 
-    # Pinned lessons (runtime, không persist)
-    # Mỗi item: {title, file, terms_label, path_key, class_path, pin_key}
+    # ── Ghim lớp (runtime, không persist) ────────────────────────
+    # Mỗi item: {name, path_key, pin_key}
+    pinned_classes: list[dict] = []
+
+    # ── Ghim bài giảng (runtime) ──────────────────────────────────
     pinned_lessons: list[dict] = []
 
     show_rename_dialog: bool = False
@@ -67,12 +69,12 @@ class ClassManagerState(rx.State):
         return "Chưa có bài giảng nào" if n == 0 else f"{n} bài giảng"
 
     @rx.var
-    def has_pinned(self) -> bool:
-        return len(self.pinned_lessons) > 0
+    def has_pinned_classes(self) -> bool:
+        return len(self.pinned_classes) > 0
 
     @rx.var
-    def pinned_count(self) -> int:
-        return len(self.pinned_lessons)
+    def pinned_class_keys(self) -> list[str]:
+        return [p["pin_key"] for p in self.pinned_classes]
 
     # ── Helpers ──────────────────────────────────────────────────
 
@@ -87,7 +89,12 @@ class ClassManagerState(rx.State):
     def _rebuild_tree(self):
         data = load_classes()
         lessons = load_class_lessons_raw()
-        self.tree_rows = flatten_class_tree(data, lessons)
+        rows = flatten_class_tree(data, lessons)
+        # Đánh dấu is_pinned cho mỗi row
+        pinned_keys = {p["pin_key"] for p in self.pinned_classes}
+        for row in rows:
+            row["is_pinned"] = row["path_key"] in pinned_keys
+        self.tree_rows = rows
 
     def _load_lessons(self):
         if not self.selected_path_key:
@@ -145,7 +152,41 @@ class ClassManagerState(rx.State):
         self.apply_selection(path_key)
         await self._sync_sidebar()
 
-    # ── Pin / Unpin ───────────────────────────────────────────────
+    # ── Pin / Unpin lớp ──────────────────────────────────────────
+
+    def toggle_pin_class(self, path_key: str):
+        """Ghim hoặc bỏ ghim một lớp theo path_key."""
+        pin_key = path_key
+        existing = [p for p in self.pinned_classes if p["pin_key"] == pin_key]
+        if existing:
+            # Bỏ ghim
+            self.pinned_classes = [p for p in self.pinned_classes if p["pin_key"] != pin_key]
+        else:
+            # Ghim — tìm tên từ tree_rows
+            name = path_key.split("/")[-1] if path_key else path_key
+            for row in self.tree_rows:
+                if row["path_key"] == path_key:
+                    name = row["name"]
+                    break
+            self.pinned_classes = list(self.pinned_classes) + [
+                {
+                    "name": name,
+                    "path_key": path_key,
+                    "pin_key": pin_key,
+                    "breadcrumb": path_key.replace("/", " › "),
+                }
+            ]
+        self._rebuild_tree()
+
+    def unpin_class(self, pin_key: str):
+        self.pinned_classes = [p for p in self.pinned_classes if p["pin_key"] != pin_key]
+        self._rebuild_tree()
+
+    def clear_all_pinned_classes(self):
+        self.pinned_classes = []
+        self._rebuild_tree()
+
+    # ── Pin / Unpin bài giảng ─────────────────────────────────────
 
     def toggle_pin_lesson(self, pin_key: str):
         existing = [p for p in self.pinned_lessons if p["pin_key"] == pin_key]
@@ -243,7 +284,14 @@ class ClassManagerState(rx.State):
             old_key = self.selected_path_key
             new_key = path_to_key([*path[:-1], new_name])
             self.selected_path_key = new_key
-            # Cập nhật pin_key của pinned lessons
+            self.pinned_classes = [
+                {**p,
+                 "path_key": p["path_key"].replace(old_key, new_key, 1),
+                 "pin_key": p["pin_key"].replace(old_key, new_key, 1),
+                 "breadcrumb": p["breadcrumb"].replace(path[-1], new_name, 1),
+                } if p["path_key"].startswith(old_key) else p
+                for p in self.pinned_classes
+            ]
             self.pinned_lessons = [
                 {**p,
                  "path_key": p["path_key"].replace(old_key, new_key, 1),
@@ -281,6 +329,10 @@ class ClassManagerState(rx.State):
         parent_key = path_to_key(path[:-1])
         deleted_key = self.selected_path_key
         if delete_class(path):
+            self.pinned_classes = [
+                p for p in self.pinned_classes
+                if not p["path_key"].startswith(deleted_key)
+            ]
             self.pinned_lessons = [
                 p for p in self.pinned_lessons
                 if not p["path_key"].startswith(deleted_key)
