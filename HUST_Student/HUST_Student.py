@@ -16,5 +16,5 @@ app = rx.App()
 app.add_page(
     home,
     route="/",
-    title="HUST Student",
+    title="X AI",
 )

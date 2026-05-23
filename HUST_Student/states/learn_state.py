@@ -43,7 +43,7 @@ class LearnState(rx.State):
 
     # ── Trả lời ───────────────────────────────────────────────────
     typed_answer: str = ""
-    user_answer: str = ""      # lưu đáp án người dùng đã gõ để hiển thị trong feedback
+    user_answer: str = ""
     selected_answer: str = ""
     choice_options: list[str] = []
     correct_answer: str = ""
@@ -177,7 +177,7 @@ class LearnState(rx.State):
                 j += 1
 
         chunk_size = 4
-        chunks = [merged[k : k + chunk_size] for k in range(0, len(merged), chunk_size)]
+        chunks = [merged[k: k + chunk_size] for k in range(0, len(merged), chunk_size)]
         random.shuffle(chunks)
         merged = [item for ch in chunks for item in ch]
 
@@ -245,6 +245,18 @@ class LearnState(rx.State):
         self.preview_pos += 1
         self._load_preview_card()
 
+    def handle_preview_key(self, key: str):
+        """Enter trong preview:
+        - Nếu chưa lật → lật thẻ
+        - Nếu đã lật → "Đã biết" (tiếp tục)
+        """
+        if key != "Enter":
+            return
+        if not self.is_preview_flipped:
+            self.flip_preview()
+        else:
+            self.preview_got_it()
+
     # ═══════════════════════════════════════════════════════════════
     # PHASE: PRACTICE
     # ═══════════════════════════════════════════════════════════════
@@ -301,9 +313,9 @@ class LearnState(rx.State):
         self.typed_answer = str(text) if text else ""
 
     def handle_type_key(self, key: str):
-        """Xử lý phím Enter trong ô nhập đáp án:
-        - Nếu chưa submit → submit đáp án
-        - Nếu đã hiển thị feedback → tiếp tục câu tiếp theo
+        """Enter trong ô nhập type:
+        - Chưa feedback → submit
+        - Đã feedback → tiếp tục
         """
         if key != "Enter":
             return
@@ -313,7 +325,6 @@ class LearnState(rx.State):
             self._do_submit_typed()
 
     def _do_submit_typed(self):
-        """Logic submit đáp án (dùng chung cho nút bấm và Enter)."""
         if not self.typed_answer.strip() or self.show_feedback:
             return
         if self.practice_pos >= len(self.practice_queue):
@@ -359,6 +370,24 @@ class LearnState(rx.State):
 
     def continue_after_choice(self):
         self._continue_after_answer()
+
+    def handle_choice_key(self, key: str):
+        """Enter sau khi đã chọn đáp án trắc nghiệm → tiếp tục."""
+        if key != "Enter":
+            return
+        if self.show_feedback:
+            self._continue_after_answer()
+
+    # ── Batch review key handler ──────────────────────────────────
+
+    def handle_batch_review_key(self, key: str):
+        """Enter trong batch_review → giống type."""
+        if key != "Enter":
+            return
+        if self.show_feedback:
+            self._continue_after_answer()
+        else:
+            self._do_submit_typed()
 
     # ═══════════════════════════════════════════════════════════════
     # BATCH REVIEW

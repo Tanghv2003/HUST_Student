@@ -138,8 +138,11 @@ def _direction_toggle():
         align="center",
     )
 
+
 # ═══════════════════════════════════════════════════════════════════
 # PHASE: PREVIEW
+# Enter: chưa lật → lật; đã lật → "Đã biết"
+# Dùng input ẩn để bắt phím (rx.box không hỗ trợ on_key_down)
 # ═══════════════════════════════════════════════════════════════════
 
 def preview_phase():
@@ -155,6 +158,7 @@ def preview_phase():
             spacing="2", align="center",
         ),
 
+        # Card
         rx.box(
             rx.vstack(
                 rx.text(
@@ -175,8 +179,15 @@ def preview_phase():
                     font_size="2rem", font_weight="700", color=T.TEXT_PRIMARY,
                     text_align="center", line_height="1.3",
                 ),
-                rx.text("Nhấp để lật thẻ", font_size="0.75rem", color=T.TEXT_SECONDARY,
-                        margin_top="0.5rem"),
+                rx.text(
+                    rx.cond(
+                        LearnState.is_preview_flipped,
+                        "Enter = Đã biết  ·  click để xem lại mặt trước",
+                        "Nhấp hoặc Enter để lật thẻ",
+                    ),
+                    font_size="0.75rem", color=T.TEXT_SECONDARY,
+                    margin_top="0.5rem",
+                ),
                 spacing="3", align="center", justify="center", height="100%",
             ),
             width="100%", min_height="200px",
@@ -187,6 +198,19 @@ def preview_phase():
             display="flex", align_items="center", justify_content="center",
             transition="all 0.2s ease",
             _hover={"border_color": T.PRIMARY, "box_shadow": T.SHADOW_CARD_HOVER},
+        ),
+
+        # Input ẩn để bắt Enter trong preview
+        rx.input(
+            value="",
+            on_key_down=LearnState.handle_preview_key,
+            position="absolute",
+            opacity="0",
+            pointer_events="none",
+            width="1px",
+            height="1px",
+            tab_index=0,
+            auto_focus=True,
         ),
 
         rx.hstack(
@@ -201,7 +225,7 @@ def preview_phase():
                 flex="1",
             ),
             rx.button(
-                rx.hstack(rx.icon("check", size=16), rx.text("Đã biết"),
+                rx.hstack(rx.icon("check", size=16), rx.text("Đã biết  [Enter]"),
                           spacing="2", align="center"),
                 on_click=LearnState.preview_got_it,
                 bg=T.PRIMARY, color="white",
@@ -212,11 +236,13 @@ def preview_phase():
             spacing="3", width="100%",
         ),
         spacing="4", width="100%",
+        position="relative",
     )
 
 
 # ═══════════════════════════════════════════════════════════════════
 # PHASE: PRACTICE — TYPE
+# Enter: submit nếu chưa feedback; tiếp tục nếu đã feedback
 # ═══════════════════════════════════════════════════════════════════
 
 def _question_box(accent_bg: str, accent_border: str):
@@ -304,9 +330,26 @@ def type_practice():
                         border_radius="14px",
                     ),
                 ),
-                # Nút Tiếp theo — cũng lắng nghe Enter
+                # Input ẩn auto_focus để bắt Enter khi đang hiện feedback
+                rx.input(
+                    value="",
+                    on_key_down=LearnState.handle_type_key,
+                    position="absolute",
+                    opacity="0",
+                    pointer_events="none",
+                    width="1px",
+                    height="1px",
+                    tab_index=0,
+                    auto_focus=True,
+                ),
+                # Nút tiếp theo
                 rx.button(
-                    "Tiếp theo →",
+                    rx.hstack(
+                        rx.text("Tiếp theo"),
+                        rx.text("[Enter]", font_size="0.75rem", opacity="0.7"),
+                        rx.icon("arrow-right", size=15),
+                        spacing="2", align="center",
+                    ),
                     on_click=LearnState.continue_after_type,
                     bg=rx.cond(LearnState.feedback_correct, "#16A34A", "#DC2626"),
                     color="white", border_radius="12px",
@@ -314,8 +357,9 @@ def type_practice():
                     _hover={"opacity": "0.9"},
                 ),
                 spacing="3", width="100%",
+                position="relative",
             ),
-            # ── Input box ──
+            # ── Input box (visible, bắt Enter) ──
             rx.vstack(
                 rx.text(
                     rx.cond(
@@ -329,12 +373,13 @@ def type_practice():
                     rx.input(
                         value=LearnState.typed_answer,
                         on_change=LearnState.set_typed_answer,
-                        # ← THÊM: nhấn Enter để submit
                         on_key_down=LearnState.handle_type_key,
-                        placeholder="Nhập đáp án... (Enter để gửi)",
+                        placeholder="Nhập đáp án... (Enter để gửi / tiếp tục)",
                         width="100%", height="52px",
                         bg="white", border="2px solid #E5E7EB", border_radius="12px",
                         font_size="1.05rem", padding="0 1rem",
+                        auto_focus=True,
+                        key=LearnState.practice_pos,
                         _focus={"border_color": T.PRIMARY,
                                 "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}"},
                     ),
@@ -356,6 +401,7 @@ def type_practice():
 
 # ═══════════════════════════════════════════════════════════════════
 # PHASE: PRACTICE — CHOICE
+# Enter sau khi đã chọn → tiếp tục (input ẩn bắt phím)
 # ═══════════════════════════════════════════════════════════════════
 
 def _choice_btn(option: str):
@@ -422,13 +468,34 @@ def choice_practice():
         ),
         rx.cond(
             LearnState.show_feedback,
-            rx.button(
-                "Tiếp theo →",
-                on_click=LearnState.continue_after_choice,
-                bg=rx.cond(LearnState.feedback_correct, "#16A34A", "#DC2626"),
-                color="white", border_radius="12px",
-                padding="0.65rem 2rem", font_weight="700", width="100%",
-                _hover={"opacity": "0.9"},
+            rx.vstack(
+                rx.button(
+                    rx.hstack(
+                        rx.text("Tiếp theo"),
+                        rx.text("[Enter]", font_size="0.75rem", opacity="0.7"),
+                        rx.icon("arrow-right", size=15),
+                        spacing="2", align="center",
+                    ),
+                    on_click=LearnState.continue_after_choice,
+                    bg=rx.cond(LearnState.feedback_correct, "#16A34A", "#DC2626"),
+                    color="white", border_radius="12px",
+                    padding="0.65rem 2rem", font_weight="700", width="100%",
+                    _hover={"opacity": "0.9"},
+                ),
+                # Input ẩn bắt Enter sau khi đã chọn đáp án
+                rx.input(
+                    value="",
+                    on_key_down=LearnState.handle_choice_key,
+                    position="absolute",
+                    opacity="0",
+                    pointer_events="none",
+                    width="1px",
+                    height="1px",
+                    tab_index=0,
+                    auto_focus=True,
+                ),
+                spacing="2", width="100%",
+                position="relative",
             ),
             rx.box(),
         ),
@@ -445,7 +512,7 @@ def practice_phase():
 
 
 # ═══════════════════════════════════════════════════════════════════
-# PHASE: BATCH REVIEW
+# PHASE: BATCH REVIEW (tái dùng type_practice)
 # ═══════════════════════════════════════════════════════════════════
 
 def batch_review_phase():
