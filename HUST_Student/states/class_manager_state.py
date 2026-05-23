@@ -8,10 +8,12 @@ from HUST_Student.services.class_service import (
     add_subclass,
     delete_class,
     flatten_class_tree,
+    find_children_at_path,
     load_classes,
     path_to_key,
     path_to_list,
     rename_class,
+    normalize_class_node,
 )
 from HUST_Student.services.class_lesson_service import (
     add_lesson,
@@ -30,11 +32,18 @@ class ClassManagerState(rx.State):
     class_lessons: list[dict] = []
 
     # ── Ghim lớp (runtime, không persist) ────────────────────────
-    # Mỗi item: {name, path_key, pin_key}
     pinned_classes: list[dict] = []
 
     # ── Ghim bài giảng (runtime) ──────────────────────────────────
     pinned_lessons: list[dict] = []
+
+    # ── Pinned tab navigation ─────────────────────────────────────
+    # path đang xem trong tab ghim (có thể đi sâu vào sublclass)
+    pinned_view_path: str = ""
+    # dữ liệu subclasses của lớp đang xem trong tab ghim
+    pinned_subclasses: list[dict] = []
+    # bài giảng của lớp đang xem trong tab ghim
+    pinned_view_lessons: list[dict] = []
 
     show_rename_dialog: bool = False
     show_add_subclass_dialog: bool = False
@@ -76,6 +85,36 @@ class ClassManagerState(rx.State):
     def pinned_class_keys(self) -> list[str]:
         return [p["pin_key"] for p in self.pinned_classes]
 
+    # ── Pinned view computed ──────────────────────────────────────
+
+    @rx.var
+    def pinned_view_breadcrumb(self) -> str:
+        if not self.pinned_view_path:
+            return ""
+        return self.pinned_view_path.replace("/", " › ")
+
+    @rx.var
+    def pinned_view_name(self) -> str:
+        if not self.pinned_view_path:
+            return ""
+        parts = self.pinned_view_path.split("/")
+        return parts[-1] if parts else ""
+
+    @rx.var
+    def pinned_view_parent_path(self) -> str:
+        """Path cha để điều hướng back."""
+        if not self.pinned_view_path:
+            return ""
+        parts = self.pinned_view_path.split("/")
+        if len(parts) <= 1:
+            return ""
+        return "/".join(parts[:-1])
+
+    @rx.var
+    def pinned_view_can_go_back(self) -> bool:
+        """Có thể back lên không (vẫn trong phạm vi lớp ghim)."""
+        return bool(self.pinned_view_path) and "/" in self.pinned_view_path
+
     # ── Helpers ──────────────────────────────────────────────────
 
     async def _sync_sidebar(self):
@@ -90,7 +129,6 @@ class ClassManagerState(rx.State):
         data = load_classes()
         lessons = load_class_lessons_raw()
         rows = flatten_class_tree(data, lessons)
-        # Đánh dấu is_pinned cho mỗi row
         pinned_keys = {p["pin_key"] for p in self.pinned_classes}
         for row in rows:
             row["is_pinned"] = row["path_key"] in pinned_keys
@@ -132,6 +170,57 @@ class ClassManagerState(rx.State):
             return "Gốc"
         return self.selected_path_key.replace("/", " › ")
 
+    def _load_pinned_view(self, path_key: str):
+        """Load subclasses + lessons cho pinned tab view tại path_key."""
+        self.pinned_view_path = path_key
+        if not path_key:
+            self.pinned_subclasses = []
+            self.pinned_view_lessons = []
+            return
+
+        # Load subclasses
+        data = load_classes()
+        path = path_to_list(path_key)
+        children = find_children_at_path(data, path) or {}
+        lessons_raw = load_class_lessons_raw()
+
+        subclasses = []
+        for name in sorted(children.keys()):
+            node = normalize_class_node(children[name])
+            child_path = f"{path_key}/{name}"
+            child_children = node.get("classes", {})
+            lesson_count = len(lessons_raw.get(child_path, []))
+            child_count = len(child_children)
+
+            subtitle_parts = []
+            if child_count:
+                subtitle_parts.append(f"{child_count} lớp con")
+            if lesson_count:
+                subtitle_parts.append(f"{lesson_count} bài giảng")
+
+            subclasses.append({
+                "name": name,
+                "path_key": child_path,
+                "icon": node.get("icon", "graduation-cap"),
+                "color": node.get("color", "#4257B2"),
+                "students": node.get("students", 0),
+                "subtitle": " · ".join(subtitle_parts) if subtitle_parts else "Lớp trống",
+                "has_children": bool(child_count or lesson_count),
+            })
+        self.pinned_subclasses = subclasses
+
+        # Load lessons at current path
+        raw_lessons = get_lessons_for_path(path_key)
+        self.pinned_view_lessons = [
+            {
+                "title": item.get("title", ""),
+                "file": item.get("file", ""),
+                "terms": item.get("terms", 0),
+                "terms_label": f"{item.get('terms', 0)} mục",
+            }
+            for item in raw_lessons
+        ]
+
     # ── Selection ────────────────────────────────────────────────
 
     @rx.event
@@ -152,17 +241,33 @@ class ClassManagerState(rx.State):
         self.apply_selection(path_key)
         await self._sync_sidebar()
 
+    # ── Pinned tab navigation ─────────────────────────────────────
+
+    def open_pinned_class(self, path_key: str):
+        """Mở tab ghim và load view tại path_key của lớp ghim."""
+        self._load_pinned_view(path_key)
+
+    def navigate_pinned_into(self, path_key: str):
+        """Đi sâu vào subclass trong tab ghim."""
+        self._load_pinned_view(path_key)
+
+    def navigate_pinned_back(self):
+        """Quay lại lớp cha trong tab ghim."""
+        parent = self.pinned_view_parent_path
+        self._load_pinned_view(parent)
+
+    def navigate_pinned_to(self, path_key: str):
+        """Điều hướng tới bất kỳ path nào trong tab ghim (dùng cho breadcrumb)."""
+        self._load_pinned_view(path_key)
+
     # ── Pin / Unpin lớp ──────────────────────────────────────────
 
     def toggle_pin_class(self, path_key: str):
-        """Ghim hoặc bỏ ghim một lớp theo path_key."""
         pin_key = path_key
         existing = [p for p in self.pinned_classes if p["pin_key"] == pin_key]
         if existing:
-            # Bỏ ghim
             self.pinned_classes = [p for p in self.pinned_classes if p["pin_key"] != pin_key]
         else:
-            # Ghim — tìm tên từ tree_rows
             name = path_key.split("/")[-1] if path_key else path_key
             for row in self.tree_rows:
                 if row["path_key"] == path_key:
