@@ -1,5 +1,7 @@
 """
 class_manager_panel.py — UI panel quản lý lớp học + ghim lớp.
+BUG FIX: Bỏ on_mount (không đáng tin cậy trong Reflex 0.9).
+         Load được trigger từ NavigationState.go_classes thay thế.
 """
 
 import reflex as rx
@@ -226,7 +228,6 @@ def _add_lesson_modal():
 # ══════════════════════════════════════════════════════════════════
 
 def _pinned_class_chip(item: dict):
-    """Chip nhỏ cho lớp đã ghim."""
     return rx.hstack(
         rx.icon("graduation-cap", size=13, color=T.SUCCESS, flex_shrink="0"),
         rx.vstack(
@@ -291,7 +292,7 @@ def _pinned_section():
 
 
 # ══════════════════════════════════════════════════════════════════
-# TREE ROW (có nút ghim bên phải)
+# TREE ROW
 # ══════════════════════════════════════════════════════════════════
 
 def _tree_row(row: dict):
@@ -318,7 +319,6 @@ def _tree_row(row: dict):
                 ),
                 spacing="0", align="start", flex="1", min_width="0",
             ),
-            # Nút ghim / bỏ ghim
             rx.button(
                 rx.icon(
                     rx.cond(is_pinned, "pin-off", "pin"),
@@ -445,7 +445,7 @@ def _message_toast():
 
 
 # ══════════════════════════════════════════════════════════════════
-# MAIN PANEL
+# MAIN PANEL — KHÔNG CÓ on_mount (load từ navigation_state.go_classes)
 # ══════════════════════════════════════════════════════════════════
 
 def class_manager_panel():
@@ -480,7 +480,6 @@ def class_manager_panel():
                 width="100%", align="center",
             ),
 
-            # ── Pinned classes ──────────────────────────────────
             _pinned_section(),
 
             # ── Breadcrumb + summary ────────────────────────────
@@ -603,5 +602,5 @@ def class_manager_panel():
             spacing="3", width="100%", align="start",
         ),
         width="100%",
-        on_mount=ClassManagerState.load_current_class,
-)
+        # on_mount ĐÃ BỊ XÓA — load được gọi từ NavigationState.go_classes
+    )

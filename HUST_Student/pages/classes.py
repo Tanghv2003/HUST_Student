@@ -34,7 +34,6 @@ def _tab(label: str, icon: str, active, on_click):
 
 
 def _pinned_tab(item: dict):
-    """Tab động cho lớp đã ghim — có nút × để bỏ ghim."""
     is_active = ClassesTabState.active_tab == item["pin_key"]
     return rx.hstack(
         rx.icon("graduation-cap", size=13,
@@ -47,11 +46,11 @@ def _pinned_tab(item: dict):
             max_width="120px",
             no_of_lines=1,
         ),
-        # Nút bỏ ghim
         rx.box(
             rx.icon("x", size=11),
             on_click=[
                 ClassManagerState.unpin_class(item["pin_key"]),
+                ClassesTabState.set_tab("lop_hoc"),
                 rx.stop_propagation,
             ],
             color=rx.cond(is_active, T.PRIMARY, T.TEXT_MUTED),
@@ -73,7 +72,6 @@ def _pinned_tab(item: dict):
         cursor="pointer",
         transition="all 0.12s ease",
         on_click=[
-            # Chuyển sang tab ghim này và load view
             ClassesTabState.set_tab(item["pin_key"]),
             ClassManagerState.open_pinned_class(item["path_key"]),
         ],
@@ -82,15 +80,14 @@ def _pinned_tab(item: dict):
     )
 
 
-# ── Pinned class content wrapper ──────────────────────────────────
+# ── Pinned class content ──────────────────────────────────────────
 
 def _pinned_class_page(item: dict):
-    """Nội dung trang của tab ghim — chỉ render khi tab này active."""
     is_active = ClassesTabState.active_tab == item["pin_key"]
     return rx.cond(
         is_active,
         rx.vstack(
-            # Header của lớp ghim
+            # Header
             rx.hstack(
                 rx.box(
                     rx.icon("pin", size=14, color=T.PRIMARY),
@@ -146,7 +143,6 @@ def _pinned_class_page(item: dict):
                 border_radius=T.RADIUS_LG,
                 box_shadow=T.SHADOW_CARD,
             ),
-            # Detail view với subclasses + lessons
             pinned_class_detail_view(item["path_key"]),
             spacing="4",
             width="100%",
@@ -194,14 +190,13 @@ def classes_page():
             width="100%", align="center",
         ),
 
-        # ── Tabs: "Quản lý lớp" + pinned class tabs ─────────────
+        # ── Tabs ────────────────────────────────────────────────
         rx.hstack(
             _tab(
                 "Quản lý lớp", "graduation-cap",
                 is_classes_tab,
                 ClassesTabState.set_tab("lop_hoc"),
             ),
-            # Tab động cho từng lớp đã ghim
             rx.foreach(ClassManagerState.pinned_classes, _pinned_tab),
             spacing="2",
             border_bottom=f"1px solid {T.BORDER_LIGHT}",
@@ -214,17 +209,22 @@ def classes_page():
         rx.divider(margin_y="0"),
 
         # ── Content ─────────────────────────────────────────────
+        # class_manager_panel luôn ở trong DOM (display none/block)
+        # để tránh mất on_mount khi switch tab
         rx.box(
-            # Tab "Quản lý lớp"
-            rx.cond(
-                is_classes_tab,
+            rx.box(
                 class_manager_panel(),
-                # Render nội dung từng tab ghim
+                display=rx.cond(is_classes_tab, "block", "none"),
+                width="100%",
+            ),
+            rx.cond(
+                ~is_classes_tab,
                 rx.vstack(
                     rx.foreach(ClassManagerState.pinned_classes, _pinned_class_page),
                     width="100%",
                     spacing="0",
                 ),
+                rx.box(),
             ),
             width="100%",
             flex="1",
