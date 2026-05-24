@@ -445,7 +445,7 @@ class FolderState(rx.State):
             # "Native" hoặc "Cả hai" → hỏi native (front), đáp foreign (back)
             learn_direction = "native_to_foreign"
         learn = await self.get_state(LearnState)
-        learn.init_learn(words, title, answer_language=learn_direction)
+        return learn.init_learn(words, title, answer_language=learn_direction)
 
     def open_test_options(self):
         if self.selected_set:

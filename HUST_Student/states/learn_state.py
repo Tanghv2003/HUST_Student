@@ -60,6 +60,7 @@ class LearnState(rx.State):
     mastered_count: int = 0
     learning_count: int = 0
     not_started_count: int = 0
+    speech_rate: float = 0.85
 
     # ═══════════════════════════════════════════════════════════════
     # SETUP
@@ -81,11 +82,14 @@ class LearnState(rx.State):
         random.shuffle(indices)
         self.all_indices = indices
 
-        self._load_next_batch()
+        return self._load_next_batch()
 
     def set_answer_language(self, value: str):
         if value in ("native_to_foreign", "foreign_to_native"):
             self.answer_language = value
+
+    def set_speech_rate(self, value: float):
+        self.speech_rate = float(value)
 
     # ── Helpers ──────────────────────────────────────────────────
 
@@ -132,8 +136,8 @@ class LearnState(rx.State):
 
         self.phase = "preview"
         self._mark_new_cards_seen(list(new_indices))
-        self._load_preview_card()
         self._update_counts()
+        return self._load_preview_card()
 
     def _mark_new_cards_seen(self, new_indices: list):
         for idx in new_indices:
@@ -205,7 +209,7 @@ class LearnState(rx.State):
         self.practice_pos += 1
         if was_wrong:
             self._insert_spaced_review(item.card_index)
-        self._load_practice_item()
+        return self._load_practice_item()
 
     # ═══════════════════════════════════════════════════════════════
     # PHASE: PREVIEW
@@ -215,11 +219,11 @@ class LearnState(rx.State):
         if self.preview_pos >= len(self.preview_cards):
             self.introduced_count += len(self.current_new_indices)
             self.phase = "practice"
-            self._load_practice_item()
-            return
+            return self._load_practice_item()
         card_idx = self.preview_cards[self.preview_pos]
         self.correct_answer = self._get_answer(self.cards[card_idx])
         self.is_preview_flipped = False
+        return self.speak_current_word()
 
     def flip_preview(self):
         self.is_preview_flipped = not self.is_preview_flipped
@@ -234,7 +238,7 @@ class LearnState(rx.State):
         self.total_correct += 1
         self.preview_pos += 1
         self._update_counts()
-        self._load_preview_card()
+        return self._load_preview_card()
 
     def preview_still_learning(self):
         if self.preview_pos >= len(self.preview_cards):
@@ -243,7 +247,7 @@ class LearnState(rx.State):
         if card_idx not in self.batch_wrong:
             self.batch_wrong = self.batch_wrong + [card_idx]
         self.preview_pos += 1
-        self._load_preview_card()
+        return self._load_preview_card()
 
     def handle_preview_key(self, key: str):
         """Enter trong preview:
@@ -255,7 +259,7 @@ class LearnState(rx.State):
         if not self.is_preview_flipped:
             self.flip_preview()
         else:
-            self.preview_got_it()
+            return self.preview_got_it()
 
     # ═══════════════════════════════════════════════════════════════
     # PHASE: PRACTICE
@@ -269,13 +273,15 @@ class LearnState(rx.State):
         self.feedback_message = ""
 
         if self.practice_pos >= len(self.practice_queue):
-            self._end_batch()
-            return
+            return self._end_batch()
 
         item = self.practice_queue[self.practice_pos]
         self.correct_answer = self._get_answer(self.cards[item.card_index])
         if item.mode == "choice":
             self._build_choices(item.card_index)
+
+        if self.answer_language == "native_to_foreign":
+            return self.speak_current_word()
 
     def _build_choices(self, card_idx: int):
         correct = self._get_answer(self.cards[card_idx])
@@ -320,9 +326,9 @@ class LearnState(rx.State):
         if key != "Enter":
             return
         if self.show_feedback:
-            self._continue_after_answer()
+            return self._continue_after_answer()
         else:
-            self._do_submit_typed()
+            return self._do_submit_typed()
 
     def _do_submit_typed(self):
         if not self.typed_answer.strip() or self.show_feedback:
@@ -341,12 +347,14 @@ class LearnState(rx.State):
             else f"❌ Đáp án đúng: {correct}"
         )
         self._record_answer(item.card_index, is_correct)
+        if self.answer_language == "foreign_to_native":
+            return self.speak_current_word()
 
     def submit_typed(self):
-        self._do_submit_typed()
+        return self._do_submit_typed()
 
     def continue_after_type(self):
-        self._continue_after_answer()
+        return self._continue_after_answer()
 
     # ── Choice ────────────────────────────────────────────────────
 
@@ -367,16 +375,18 @@ class LearnState(rx.State):
             else f"❌ Đáp án đúng: {correct}"
         )
         self._record_answer(item.card_index, is_correct)
+        if self.answer_language == "foreign_to_native":
+            return self.speak_current_word()
 
     def continue_after_choice(self):
-        self._continue_after_answer()
+        return self._continue_after_answer()
 
     def handle_choice_key(self, key: str):
         """Enter sau khi đã chọn đáp án trắc nghiệm → tiếp tục."""
         if key != "Enter":
             return
         if self.show_feedback:
-            self._continue_after_answer()
+            return self._continue_after_answer()
 
     # ── Batch review key handler ──────────────────────────────────
 
@@ -385,9 +395,9 @@ class LearnState(rx.State):
         if key != "Enter":
             return
         if self.show_feedback:
-            self._continue_after_answer()
+            return self._continue_after_answer()
         else:
-            self._do_submit_typed()
+            return self._do_submit_typed()
 
     # ═══════════════════════════════════════════════════════════════
     # BATCH REVIEW
@@ -405,12 +415,12 @@ class LearnState(rx.State):
             self.practice_pos = 0
             self.batch_wrong = []
             self.phase = "batch_review"
-            self._load_practice_item()
+            return self._load_practice_item()
         else:
-            self._load_next_batch()
+            return self._load_next_batch()
 
     def finish_batch_review(self):
-        self._load_next_batch()
+        return self._load_next_batch()
 
     # ═══════════════════════════════════════════════════════════════
     # ROUND REVIEW / COMPLETE
@@ -599,3 +609,52 @@ class LearnState(rx.State):
         if total == 0:
             return 0
         return (self.total_correct * 100) // total
+
+    @rx.var
+    def current_foreign_word(self) -> str:
+        if self.phase == "preview":
+            if self.preview_pos >= len(self.preview_cards):
+                return ""
+            idx = self.preview_cards[self.preview_pos]
+        elif self.phase in ("practice", "batch_review"):
+            if self.practice_pos >= len(self.practice_queue):
+                return ""
+            idx = self.practice_queue[self.practice_pos].card_index
+        else:
+            return ""
+        if idx >= len(self.cards):
+            return ""
+        return self.cards[idx].front
+
+    def speak_word(self, word_text: str):
+        if not word_text:
+            return
+        
+        is_japanese = any(
+            0x3040 <= ord(c) <= 0x309F or 
+            0x30A0 <= ord(c) <= 0x30FF or 
+            0x4E00 <= ord(c) <= 0x9FAF 
+            for c in word_text
+        )
+        lang = "ja-JP" if is_japanese else "en-US"
+        
+        js_code = f"""
+        (function() {{
+            if ('speechSynthesis' in window) {{
+                window.speechSynthesis.cancel();
+                var utterance = new SpeechSynthesisUtterance({repr(word_text)});
+                utterance.lang = '{lang}';
+                utterance.rate = {self.speech_rate};
+                var voices = window.speechSynthesis.getVoices();
+                if (voices && voices.length > 0) {{
+                    var matchingVoice = voices.find(v => v.lang.startsWith('{lang.split("-")[0]}'));
+                    if (matchingVoice) utterance.voice = matchingVoice;
+                }}
+                window.speechSynthesis.speak(utterance);
+            }}
+        }})()
+        """
+        return rx.call_script(js_code)
+
+    def speak_current_word(self):
+        return self.speak_word(self.current_foreign_word)

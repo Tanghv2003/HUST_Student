@@ -101,6 +101,23 @@ def _new_tag():
     )
 
 
+def _speak_button(word_var, size: int = 16, color: str = T.PRIMARY, hover_bg: str = T.PRIMARY_TINT, stop_prop: bool = False):
+    click_handler = LearnState.speak_word(word_var)
+    if stop_prop:
+        click_handler = click_handler.stop_propagation
+    return rx.button(
+        rx.icon("volume-2", size=size),
+        on_click=click_handler,
+        bg="transparent",
+        color=color,
+        _hover={"bg": hover_bg},
+        size="1",
+        variant="ghost",
+        border_radius="999px",
+        padding="0.25rem",
+    )
+
+
 def _direction_toggle():
     is_ntf = LearnState.answer_language == "native_to_foreign"
     return rx.hstack(
@@ -126,6 +143,55 @@ def _direction_toggle():
                 bg=rx.cond(~is_ntf, T.PRIMARY, "transparent"),
                 cursor="pointer",
                 on_click=lambda: LearnState.set_answer_language("foreign_to_native"),
+                transition="all 0.15s ease",
+            ),
+            spacing="0",
+            bg=T.BORDER_LIGHT,
+            border=f"0.5px solid {T.BORDER}",
+            border_radius="999px",
+            padding="2px",
+        ),
+        spacing="2",
+        align="center",
+    )
+
+
+def _speed_toggle():
+    rate = LearnState.speech_rate
+    return rx.hstack(
+        rx.text("Tốc độ:", font_size="0.7rem", font_weight="500", color=T.TEXT_MUTED),
+        rx.hstack(
+            rx.box(
+                rx.text("Chậm", font_size="0.7rem", font_weight="500",
+                        color=rx.cond(rate == 0.7, "white", T.TEXT_MUTED),
+                        white_space="nowrap"),
+                padding="3px 8px",
+                border_radius="999px",
+                bg=rx.cond(rate == 0.7, T.PRIMARY, "transparent"),
+                cursor="pointer",
+                on_click=lambda: LearnState.set_speech_rate(0.7),
+                transition="all 0.15s ease",
+            ),
+            rx.box(
+                rx.text("Thường", font_size="0.7rem", font_weight="500",
+                        color=rx.cond(rate == 1.0, "white", T.TEXT_MUTED),
+                        white_space="nowrap"),
+                padding="3px 8px",
+                border_radius="999px",
+                bg=rx.cond(rate == 1.0, T.PRIMARY, "transparent"),
+                cursor="pointer",
+                on_click=lambda: LearnState.set_speech_rate(1.0),
+                transition="all 0.15s ease",
+            ),
+            rx.box(
+                rx.text("Nhanh", font_size="0.7rem", font_weight="500",
+                        color=rx.cond(rate == 1.3, "white", T.TEXT_MUTED),
+                        white_space="nowrap"),
+                padding="3px 8px",
+                border_radius="999px",
+                bg=rx.cond(rate == 1.3, T.PRIMARY, "transparent"),
+                cursor="pointer",
+                on_click=lambda: LearnState.set_speech_rate(1.3),
                 transition="all 0.15s ease",
             ),
             spacing="0",
@@ -170,14 +236,19 @@ def preview_phase():
                     font_size="0.78rem", font_weight="700", color=T.PRIMARY,
                     text_transform="uppercase", letter_spacing="0.08em",
                 ),
-                rx.text(
-                    rx.cond(
-                        LearnState.is_preview_flipped,
-                        LearnState.current_card_back,
-                        LearnState.current_card_front,
+                rx.hstack(
+                    rx.text(
+                        rx.cond(
+                            LearnState.is_preview_flipped,
+                            LearnState.current_card_back,
+                            LearnState.current_card_front,
+                        ),
+                        font_size="2rem", font_weight="700", color=T.TEXT_PRIMARY,
+                        text_align="center", line_height="1.3",
                     ),
-                    font_size="2rem", font_weight="700", color=T.TEXT_PRIMARY,
-                    text_align="center", line_height="1.3",
+                    _speak_button(LearnState.current_foreign_word, size=22, stop_prop=True),
+                    spacing="3",
+                    align="center",
                 ),
                 rx.text(
                     rx.cond(
@@ -257,8 +328,17 @@ def _question_box(accent_bg: str, accent_border: str):
                 _new_tag(),
                 spacing="2", align="center",
             ),
-            rx.text(LearnState.current_card_front, font_size="1.5rem", font_weight="700",
-                    color="#111827", text_align="center", line_height="1.3"),
+            rx.hstack(
+                rx.text(LearnState.current_card_front, font_size="1.5rem", font_weight="700",
+                        color="#111827", text_align="center", line_height="1.3"),
+                rx.cond(
+                    LearnState.answer_language == "native_to_foreign",
+                    _speak_button(LearnState.current_foreign_word, size=18),
+                    rx.box(),
+                ),
+                spacing="2",
+                align="center",
+            ),
             spacing="2", align="center",
         ),
         width="100%", padding="1.5rem",
@@ -282,6 +362,11 @@ def type_practice():
                             rx.text(
                                 LearnState.feedback_message,
                                 font_size="1rem", font_weight="600", color="#15803D",
+                            ),
+                            rx.cond(
+                                LearnState.answer_language == "foreign_to_native",
+                                _speak_button(LearnState.current_foreign_word, size=16, color="#15803D", hover_bg="#DCFCE7"),
+                                rx.box(),
                             ),
                             spacing="2", align="center", justify="center",
                         ),
@@ -318,10 +403,19 @@ def type_practice():
                                 ),
                                 spacing="2", align="center",
                             ),
-                            rx.text(
-                                LearnState.correct_answer,
-                                font_size="1.3rem", font_weight="800",
-                                color="#15803D", text_align="center",
+                            rx.hstack(
+                                rx.text(
+                                    LearnState.correct_answer,
+                                    font_size="1.3rem", font_weight="800",
+                                    color="#15803D", text_align="center",
+                                ),
+                                rx.cond(
+                                    LearnState.answer_language == "foreign_to_native",
+                                    _speak_button(LearnState.current_foreign_word, size=16, color="#15803D", hover_bg="#DCFCE7"),
+                                    rx.box(),
+                                ),
+                                spacing="2",
+                                align="center",
                             ),
                             spacing="1", align="center", width="100%",
                         ),
@@ -718,7 +812,12 @@ def learn_overlay():
                         rx.spacer(),
                         rx.cond(
                             LearnState.phase != "complete",
-                            _direction_toggle(),
+                            rx.hstack(
+                                _direction_toggle(),
+                                _speed_toggle(),
+                                spacing="3",
+                                align="center",
+                            ),
                             rx.box(),
                         ),
                         rx.button(
