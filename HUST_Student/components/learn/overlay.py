@@ -101,7 +101,8 @@ def _new_tag():
     )
 
 
-def _speak_button(word_var, size: int = 16, color: str = T.PRIMARY, hover_bg: str = T.PRIMARY_TINT, stop_prop: bool = False):
+def _speak_button(word_var, size: int = 16, color: str = T.PRIMARY,
+                  hover_bg: str = T.PRIMARY_TINT, stop_prop: bool = False):
     click_handler = LearnState.speak_word(word_var)
     if stop_prop:
         click_handler = click_handler.stop_propagation
@@ -127,8 +128,7 @@ def _direction_toggle():
                 rx.text("F", font_size="0.7rem", font_weight="500",
                         color=rx.cond(is_ntf, "white", T.TEXT_MUTED),
                         white_space="nowrap"),
-                padding="3px 8px",
-                border_radius="999px",
+                padding="3px 8px", border_radius="999px",
                 bg=rx.cond(is_ntf, T.PRIMARY, "transparent"),
                 cursor="pointer",
                 on_click=lambda: LearnState.set_answer_language("native_to_foreign"),
@@ -138,8 +138,7 @@ def _direction_toggle():
                 rx.text("N", font_size="0.7rem", font_weight="500",
                         color=rx.cond(~is_ntf, "white", T.TEXT_MUTED),
                         white_space="nowrap"),
-                padding="3px 8px",
-                border_radius="999px",
+                padding="3px 8px", border_radius="999px",
                 bg=rx.cond(~is_ntf, T.PRIMARY, "transparent"),
                 cursor="pointer",
                 on_click=lambda: LearnState.set_answer_language("foreign_to_native"),
@@ -151,64 +150,132 @@ def _direction_toggle():
             border_radius="999px",
             padding="2px",
         ),
-        spacing="2",
-        align="center",
+        spacing="2", align="center",
+    )
+
+
+# ── Speed toggle: 5 mức ──────────────────────────────────────────
+
+_SPEED_LEVELS = [
+    (0.5, "x0.5"),
+    (0.7, "x0.7"),
+    (1.0, "Thường"),
+    (1.3, "x1.3"),
+    (1.6, "x1.6"),
+]
+
+
+def _speed_btn(rate: float, label: str):
+    active = LearnState.speech_rate == rate
+    return rx.box(
+        rx.text(label, font_size="0.68rem", font_weight="500",
+                color=rx.cond(active, "white", T.TEXT_MUTED),
+                white_space="nowrap"),
+        padding="3px 7px", border_radius="999px",
+        bg=rx.cond(active, T.PRIMARY, "transparent"),
+        cursor="pointer",
+        on_click=lambda: LearnState.set_speech_rate(rate),
+        transition="all 0.15s ease",
     )
 
 
 def _speed_toggle():
-    rate = LearnState.speech_rate
     return rx.hstack(
-        rx.text("Tốc độ:", font_size="0.7rem", font_weight="500", color=T.TEXT_MUTED),
+        rx.text("Tốc:", font_size="0.7rem", font_weight="500", color=T.TEXT_MUTED),
         rx.hstack(
-            rx.box(
-                rx.text("Chậm", font_size="0.7rem", font_weight="500",
-                        color=rx.cond(rate == 0.7, "white", T.TEXT_MUTED),
-                        white_space="nowrap"),
-                padding="3px 8px",
-                border_radius="999px",
-                bg=rx.cond(rate == 0.7, T.PRIMARY, "transparent"),
-                cursor="pointer",
-                on_click=lambda: LearnState.set_speech_rate(0.7),
-                transition="all 0.15s ease",
-            ),
-            rx.box(
-                rx.text("Thường", font_size="0.7rem", font_weight="500",
-                        color=rx.cond(rate == 1.0, "white", T.TEXT_MUTED),
-                        white_space="nowrap"),
-                padding="3px 8px",
-                border_radius="999px",
-                bg=rx.cond(rate == 1.0, T.PRIMARY, "transparent"),
-                cursor="pointer",
-                on_click=lambda: LearnState.set_speech_rate(1.0),
-                transition="all 0.15s ease",
-            ),
-            rx.box(
-                rx.text("Nhanh", font_size="0.7rem", font_weight="500",
-                        color=rx.cond(rate == 1.3, "white", T.TEXT_MUTED),
-                        white_space="nowrap"),
-                padding="3px 8px",
-                border_radius="999px",
-                bg=rx.cond(rate == 1.3, T.PRIMARY, "transparent"),
-                cursor="pointer",
-                on_click=lambda: LearnState.set_speech_rate(1.3),
-                transition="all 0.15s ease",
-            ),
+            *[_speed_btn(r, l) for r, l in _SPEED_LEVELS],
             spacing="0",
             bg=T.BORDER_LIGHT,
             border=f"0.5px solid {T.BORDER}",
             border_radius="999px",
             padding="2px",
         ),
+        spacing="2", align="center",
+    )
+
+
+# ── Volume toggle: 5 mức (0%, 25%, 50%, 75%, 100%) ───────────────
+
+_VOLUME_LEVELS = [
+    (0.0, "🔇"),
+    (0.25, "🔈"),
+    (0.5, "🔉"),
+    (0.75, "🔊"),
+    (1.0, "MAX"),
+]
+
+
+def _volume_btn(vol: float, label: str):
+    active = LearnState.speech_volume == vol
+    return rx.box(
+        rx.text(label, font_size="0.68rem", font_weight="600",
+                color=rx.cond(active, "white", T.TEXT_MUTED),
+                white_space="nowrap"),
+        padding="3px 7px", border_radius="999px",
+        bg=rx.cond(active, "#0369A1", "transparent"),
+        cursor="pointer",
+        on_click=lambda: LearnState.set_speech_volume(vol),
+        transition="all 0.15s ease",
+        title=f"{int(vol * 100)}%",
+    )
+
+
+def _volume_toggle():
+    return rx.hstack(
+        rx.text("Vol:", font_size="0.7rem", font_weight="500", color=T.TEXT_MUTED),
+        rx.hstack(
+            *[_volume_btn(v, l) for v, l in _VOLUME_LEVELS],
+            spacing="0",
+            bg=T.BORDER_LIGHT,
+            border=f"0.5px solid {T.BORDER}",
+            border_radius="999px",
+            padding="2px",
+        ),
+        rx.text(
+            LearnState.volume_pct_label,
+            font_size="0.65rem",
+            color=T.TEXT_MUTED,
+            min_width="28px",
+        ),
+        spacing="2", align="center",
+    )
+
+
+# ── Audio controls row ────────────────────────────────────────────
+
+def _audio_controls():
+    """Gộp speed + volume vào một row compact."""
+    return rx.vstack(
+        rx.hstack(
+            _direction_toggle(),
+            rx.spacer(),
+            rx.hstack(
+                rx.icon("volume-2", size=13, color=T.TEXT_MUTED),
+                rx.text("Âm thanh", font_size="0.68rem", font_weight="600",
+                        color=T.TEXT_MUTED),
+                spacing="1", align="center",
+            ),
+            width="100%", align="center",
+        ),
+        rx.hstack(
+            _speed_toggle(),
+            rx.box(width="1px", height="18px", bg=T.BORDER),
+            _volume_toggle(),
+            spacing="3",
+            flex_wrap="wrap",
+            align="center",
+        ),
         spacing="2",
-        align="center",
+        padding="0.6rem 0.8rem",
+        bg=T.BORDER_LIGHT,
+        border=f"1px solid {T.BORDER}",
+        border_radius=T.RADIUS_MD,
+        width="100%",
     )
 
 
 # ═══════════════════════════════════════════════════════════════════
 # PHASE: PREVIEW
-# Enter: chưa lật → lật; đã lật → "Đã biết"
-# Dùng input ẩn để bắt phím (rx.box không hỗ trợ on_key_down)
 # ═══════════════════════════════════════════════════════════════════
 
 def preview_phase():
@@ -247,8 +314,7 @@ def preview_phase():
                         text_align="center", line_height="1.3",
                     ),
                     _speak_button(LearnState.current_foreign_word, size=22, stop_prop=True),
-                    spacing="3",
-                    align="center",
+                    spacing="3", align="center",
                 ),
                 rx.text(
                     rx.cond(
@@ -271,17 +337,11 @@ def preview_phase():
             _hover={"border_color": T.PRIMARY, "box_shadow": T.SHADOW_CARD_HOVER},
         ),
 
-        # Input ẩn để bắt Enter trong preview
         rx.input(
             value="",
             on_key_down=LearnState.handle_preview_key,
-            position="absolute",
-            opacity="0",
-            pointer_events="none",
-            width="1px",
-            height="1px",
-            tab_index=0,
-            auto_focus=True,
+            position="absolute", opacity="0", pointer_events="none",
+            width="1px", height="1px", tab_index=0, auto_focus=True,
         ),
 
         rx.hstack(
@@ -313,7 +373,6 @@ def preview_phase():
 
 # ═══════════════════════════════════════════════════════════════════
 # PHASE: PRACTICE — TYPE
-# Enter: submit nếu chưa feedback; tiếp tục nếu đã feedback
 # ═══════════════════════════════════════════════════════════════════
 
 def _question_box(accent_bg: str, accent_border: str):
@@ -336,8 +395,7 @@ def _question_box(accent_bg: str, accent_border: str):
                     _speak_button(LearnState.current_foreign_word, size=18),
                     rx.box(),
                 ),
-                spacing="2",
-                align="center",
+                spacing="2", align="center",
             ),
             spacing="2", align="center",
         ),
@@ -355,88 +413,65 @@ def type_practice():
             rx.vstack(
                 rx.cond(
                     LearnState.feedback_correct,
-                    # ── Đúng ──
                     rx.box(
                         rx.hstack(
                             rx.icon("check-circle", size=18, color="#15803D"),
-                            rx.text(
-                                LearnState.feedback_message,
-                                font_size="1rem", font_weight="600", color="#15803D",
-                            ),
+                            rx.text(LearnState.feedback_message,
+                                    font_size="1rem", font_weight="600", color="#15803D"),
                             rx.cond(
                                 LearnState.answer_language == "foreign_to_native",
-                                _speak_button(LearnState.current_foreign_word, size=16, color="#15803D", hover_bg="#DCFCE7"),
+                                _speak_button(LearnState.current_foreign_word, size=16,
+                                              color="#15803D", hover_bg="#DCFCE7"),
                                 rx.box(),
                             ),
                             spacing="2", align="center", justify="center",
                         ),
                         width="100%", padding="1rem 1.2rem",
-                        bg="#F0FDF4", border="1.5px solid #BBF7D0",
-                        border_radius="14px",
+                        bg="#F0FDF4", border="1.5px solid #BBF7D0", border_radius="14px",
                     ),
-                    # ── Sai ──
                     rx.box(
                         rx.vstack(
                             rx.hstack(
                                 rx.icon("x-circle", size=15, color="#B91C1C"),
-                                rx.text(
-                                    "Bạn đã nhập:",
-                                    font_size="0.72rem", font_weight="700", color="#B91C1C",
-                                    text_transform="uppercase", letter_spacing="0.05em",
-                                ),
+                                rx.text("Bạn đã nhập:", font_size="0.72rem", font_weight="700",
+                                        color="#B91C1C", text_transform="uppercase",
+                                        letter_spacing="0.05em"),
                                 spacing="2", align="center",
                             ),
-                            rx.text(
-                                LearnState.user_answer,
-                                font_size="1.15rem", font_weight="700",
-                                color="#B91C1C", text_align="center",
-                                text_decoration="line-through",
-                                opacity="0.85",
-                            ),
+                            rx.text(LearnState.user_answer, font_size="1.15rem",
+                                    font_weight="700", color="#B91C1C", text_align="center",
+                                    text_decoration="line-through", opacity="0.85"),
                             rx.box(height="1px", width="100%", bg="#FECACA", margin_y="0.25rem"),
                             rx.hstack(
                                 rx.icon("check-circle", size=15, color="#15803D"),
-                                rx.text(
-                                    "Đáp án đúng:",
-                                    font_size="0.72rem", font_weight="700", color="#15803D",
-                                    text_transform="uppercase", letter_spacing="0.05em",
-                                ),
+                                rx.text("Đáp án đúng:", font_size="0.72rem", font_weight="700",
+                                        color="#15803D", text_transform="uppercase",
+                                        letter_spacing="0.05em"),
                                 spacing="2", align="center",
                             ),
                             rx.hstack(
-                                rx.text(
-                                    LearnState.correct_answer,
-                                    font_size="1.3rem", font_weight="800",
-                                    color="#15803D", text_align="center",
-                                ),
+                                rx.text(LearnState.correct_answer, font_size="1.3rem",
+                                        font_weight="800", color="#15803D", text_align="center"),
                                 rx.cond(
                                     LearnState.answer_language == "foreign_to_native",
-                                    _speak_button(LearnState.current_foreign_word, size=16, color="#15803D", hover_bg="#DCFCE7"),
+                                    _speak_button(LearnState.current_foreign_word, size=16,
+                                                  color="#15803D", hover_bg="#DCFCE7"),
                                     rx.box(),
                                 ),
-                                spacing="2",
-                                align="center",
+                                spacing="2", align="center",
                             ),
                             spacing="1", align="center", width="100%",
                         ),
                         width="100%", padding="1rem 1.2rem",
-                        bg="#FFF5F5", border="1.5px solid #FECACA",
-                        border_radius="14px",
+                        bg="#FFF5F5", border="1.5px solid #FECACA", border_radius="14px",
                     ),
                 ),
-                # Input ẩn auto_focus để bắt Enter khi đang hiện feedback
                 rx.input(
                     value="",
                     on_key_down=LearnState.handle_type_key,
-                    position="absolute",
-                    opacity="0",
-                    pointer_events="none",
-                    width="1px",
-                    height="1px",
-                    tab_index=0,
-                    auto_focus=True,
+                    position="absolute", opacity="0", pointer_events="none",
+                    width="1px", height="1px", tab_index=0, auto_focus=True,
                 ),
-                # Nút tiếp theo
                 rx.button(
                     rx.hstack(
                         rx.text("Tiếp theo"),
@@ -450,17 +485,12 @@ def type_practice():
                     padding="0.65rem 1.5rem", font_weight="700", width="100%",
                     _hover={"opacity": "0.9"},
                 ),
-                spacing="3", width="100%",
-                position="relative",
+                spacing="3", width="100%", position="relative",
             ),
-            # ── Input box (visible, bắt Enter) ──
             rx.vstack(
                 rx.text(
-                    rx.cond(
-                        LearnState.answer_language == "native_to_foreign",
-                        "Gõ thuật ngữ",
-                        "Gõ nghĩa",
-                    ),
+                    rx.cond(LearnState.answer_language == "native_to_foreign",
+                            "Gõ thuật ngữ", "Gõ nghĩa"),
                     font_size="0.85rem", color="#6B7280", font_weight="500",
                 ),
                 rx.hstack(
@@ -495,7 +525,6 @@ def type_practice():
 
 # ═══════════════════════════════════════════════════════════════════
 # PHASE: PRACTICE — CHOICE
-# Enter sau khi đã chọn → tiếp tục (input ẩn bắt phím)
 # ═══════════════════════════════════════════════════════════════════
 
 def _choice_btn(option: str):
@@ -548,11 +577,8 @@ def choice_practice():
     return rx.vstack(
         _question_box(T.QUESTION_BOX_ALT_BG, T.QUESTION_BOX_ALT_BORDER),
         rx.text(
-            rx.cond(
-                LearnState.answer_language == "native_to_foreign",
-                "Chọn thuật ngữ đúng",
-                "Chọn nghĩa đúng",
-            ),
+            rx.cond(LearnState.answer_language == "native_to_foreign",
+                    "Chọn thuật ngữ đúng", "Chọn nghĩa đúng"),
             font_size="0.82rem", color="#6B7280", font_weight="500",
         ),
         rx.grid(
@@ -576,20 +602,13 @@ def choice_practice():
                     padding="0.65rem 2rem", font_weight="700", width="100%",
                     _hover={"opacity": "0.9"},
                 ),
-                # Input ẩn bắt Enter sau khi đã chọn đáp án
                 rx.input(
                     value="",
                     on_key_down=LearnState.handle_choice_key,
-                    position="absolute",
-                    opacity="0",
-                    pointer_events="none",
-                    width="1px",
-                    height="1px",
-                    tab_index=0,
-                    auto_focus=True,
+                    position="absolute", opacity="0", pointer_events="none",
+                    width="1px", height="1px", tab_index=0, auto_focus=True,
                 ),
-                spacing="2", width="100%",
-                position="relative",
+                spacing="2", width="100%", position="relative",
             ),
             rx.box(),
         ),
@@ -606,7 +625,7 @@ def practice_phase():
 
 
 # ═══════════════════════════════════════════════════════════════════
-# PHASE: BATCH REVIEW (tái dùng type_practice)
+# PHASE: BATCH REVIEW
 # ═══════════════════════════════════════════════════════════════════
 
 def batch_review_phase():
@@ -694,22 +713,23 @@ def complete_phase():
         rx.box(
             rx.hstack(
                 rx.vstack(
-                    rx.text(LearnState.accuracy_pct, "%", font_size="2.2rem", font_weight="800",
+                    rx.text(LearnState.accuracy_pct, "%", font_size="2.2rem",
+                            font_weight="800",
                             color=rx.cond(LearnState.accuracy_pct >= 70, "#16A34A", "#F59E0B")),
                     rx.text("Độ chính xác", font_size="0.8rem", color="#6B7280"),
                     align="center",
                 ),
                 rx.box(width="1px", height="60px", bg="#E5E7EB"),
                 rx.vstack(
-                    rx.text(LearnState.mastered_count, font_size="2.2rem", font_weight="800",
-                            color=T.PRIMARY),
+                    rx.text(LearnState.mastered_count, font_size="2.2rem",
+                            font_weight="800", color=T.PRIMARY),
                     rx.text("Thành thạo", font_size="0.8rem", color="#6B7280"),
                     align="center",
                 ),
                 rx.box(width="1px", height="60px", bg="#E5E7EB"),
                 rx.vstack(
-                    rx.text(LearnState.round_number, font_size="2.2rem", font_weight="800",
-                            color="#F59E0B"),
+                    rx.text(LearnState.round_number, font_size="2.2rem",
+                            font_weight="800", color="#F59E0B"),
                     rx.text("Vòng học", font_size="0.8rem", color="#6B7280"),
                     align="center",
                 ),
@@ -774,11 +794,12 @@ def learn_overlay():
         rx.box(
             rx.box(
                 rx.vstack(
-                    # Header
+                    # ── Header ───────────────────────────────────
                     rx.hstack(
                         rx.vstack(
                             rx.text(LearnState.set_title,
-                                    font_size="1.15rem", font_weight="700", color=T.TEXT_PRIMARY),
+                                    font_size="1.15rem", font_weight="700",
+                                    color=T.TEXT_PRIMARY),
                             rx.hstack(
                                 _phase_badge(),
                                 rx.text(LearnState.queue_progress_label,
@@ -790,36 +811,20 @@ def learn_overlay():
                             ),
                             rx.cond(
                                 LearnState.phase == "practice",
-                                rx.text(
-                                    LearnState.session_srs_hint,
-                                    font_size="0.72rem",
-                                    color=T.TEXT_SECONDARY,
-                                    line_height="1.35",
-                                ),
+                                rx.text(LearnState.session_srs_hint,
+                                        font_size="0.72rem", color=T.TEXT_SECONDARY,
+                                        line_height="1.35"),
                                 rx.cond(
                                     LearnState.phase == "batch_review",
-                                    rx.text(
-                                        LearnState.session_srs_hint,
-                                        font_size="0.72rem",
-                                        color=T.TEXT_SECONDARY,
-                                        line_height="1.35",
-                                    ),
+                                    rx.text(LearnState.session_srs_hint,
+                                            font_size="0.72rem", color=T.TEXT_SECONDARY,
+                                            line_height="1.35"),
                                     rx.box(),
                                 ),
                             ),
                             spacing="1", align="start",
                         ),
                         rx.spacer(),
-                        rx.cond(
-                            LearnState.phase != "complete",
-                            rx.hstack(
-                                _direction_toggle(),
-                                _speed_toggle(),
-                                spacing="3",
-                                align="center",
-                            ),
-                            rx.box(),
-                        ),
                         rx.button(
                             rx.icon("x", size=18),
                             on_click=LearnState.close_learn,
@@ -830,10 +835,17 @@ def learn_overlay():
                         width="100%", align="center", spacing="3",
                     ),
 
-                    # Progress bars
+                    # ── Progress bars ─────────────────────────────
                     rx.cond(
                         LearnState.phase != "complete",
                         _progress_bar(),
+                        rx.box(),
+                    ),
+
+                    # ── Audio controls (speed + volume + direction) ──
+                    rx.cond(
+                        LearnState.phase != "complete",
+                        _audio_controls(),
                         rx.box(),
                     ),
 
@@ -841,7 +853,7 @@ def learn_overlay():
 
                     learn_phase_router(),
 
-                    spacing="5", padding="1.8rem 2rem 2rem", width="100%",
+                    spacing="4", padding="1.8rem 2rem 2rem", width="100%",
                 ),
                 bg="white", border_radius=T.RADIUS_XL,
                 width="580px", max_width="min(580px, calc(100vw - 2.5rem))",

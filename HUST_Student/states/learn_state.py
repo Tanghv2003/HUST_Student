@@ -60,7 +60,12 @@ class LearnState(rx.State):
     mastered_count: int = 0
     learning_count: int = 0
     not_started_count: int = 0
-    speech_rate: float = 0.85
+
+    # ── Âm thanh ──────────────────────────────────────────────────
+    # Tốc độ: 0.5 | 0.7 | 1.0 | 1.3 | 1.6
+    speech_rate: float = 1.0
+    # Âm lượng: 0.0 → 1.0 (0%, 25%, 50%, 75%, 100%)
+    speech_volume: float = 1.0
 
     # ═══════════════════════════════════════════════════════════════
     # SETUP
@@ -90,6 +95,9 @@ class LearnState(rx.State):
 
     def set_speech_rate(self, value: float):
         self.speech_rate = float(value)
+
+    def set_speech_volume(self, value: float):
+        self.speech_volume = max(0.0, min(1.0, float(value)))
 
     # ── Helpers ──────────────────────────────────────────────────
 
@@ -250,10 +258,6 @@ class LearnState(rx.State):
         return self._load_preview_card()
 
     def handle_preview_key(self, key: str):
-        """Enter trong preview:
-        - Nếu chưa lật → lật thẻ
-        - Nếu đã lật → "Đã biết" (tiếp tục)
-        """
         if key != "Enter":
             return
         if not self.is_preview_flipped:
@@ -319,10 +323,6 @@ class LearnState(rx.State):
         self.typed_answer = str(text) if text else ""
 
     def handle_type_key(self, key: str):
-        """Enter trong ô nhập type:
-        - Chưa feedback → submit
-        - Đã feedback → tiếp tục
-        """
         if key != "Enter":
             return
         if self.show_feedback:
@@ -382,16 +382,12 @@ class LearnState(rx.State):
         return self._continue_after_answer()
 
     def handle_choice_key(self, key: str):
-        """Enter sau khi đã chọn đáp án trắc nghiệm → tiếp tục."""
         if key != "Enter":
             return
         if self.show_feedback:
             return self._continue_after_answer()
 
-    # ── Batch review key handler ──────────────────────────────────
-
     def handle_batch_review_key(self, key: str):
-        """Enter trong batch_review → giống type."""
         if key != "Enter":
             return
         if self.show_feedback:
@@ -626,18 +622,39 @@ class LearnState(rx.State):
             return ""
         return self.cards[idx].front
 
+    # ── Computed: icon âm lượng ───────────────────────────────────
+    @rx.var
+    def volume_icon(self) -> str:
+        if self.speech_volume == 0.0:
+            return "volume-x"
+        elif self.speech_volume <= 0.4:
+            return "volume-1"
+        elif self.speech_volume <= 0.7:
+            return "volume-2"
+        else:
+            return "volume-2"
+
+    @rx.var
+    def volume_pct_label(self) -> str:
+        return f"{int(self.speech_volume * 100)}%"
+
+    @rx.var
+    def rate_label(self) -> str:
+        mapping = {0.5: "x0.5", 0.7: "x0.7", 1.0: "Thường", 1.3: "x1.3", 1.6: "x1.6"}
+        return mapping.get(self.speech_rate, f"x{self.speech_rate}")
+
     def speak_word(self, word_text: str):
         if not word_text:
             return
-        
+
         is_japanese = any(
-            0x3040 <= ord(c) <= 0x309F or 
-            0x30A0 <= ord(c) <= 0x30FF or 
-            0x4E00 <= ord(c) <= 0x9FAF 
+            0x3040 <= ord(c) <= 0x309F or
+            0x30A0 <= ord(c) <= 0x30FF or
+            0x4E00 <= ord(c) <= 0x9FAF
             for c in word_text
         )
         lang = "ja-JP" if is_japanese else "en-US"
-        
+
         js_code = f"""
         (function() {{
             if ('speechSynthesis' in window) {{
@@ -645,6 +662,7 @@ class LearnState(rx.State):
                 var utterance = new SpeechSynthesisUtterance({repr(word_text)});
                 utterance.lang = '{lang}';
                 utterance.rate = {self.speech_rate};
+                utterance.volume = {self.speech_volume};
                 var voices = window.speechSynthesis.getVoices();
                 if (voices && voices.length > 0) {{
                     var matchingVoice = voices.find(v => v.lang.startsWith('{lang.split("-")[0]}'));
