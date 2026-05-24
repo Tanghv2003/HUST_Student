@@ -8,7 +8,7 @@ from HUST_Student.states.kanji_state import ClassesTabState, ClassTreeState, Kan
 from HUST_Student.states.learn_state import LearnState  # noqa: F401
 from HUST_Student.states.tree_state import TreeState  # noqa: F401
 
-from .pages.home import home
+from .pages.home import home, HomeState  # noqa: F401
 
 
 app = rx.App()
@@ -16,5 +16,5 @@ app = rx.App()
 app.add_page(
     home,
     route="/",
-    title="Q AI",
+    title="X AI",
 )
