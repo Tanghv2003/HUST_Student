@@ -1,8 +1,9 @@
 """
 roadmap_state.py — State quản lý lộ trình học.
-Tương thích Reflex 0.9: dùng list[dict] thay vì rx.Base.
+Tương thích Reflex 0.9: dùng pydantic BaseModel cho typed foreach.
 """
 import reflex as rx
+from pydantic import BaseModel
 
 from HUST_Student.services.roadmap_service import (
     add_roadmap,
@@ -11,6 +12,15 @@ from HUST_Student.services.roadmap_service import (
     toggle_day_completed,
     update_roadmap_title,
 )
+
+
+class DayItem(BaseModel):
+    day: int = 0
+    lessons: list[int] = []
+    completed: bool = False
+    new_lesson: int = 0
+    review_str: str = ""
+    has_reviews: bool = False
 
 
 class RoadmapState(rx.State):
@@ -48,8 +58,21 @@ class RoadmapState(rx.State):
         return len(self.roadmaps)
 
     @rx.var
-    def detail_schedule(self) -> list[dict]:
-        return self.detail_roadmap.get("schedule", [])
+    def detail_schedule(self) -> list[DayItem]:
+        raw = self.detail_roadmap.get("schedule", [])
+        result = []
+        for s in raw:
+            lessons = s.get("lessons", [])
+            reviews = lessons[1:] if len(lessons) > 1 else []
+            result.append(DayItem(
+                day=s.get("day", 0),
+                lessons=lessons,
+                completed=s.get("completed", False),
+                new_lesson=lessons[0] if lessons else 0,
+                review_str=", ".join(str(x) for x in reviews),
+                has_reviews=len(reviews) > 0,
+            ))
+        return result
 
     @rx.var
     def detail_title(self) -> str:
@@ -78,7 +101,19 @@ class RoadmapState(rx.State):
     # ── Load ──────────────────────────────────────────────────────
 
     def load_roadmaps(self):
-        self.roadmaps = load_roadmaps()
+        """Tải dữ liệu và tính toán sẵn số liệu cho Frontend"""
+        raw_data = load_roadmaps()
+        
+        for r in raw_data:
+            schedule = r.get("schedule", [])
+            completed = sum(1 for s in schedule if s.get("completed"))
+            total = r.get("total_days", 0)
+            
+            # Gắn trực tiếp kết quả tính toán vào dict để Frontend gọi thẳng key
+            r["completed_count"] = completed
+            r["pct"] = (completed * 100 // total) if total > 0 else 0
+            
+        self.roadmaps = raw_data
 
     # ── Detail ────────────────────────────────────────────────────
 
@@ -95,8 +130,7 @@ class RoadmapState(rx.State):
 
     def toggle_day(self, roadmap_id: str, day: int):
         toggle_day_completed(roadmap_id, day)
-        self.roadmaps = load_roadmaps()
-        # refresh detail
+        self.load_roadmaps()
         for r in self.roadmaps:
             if r.get("id") == roadmap_id:
                 self.detail_roadmap = dict(r)
@@ -129,7 +163,7 @@ class RoadmapState(rx.State):
             self.message_type = "error"
             return
         add_roadmap(title, self.new_total_days)
-        self.roadmaps = load_roadmaps()
+        self.load_roadmaps()
         self.close_add()
         self.message = f"✅ Đã tạo lộ trình '{title}'"
         self.message_type = "success"
@@ -155,7 +189,7 @@ class RoadmapState(rx.State):
             self.message_type = "error"
             return
         update_roadmap_title(self.edit_id, title)
-        self.roadmaps = load_roadmaps()
+        self.load_roadmaps()
         self.close_edit()
         self.message = f"✅ Đã đổi tên thành '{title}'"
         self.message_type = "success"
@@ -173,7 +207,7 @@ class RoadmapState(rx.State):
 
     def confirm_delete(self):
         delete_roadmap(self.delete_id)
-        self.roadmaps = load_roadmaps()
+        self.load_roadmaps()
         self.close_delete()
         self.message = f"✅ Đã xóa lộ trình '{self.delete_title}'"
         self.message_type = "success"

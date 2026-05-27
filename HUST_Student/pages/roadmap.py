@@ -1,12 +1,12 @@
 """
 roadmap.py — Trang quản lý lộ trình học.
-Tương thích Reflex 0.9: dùng list[dict], không dùng rx.Base.
+Tương thích Reflex 0.9.
 """
 import reflex as rx
 
 from HUST_Student.components.ui import theme as T
 from HUST_Student.components.ui.modal import modal_close_btn
-from HUST_Student.states.roadmap_state import RoadmapState
+from HUST_Student.states.roadmap_state import RoadmapState, DayItem
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -171,65 +171,57 @@ def _delete_modal():
 # MODAL: DETAIL — lịch từng ngày
 # ══════════════════════════════════════════════════════════════════
 
-def _day_row(day_item: dict):
-    """Render 1 dòng ngày trong lịch. day_item là dict."""
-    day_num = day_item["day"]
-    lessons = day_item["lessons"]
-    is_completed = day_item["completed"]
-
-    # lessons[0] = bài mới, lessons[1:] = bài ôn
-    new_lesson = lessons[0]
-    review_lessons = lessons[1:]
-
+def _day_row(day_item: DayItem):
+    """Render 1 dòng ngày trong lịch. day_item là DayItem (pydantic BaseModel)."""
     return rx.box(
         rx.hstack(
             # Checkbox
             rx.box(
                 rx.cond(
-                    is_completed,
+                    day_item.completed,
                     rx.icon("check", size=13, color="white"),
                     rx.box(),
                 ),
                 width="22px", height="22px",
                 border_radius="6px",
-                bg=rx.cond(is_completed, T.PRIMARY, T.SURFACE),
+                bg=rx.cond(day_item.completed, T.PRIMARY, T.SURFACE),
                 border=rx.cond(
-                    is_completed,
+                    day_item.completed,
                     f"2px solid {T.PRIMARY}",
                     f"2px solid {T.BORDER}",
                 ),
                 display="flex", align_items="center", justify_content="center",
                 cursor="pointer", flex_shrink="0",
                 on_click=RoadmapState.toggle_day(
-                    RoadmapState.detail_roadmap_id, day_num
+                    RoadmapState.detail_roadmap_id, day_item.day
                 ),
                 transition="all 0.15s ease",
                 _hover={"border_color": T.PRIMARY},
             ),
             # Ngày
             rx.text(
-                f"Ngày {day_num}",
+                "Ngày ", day_item.day,
                 font_size="0.78rem", font_weight="700",
-                color=rx.cond(is_completed, T.PRIMARY, T.TEXT_MUTED),
+                color=rx.cond(day_item.completed, T.PRIMARY, T.TEXT_MUTED),
                 width="58px", flex_shrink="0",
             ),
             # Bài mới
             rx.hstack(
                 rx.icon("book-open", size=12, color=T.PRIMARY),
                 rx.text(
-                    f"Bài mới: {new_lesson}",
+                    "Bài mới: ", day_item.new_lesson,
                     font_size="0.85rem", font_weight="600",
-                    color=rx.cond(is_completed, T.TEXT_MUTED, T.TEXT_PRIMARY),
-                    text_decoration=rx.cond(is_completed, "line-through", "none"),
+                    color=rx.cond(day_item.completed, T.TEXT_MUTED, T.TEXT_PRIMARY),
+                    text_decoration=rx.cond(day_item.completed, "line-through", "none"),
                 ),
                 spacing="1", align="center",
             ),
             rx.spacer(),
             # Bài ôn
             rx.cond(
-                rx.Var.create(len(review_lessons) > 0),
+                day_item.has_reviews,
                 rx.text(
-                    f"Ôn: {', '.join(str(x) for x in review_lessons)}",
+                    "Ôn: ", day_item.review_str,
                     font_size="0.72rem", color=T.TEXT_MUTED,
                     no_of_lines=1, max_width="180px",
                 ),
@@ -239,9 +231,9 @@ def _day_row(day_item: dict):
         ),
         width="100%", padding="0.55rem 0.75rem",
         border_radius=T.RADIUS_MD,
-        bg=rx.cond(is_completed, T.PRIMARY_TINT, T.SURFACE),
+        bg=rx.cond(day_item.completed, T.PRIMARY_TINT, T.SURFACE),
         border=rx.cond(
-            is_completed,
+            day_item.completed,
             f"1px solid {T.PRIMARY_LIGHT}",
             f"1px solid {T.BORDER}",
         ),
@@ -351,9 +343,10 @@ def _roadmap_card(r: dict):
     title = r["title"]
     total = r["total_days"]
     protocol = r["protocol"]
-    schedule = r.get("schedule", [])
-    completed = sum(1 for s in schedule if s.get("completed"))
-    pct = (completed * 100 // total) if total > 0 else 0
+    
+    # Read the pre-calculated values directly from the frontend Var
+    completed = r["completed_count"]
+    pct = r["pct"]
 
     return rx.box(
         rx.vstack(
