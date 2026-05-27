@@ -6,6 +6,7 @@ from HUST_Student.states.folder_manager_state import FolderManagerState  # noqa:
 from HUST_Student.states.folder_state import FolderState  # noqa: F401
 from HUST_Student.states.kanji_state import ClassesTabState, ClassTreeState, KanjiState  # noqa: F401
 from HUST_Student.states.learn_state import LearnState  # noqa: F401
+from HUST_Student.states.roadmap_state import RoadmapState  # noqa: F401
 from HUST_Student.states.tree_state import TreeState  # noqa: F401
 
 from .pages.home import home, HomeState  # noqa: F401

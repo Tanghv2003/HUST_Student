@@ -32,6 +32,14 @@ class NavigationState(rx.State):
     def go_conversation(self):
         self.current_page = "conversation"
 
+    @rx.event
+    async def go_roadmap(self):
+        from HUST_Student.states.roadmap_state import RoadmapState
+
+        self.current_page = "roadmap"
+        rs = await self.get_state(RoadmapState)
+        rs.load_roadmaps()
+
     def set_folder_detail(self, folder_name: str):
         self.current_page = "folder_detail"
         self.current_folder = folder_name

@@ -27,7 +27,6 @@ def sidebar_item(icon: str, text: str, active, on_click):
 
 
 def _library_tree_section():
-    """Section cây thư mục trong sidebar — reactive qua TreeState."""
     from HUST_Student.components.folder_tree import sidebar_folder_tree
     from HUST_Student.states.tree_state import TreeState
 
@@ -61,7 +60,6 @@ def _library_tree_section():
 
 
 def _classes_tree_section():
-    """Section cây lớp học trong sidebar — reactive qua ClassTreeState."""
     from HUST_Student.components.classes.class_tree_sidebar import class_sidebar_tree
     from HUST_Student.states.kanji_state import ClassTreeState
 
@@ -143,6 +141,12 @@ def sidebar():
                 "Lớp học",
                 NavigationState.current_page == "classes",
                 NavigationState.go_classes,
+            ),
+            sidebar_item(
+                "map",
+                "Lộ trình",
+                NavigationState.current_page == "roadmap",
+                NavigationState.go_roadmap,
             ),
             spacing="0",
             width="100%",
