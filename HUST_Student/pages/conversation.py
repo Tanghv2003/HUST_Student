@@ -49,14 +49,71 @@ def _chat_bubble(row: ChatLine):
                     margin_top="2px",
                 ),
                 rx.box(
-                    rx.text(
-                        row.text,
-                        font_size="0.925rem",
-                        color=T.TEXT_PRIMARY,
-                        white_space="pre-wrap",
-                        line_height="1.6",
+                    rx.vstack(
+                        # Context
+                        rx.cond(
+                            row.context != "",
+                            rx.box(
+                                rx.text(row.context, font_size="0.8rem", font_weight="600", color=T.TEXT_SECONDARY),
+                                bg=T.PAGE_BG,
+                                border_radius=T.RADIUS_SM,
+                                padding="0.3rem 0.6rem",
+                                margin_bottom="0.5rem",
+                            ),
+                            rx.box(),
+                        ),
+                        # Dialogue with Speaker
+                        rx.hstack(
+                            rx.text(
+                                row.dialogue,
+                                font_size="0.95rem",
+                                color=T.TEXT_PRIMARY,
+                                font_weight="600",
+                                line_height="1.5",
+                                flex="1",
+                            ),
+                            rx.button(
+                                rx.icon("volume-2", size=15),
+                                on_click=ConversationState.speak_text(row.dialogue),
+                                bg="transparent",
+                                color=T.PRIMARY,
+                                _hover={"bg": T.PRIMARY_TINT},
+                                padding="0",
+                                width="28px",
+                                height="28px",
+                                border_radius="50%",
+                                flex_shrink="0",
+                            ),
+                            width="100%",
+                            align="center",
+                            spacing="2",
+                        ),
+                        # Feedback/Reasoning
+                        rx.cond(
+                            row.feedback != "",
+                            rx.box(
+                                rx.hstack(
+                                    rx.icon("lightbulb", size=14, color=T.WARN),
+                                    rx.text("Gợi ý & Sửa lỗi", font_size="0.78rem", font_weight="700", color=T.WARN),
+                                    spacing="1",
+                                    align="center",
+                                    margin_bottom="0.2rem",
+                                ),
+                                rx.text(row.feedback, font_size="0.85rem", color=T.TEXT_SECONDARY, line_height="1.5"),
+                                bg="#FFFDF5",
+                                border=f"1px solid #F5E6D3",
+                                border_radius=T.RADIUS_SM,
+                                padding="0.6rem",
+                                margin_top="0.6rem",
+                                width="100%",
+                            ),
+                            rx.box(),
+                        ),
+                        align="start",
+                        spacing="0",
+                        width="100%",
                     ),
-                    padding="0.85rem 1.1rem",
+                    padding="0.9rem 1.2rem",
                     border_radius="18px 18px 18px 4px",
                     bg=T.SURFACE,
                     border=f"1px solid {T.BORDER}",
@@ -272,10 +329,18 @@ def conversation_page():
                     padding="0.5rem 0.25rem",
                 ),
 
+                # Hidden elements for Speech API callbacks
+                rx.button(
+                    id="stop-listening-btn",
+                    on_click=ConversationState.stop_listening,
+                    display="none",
+                ),
+
                 # Input
                 rx.hstack(
                     rx.input(
-                        placeholder="Nhập câu trả lời của bạn…",
+                        id="user-chat-input",
+                        placeholder="Nhập câu trả lời hoặc nhấn biểu tượng mic để nói…",
                         value=ConversationState.user_input,
                         on_change=ConversationState.set_user_input,
                         on_key_down=ConversationState.handle_key_press,
@@ -290,6 +355,41 @@ def conversation_page():
                                 "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}",
                                 "bg": T.SURFACE},
                     ),
+                    # Microphone Button (STT)
+                    rx.cond(
+                        ConversationState.is_listening,
+                        rx.button(
+                            rx.icon("mic-off", size=16),
+                            on_click=ConversationState.stop_listening,
+                            bg=T.DANGER,
+                            color="white",
+                            border_radius="999px",
+                            width="44px",
+                            height="44px",
+                            flex_shrink="0",
+                            _hover={"bg": "#c0392b"},
+                            padding="0",
+                            display="flex",
+                            align_items="center",
+                            justify_content="center",
+                        ),
+                        rx.button(
+                            rx.icon("mic", size=16),
+                            on_click=ConversationState.start_listening,
+                            bg=T.PRIMARY_LIGHT,
+                            color=T.PRIMARY,
+                            border_radius="999px",
+                            width="44px",
+                            height="44px",
+                            flex_shrink="0",
+                            _hover={"bg": T.PRIMARY_TINT},
+                            padding="0",
+                            display="flex",
+                            align_items="center",
+                            justify_content="center",
+                        ),
+                    ),
+                    # Send Button
                     rx.button(
                         rx.icon("send", size=16),
                         on_click=ConversationState.submit_answer,

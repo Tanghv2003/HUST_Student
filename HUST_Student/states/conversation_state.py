@@ -17,6 +17,24 @@ _LANG_NAMES = {
     "zh": "Tiếng Trung",
     "fr": "Tiếng Pháp",
     "de": "Tiếng Đức",
+    "es": "Tiếng Tây Ban Nha",
+    "it": "Tiếng Ý",
+    "pt": "Tiếng Bồ Đào Nha",
+    "ru": "Tiếng Nga",
+}
+
+_LANG_LOCALES = {
+    "vi": "vi-VN",
+    "en": "en-US",
+    "ja": "ja-JP",
+    "ko": "ko-KR",
+    "zh": "zh-CN",
+    "fr": "fr-FR",
+    "de": "de-DE",
+    "es": "es-ES",
+    "it": "it-IT",
+    "pt": "pt-PT",
+    "ru": "ru-RU",
 }
 
 _LEVEL_NAMES = {
@@ -127,6 +145,67 @@ def _to_gemini_history(messages: list[dict]) -> list[dict]:
     return result
 
 
+def parse_ai_response(text: str) -> tuple[str, str, str]:
+    """Trả về (dialogue, feedback, context)"""
+    dialogue = ""
+    feedback = ""
+    context = ""
+    
+    lines = text.split("\n")
+    dialogue_lines = []
+    feedback_lines = []
+    context_lines = []
+    
+    in_dialogue = False
+    in_feedback = False
+    
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            if in_dialogue:
+                dialogue_lines.append("")
+            elif in_feedback:
+                feedback_lines.append("")
+            continue
+            
+        if "🗣️" in stripped:
+            in_dialogue = True
+            in_feedback = False
+            content = stripped.replace("🗣️", "").strip()
+            if "**" in content:
+                parts = content.split("**", 2)
+                if len(parts) >= 3:
+                    content = parts[2].strip()
+            if content.startswith(":"):
+                content = content[1:].strip()
+            dialogue_lines.append(content)
+        elif "💡" in stripped:
+            in_dialogue = False
+            in_feedback = True
+            content = stripped.replace("💡", "").strip()
+            content = content.replace("**Nhận xét**", "").replace("Nhận xét", "").strip()
+            if content.startswith(":"):
+                content = content[1:].strip()
+            feedback_lines.append(content)
+        else:
+            if in_dialogue:
+                dialogue_lines.append(line)
+            elif in_feedback:
+                feedback_lines.append(line)
+            else:
+                context_lines.append(line)
+                
+    dialogue = "\n".join(dialogue_lines).strip()
+    feedback = "\n".join(feedback_lines).strip()
+    context = "\n".join(context_lines).strip()
+    
+    # Fallback if no dialogue matches: treat whole text as dialogue
+    if not dialogue:
+        dialogue = text
+        
+    return dialogue, feedback, context
+
+
 class ConversationState(rx.State):
     native_lang: str = "vi"
     foreign_lang: str = "en"
@@ -138,6 +217,7 @@ class ConversationState(rx.State):
 
     user_input: str = ""
     chat_rows: list[ChatLine] = []
+    is_listening: bool = False
     _message_history: list[dict] = []  # {role: user|assistant, content: str}
 
     # ── Setters ──────────────────────────────────────────────────
@@ -164,6 +244,78 @@ class ConversationState(rx.State):
     def handle_key_press(self, key: str):
         if key == "Enter" and self.user_input.strip():
             return ConversationState.submit_answer
+
+    @rx.event
+    def speak_text(self, text: str):
+        locale = _LANG_LOCALES.get(self.foreign_lang, "en-US")
+        clean_text = text.replace("'", "\\'").replace("\n", " ")
+        return rx.call_script(f"""
+            if ('speechSynthesis' in window) {{
+                window.speechSynthesis.cancel();
+                var utterance = new SpeechSynthesisUtterance('{clean_text}');
+                utterance.lang = '{locale}';
+                window.speechSynthesis.speak(utterance);
+            }}
+        """)
+
+    @rx.event
+    def start_listening(self):
+        self.is_listening = True
+        locale = _LANG_LOCALES.get(self.foreign_lang, "en-US")
+        return rx.call_script(f"""
+            if (window.activeRecognition) {{
+                try {{ window.activeRecognition.stop(); }} catch(e) {{}}
+            }}
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {{
+                var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                var recognition = new SpeechRecognition();
+                recognition.lang = '{locale}';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                recognition.onstart = function() {{
+                    console.log('Recognition started');
+                }};
+
+                recognition.onerror = function(event) {{
+                    console.error('Recognition error', event.error);
+                    var btn = document.getElementById('stop-listening-btn');
+                    if (btn) btn.click();
+                }};
+
+                recognition.onend = function() {{
+                    console.log('Recognition ended');
+                    var btn = document.getElementById('stop-listening-btn');
+                    if (btn) btn.click();
+                }};
+
+                recognition.onresult = function(event) {{
+                    var resultText = event.results[0][0].transcript;
+                    var input = document.getElementById('user-chat-input');
+                    if (input) {{
+                        input.value = resultText;
+                        input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    }}
+                }};
+
+                window.activeRecognition = recognition;
+                recognition.start();
+            }} else {{
+                alert('Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy dùng Chrome hoặc Safari.');
+                var btn = document.getElementById('stop-listening-btn');
+                if (btn) btn.click();
+            }}
+        """)
+
+    @rx.event
+    def stop_listening(self):
+        self.is_listening = False
+        return rx.call_script("""
+            if (window.activeRecognition) {
+                try { window.activeRecognition.stop(); } catch(e) {}
+                window.activeRecognition = null;
+            }
+        """)
 
     # ── Computed ─────────────────────────────────────────────────
 
@@ -204,13 +356,17 @@ class ConversationState(rx.State):
             ai_text = await _call_gemini(
                 _to_gemini_history([first_msg]), system, _get_api_key()
             )
+            dialogue, feedback, context = parse_ai_response(ai_text)
             async with self:
                 self._message_history = [
                     first_msg,
                     {"role": "assistant", "content": ai_text},
                 ]
-                self.chat_rows = [ChatLine(role="tutor", text=ai_text)]
+                self.chat_rows = [
+                    ChatLine(role="tutor", text=ai_text, dialogue=dialogue, feedback=feedback, context=context)
+                ]
                 self.loading = False
+            yield ConversationState.speak_text(dialogue)
         except Exception as e:
             async with self:
                 self.error = f"Lỗi Gemini API: {str(e)[:200]}"
@@ -230,7 +386,7 @@ class ConversationState(rx.State):
             self.error = ""
             self.user_input = ""
             self.chat_rows = list(self.chat_rows) + [
-                ChatLine(role="user", text=user_text)
+                ChatLine(role="user", text=user_text, dialogue=user_text)
             ]
             new_history = list(self._message_history) + [
                 {"role": "user", "content": user_text}
@@ -244,14 +400,16 @@ class ConversationState(rx.State):
             ai_text = await _call_gemini(
                 _to_gemini_history(new_history), system, _get_api_key()
             )
+            dialogue, feedback, context = parse_ai_response(ai_text)
             async with self:
                 self._message_history = new_history + [
                     {"role": "assistant", "content": ai_text}
                 ]
                 self.chat_rows = list(self.chat_rows) + [
-                    ChatLine(role="tutor", text=ai_text)
+                    ChatLine(role="tutor", text=ai_text, dialogue=dialogue, feedback=feedback, context=context)
                 ]
                 self.loading = False
+            yield ConversationState.speak_text(dialogue)
         except Exception as e:
             async with self:
                 self.error = f"Lỗi Gemini API: {str(e)[:200]}"
