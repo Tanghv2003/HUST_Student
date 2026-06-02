@@ -34,9 +34,56 @@ def load_studyset_detail(file_path: str) -> list:
         return json.load(f)
 
 
+def load_studyset_raw_text(file_path: str) -> str:
+    resolved = STUDYSETS_DIR / Path(file_path)
+    with open(resolved, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def save_studyset_raw_text(file_path: str, text: str) -> None:
+    resolved = STUDYSETS_DIR / Path(file_path)
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    with open(resolved, "w", encoding="utf-8") as f:
+        f.write(text)
+
+
+def save_studyset_detail(file_path: str, words_list: list[dict]) -> None:
+    resolved = STUDYSETS_DIR / Path(file_path)
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    with open(resolved, "w", encoding="utf-8") as f:
+        json.dump(words_list, f, ensure_ascii=False, indent=2)
+
+
+def detect_keys_from_file(file_path: str) -> tuple[str, str]:
+    resolved = STUDYSETS_DIR / Path(file_path)
+    try:
+        with open(resolved, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
+                first = data[0]
+                front_key = "foreign" if "foreign" in first else ("vietnamese" if "vietnamese" in first else "front")
+                back_key = "native" if "native" in first else ("japanese" if "japanese" in first else "back")
+                return front_key, back_key
+    except Exception:
+        pass
+    return "foreign", "native"
+
+
+def save_studyset_words(file_path: str, words: list) -> None:
+    front_key, back_key = detect_keys_from_file(file_path)
+    raw_data = []
+    for w in words:
+        raw_data.append({
+            front_key: w.front,
+            back_key: w.back
+        })
+    save_studyset_detail(file_path, raw_data)
+
+
 # ══════════════════════════════════════════════════════════════════
 # ENRICH (đếm số term từ file JSON nếu chưa có)
 # ══════════════════════════════════════════════════════════════════
+
 
 def _enrich_sets(sets: list) -> list:
     enriched = []

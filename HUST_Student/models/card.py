@@ -19,3 +19,10 @@ class PracticeItem(BaseModel):
     card_index: int
     mode: str
     is_new: bool = True
+
+
+class EditWord(BaseModel):
+    idx: int
+    front: str
+    back: str
+

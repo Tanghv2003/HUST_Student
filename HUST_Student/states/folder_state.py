@@ -2,11 +2,11 @@ import random
 
 import reflex as rx
 
-from HUST_Student.models.card import WordPair
+from HUST_Student.models.card import WordPair, EditWord
 from HUST_Student.models.mini_game import MatchTile
 from HUST_Student.models.studyset import StudySet
 from HUST_Student.models.test import AnswerRecord
-from HUST_Student.services.studyset_service import load_studyset_detail, load_studysets
+from HUST_Student.services.studyset_service import load_studyset_detail, load_studysets, save_studyset_words, load_studyset_raw_text, save_studyset_raw_text
 from HUST_Student.states.learn_state import LearnState
 
 
@@ -22,6 +22,12 @@ class FolderState(rx.State):
     current_folder: str = ""
     current_sets: list[StudySet] = []
     selected_set: StudySet | None = None
+
+    show_edit_studyset: bool = False
+    edit_words: list[EditWord] = []
+    edit_feedback: str = ""
+    edit_mode: str = "cards"  # "cards" | "raw"
+    raw_json_content: str = ""
 
     show_set_options: bool = False
     show_test_options: bool = False
@@ -146,6 +152,160 @@ class FolderState(rx.State):
     def close_set_options(self):
         self.show_set_options = False
         self.selected_set = None
+
+    @rx.event
+    def start_edit_content(self):
+        if not self.selected_set:
+            return
+        self.show_edit_studyset = True
+        self.show_set_options = False
+        self.edit_feedback = ""
+        self.edit_mode = "cards"
+        self.edit_words = [
+            EditWord(idx=i, front=w.front, back=w.back)
+            for i, w in enumerate(self.selected_set.words)
+        ]
+        try:
+            self.raw_json_content = load_studyset_raw_text(self.selected_set.file)
+        except Exception:
+            self.raw_json_content = ""
+
+    @rx.event
+    def close_edit_studyset(self):
+        self.show_edit_studyset = False
+        self.edit_words = []
+        self.raw_json_content = ""
+        self.edit_feedback = ""
+        self.show_set_options = True
+
+    @rx.event
+    def set_raw_json_content(self, text: str):
+        self.raw_json_content = str(text) if text is not None else ""
+        self.edit_feedback = ""
+
+    @rx.event
+    def set_edit_mode(self, mode: str):
+        mode = str(mode)
+        if mode == self.edit_mode:
+            return
+        
+        # Synchronize between tabs
+        if mode == "raw":
+            try:
+                from HUST_Student.services.studyset_service import detect_keys_from_file
+                front_key, back_key = detect_keys_from_file(self.selected_set.file)
+                import json
+                raw_list = [{front_key: w.front, back_key: w.back} for w in self.edit_words]
+                self.raw_json_content = json.dumps(raw_list, ensure_ascii=False, indent=2)
+                self.edit_feedback = ""
+            except Exception as e:
+                self.edit_feedback = f"Lỗi đồng bộ sang JSON: {str(e)}"
+        elif mode == "cards":
+            try:
+                import json
+                parsed = json.loads(self.raw_json_content)
+                if isinstance(parsed, list):
+                    new_words = []
+                    for i, item in enumerate(parsed):
+                        if isinstance(item, dict):
+                            front = item.get("foreign", item.get("vietnamese", item.get("front", "")))
+                            back = item.get("native", item.get("japanese", item.get("back", "")))
+                            new_words.append(EditWord(idx=i, front=front, back=back))
+                    self.edit_words = new_words
+                    self.edit_feedback = ""
+                else:
+                    self.edit_feedback = "Lỗi: Nội dung JSON phải là một danh sách (mảng [])."
+                    return
+            except Exception as e:
+                self.edit_feedback = f"Lỗi cú pháp JSON: {str(e)}"
+                return
+        
+        self.edit_mode = mode
+
+    @rx.event
+    def update_word_front(self, idx: int, value: str):
+        new_words = list(self.edit_words)
+        if 0 <= idx < len(new_words):
+            new_words[idx] = EditWord(idx=idx, front=value, back=new_words[idx].back)
+            self.edit_words = new_words
+
+    @rx.event
+    def update_word_back(self, idx: int, value: str):
+        new_words = list(self.edit_words)
+        if 0 <= idx < len(new_words):
+            new_words[idx] = EditWord(idx=idx, front=new_words[idx].front, back=value)
+            self.edit_words = new_words
+
+    @rx.event
+    def add_edit_word(self):
+        new_words = list(self.edit_words)
+        new_words.append(EditWord(idx=len(new_words), front="", back=""))
+        self.edit_words = new_words
+
+    @rx.event
+    def delete_edit_word(self, idx: int):
+        new_words = list(self.edit_words)
+        if 0 <= idx < len(new_words):
+            new_words.pop(idx)
+        self.edit_words = [
+            EditWord(idx=i, front=w.front, back=w.back)
+            for i, w in enumerate(new_words)
+        ]
+
+    @rx.event
+    async def save_edit_studyset(self):
+        if not self.selected_set:
+            self.edit_feedback = "Không có bài giảng nào được chọn."
+            return
+
+        file_path = self.selected_set.file
+
+        if self.edit_mode == "cards":
+            valid_words = [w for w in self.edit_words if w.front.strip() or w.back.strip()]
+            if not valid_words:
+                self.edit_feedback = "Bài giảng phải có ít nhất 1 thẻ có nội dung."
+                return
+            try:
+                save_studyset_words(file_path, valid_words)
+            except Exception as e:
+                self.edit_feedback = f"Lỗi khi lưu: {str(e)}"
+                return
+        else:
+            try:
+                import json
+                parsed = json.loads(self.raw_json_content)
+                if not isinstance(parsed, list):
+                    self.edit_feedback = "Lỗi: Nội dung JSON phải là một danh sách (mảng [])."
+                    return
+                if any(not isinstance(item, dict) for item in parsed):
+                    self.edit_feedback = "Lỗi: Các phần tử trong danh sách JSON phải là các đối tượng {}."
+                    return
+                
+                save_studyset_raw_text(file_path, self.raw_json_content)
+            except Exception as e:
+                self.edit_feedback = f"Lỗi cú pháp JSON: {str(e)}"
+                return
+
+        try:
+            self.edit_feedback = "Lưu thành công!"
+            
+            from HUST_Student.states.navigation_state import NavigationState
+            nav = await self.get_state(NavigationState)
+            if nav.current_path_key:
+                self.open_folder_path(nav.current_path_key)
+                
+                from HUST_Student.states.folder_manager_state import FolderManagerState
+                mgr = await self.get_state(FolderManagerState)
+                mgr._reload_local()
+                await mgr._sync_sidebar()
+
+            self.show_edit_studyset = False
+            self.edit_words = []
+            self.raw_json_content = ""
+            self.edit_feedback = ""
+            
+        except Exception as e:
+            self.edit_feedback = f"Lỗi khi đồng bộ giao diện: {str(e)}"
 
     def start_flashcards(self):
         if self.selected_set and self.selected_set.words:

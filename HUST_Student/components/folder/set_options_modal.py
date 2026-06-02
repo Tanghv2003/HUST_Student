@@ -31,6 +31,7 @@ def set_options_modal():
                         option_button("grid-3x3", "Khối hợp", on_click=FolderState.start_blocks),
                         option_button("zap", "Blast", on_click=FolderState.start_blast),
                         option_button("shuffle", "Ghép thẻ", on_click=FolderState.start_match),
+                        option_button("pencil", "Chỉnh sửa", on_click=FolderState.start_edit_content),
                         columns="3",
                         spacing="4",
                         width="100%",

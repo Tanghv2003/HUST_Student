@@ -2,6 +2,7 @@ import reflex as rx
 
 from HUST_Student.components.folder.blast_overlay import blast_overlay
 from HUST_Student.components.folder.blocks_overlay import blocks_overlay
+from HUST_Student.components.folder.edit_studyset_overlay import edit_studyset_overlay
 from HUST_Student.components.folder.flashcard_overlay import flashcard_overlay
 from HUST_Student.components.folder.match_overlay import match_overlay
 from HUST_Student.components.folder.set_options_modal import set_options_modal
@@ -27,6 +28,7 @@ def folder_detail_page():
         blast_overlay(),
         blocks_overlay(),
         learn_overlay(),
+        edit_studyset_overlay(),
 
         # Header
         rx.hstack(

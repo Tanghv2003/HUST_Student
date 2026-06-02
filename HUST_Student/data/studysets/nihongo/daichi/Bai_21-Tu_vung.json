@@ -1,66 +1,258 @@
 [
-  { "foreign": "ふる", "native": "rơi (mưa, tuyết)" },
-  { "foreign": "まよう", "native": "lạc đường, phân vân" },
-  { "foreign": "おとす", "native": "đánh rơi" },
-  { "foreign": "ひろう", "native": "nhặt lên" },
-  { "foreign": "なくす", "native": "làm mất" },
-  { "foreign": "あう", "native": "gặp phải (tai nạn, rắc rối)" },
-  { "foreign": "おきる", "native": "xảy ra" },
-  { "foreign": "わすれる", "native": "quên" },
-  { "foreign": "たりる", "native": "đủ" },
-  { "foreign": "つく", "native": "đến nơi" },
-  { "foreign": "とどく", "native": "được gửi đến" },
-  { "foreign": "さく", "native": "nở (hoa)" },
-  { "foreign": "しょうかいする", "native": "giới thiệu" },
-  { "foreign": "やめる", "native": "bỏ, dừng" },
-  { "foreign": "くみたてる", "native": "lắp ráp" },
-  { "foreign": "ふとる", "native": "béo lên" },
-  { "foreign": "やせる", "native": "gầy đi" },
-  { "foreign": "われる", "native": "vỡ" },
-  { "foreign": "よう", "native": "say" },
-  { "foreign": "こわれる", "native": "bị hỏng" },
-  { "foreign": "ちゅういする", "native": "chú ý, cẩn thận" },
-  { "foreign": "けんかする", "native": "cãi nhau, đánh nhau" },
-  { "foreign": "すききらいする", "native": "kén chọn" },
-  { "foreign": "サボる", "native": "trốn (học/làm)" },
-  { "foreign": "わるい", "native": "xấu, tệ" },
-  { "foreign": "よわい", "native": "yếu" },
-  { "foreign": "つよい", "native": "mạnh" },
-  { "foreign": "あまい", "native": "dễ dãi, nuông chiều" },
-  { "foreign": "しあわせ［な］", "native": "hạnh phúc" },
-  { "foreign": "しんぱい［な］", "native": "lo lắng" },
-  { "foreign": "ざんぎょう", "native": "làm thêm giờ" },
-  { "foreign": "びょうき", "native": "bệnh" },
-  { "foreign": "キャッシュカード", "native": "thẻ ATM" },
-  { "foreign": "ゆき", "native": "tuyết" },
-  { "foreign": "みち", "native": "đường" },
-  { "foreign": "こうつう", "native": "giao thông" },
-  { "foreign": "じこ", "native": "tai nạn" },
-  { "foreign": "こうつうじこう", "native": "tai nạn giao thông" },
-  { "foreign": "じしん", "native": "động đất" },
-  { "foreign": "たいふう", "native": "bão" },
-  { "foreign": "けいさつ", "native": "cảnh sát" },
-  { "foreign": "エンジン", "native": "động cơ" },
-  { "foreign": "ちょうし", "native": "tình trạng" },
-  { "foreign": "じゅけんひょう", "native": "phiếu dự thi" },
-  { "foreign": "あさねぼう", "native": "ngủ nướng" },
-  { "foreign": "ラブレター", "native": "thư tình" },
-  { "foreign": "せいせき", "native": "thành tích, kết quả" },
-  { "foreign": "おしゃべり", "native": "tán gẫu" },
-  { "foreign": "ず", "native": "hình, sơ đồ" },
-  { "foreign": "いえ", "native": "nhà" },
-  { "foreign": "ちから", "native": "sức mạnh" },
-  { "foreign": "とし", "native": "năm, tuổi" },
-  { "foreign": "へび", "native": "rắn" },
-  { "foreign": "おや", "native": "bố mẹ" },
-  { "foreign": "ふつう", "native": "bình thường" },
-  { "foreign": "ツアー", "native": "tour du lịch" },
-  { "foreign": "もうしこみ", "native": "đăng ký" },
-  { "foreign": "～しょ", "native": "giấy, đơn" },
-  { "foreign": "もうしこみしょ", "native": "đơn đăng ký" },
-  { "foreign": "ちゅうし", "native": "hủy bỏ, dừng" },
-  { "foreign": "―にんのり", "native": "xe chở ~ người" },
-  { "foreign": "～いか", "native": "~ trở xuống" },
-  { "foreign": "～いじょう", "native": "~ trở lên" },
-  { "foreign": "～までに", "native": "trước ~, đến ~" }
+  {
+    "foreign": "ふる",
+    "native": "rơi (mưa, tuyết)"
+  },
+  {
+    "foreign": "まよう",
+    "native": "lạc đường, phân vân"
+  },
+  {
+    "foreign": "おとす",
+    "native": "đánh rơi"
+  },
+  {
+    "foreign": "ひろう",
+    "native": "nhặt lên"
+  },
+  {
+    "foreign": "なくす",
+    "native": "làm mất"
+  },
+  {
+    "foreign": "あう",
+    "native": "gặp phải (tai nạn, rắc rối)"
+  },
+  {
+    "foreign": "おきる",
+    "native": "xảy ra"
+  },
+  {
+    "foreign": "わすれる",
+    "native": "quên"
+  },
+  {
+    "foreign": "たりる",
+    "native": "đủ"
+  },
+  {
+    "foreign": "つく",
+    "native": "đến nơi"
+  },
+  {
+    "foreign": "とどく",
+    "native": "được gửi đến"
+  },
+  {
+    "foreign": "さく",
+    "native": "nở (hoa)"
+  },
+  {
+    "foreign": "しょうかいする",
+    "native": "giới thiệu"
+  },
+  {
+    "foreign": "やめる",
+    "native": "bỏ, dừng"
+  },
+  {
+    "foreign": "くみたてる",
+    "native": "lắp ráp"
+  },
+  {
+    "foreign": "ふとる",
+    "native": "béo lên"
+  },
+  {
+    "foreign": "やせる",
+    "native": "gầy đi"
+  },
+  {
+    "foreign": "われる",
+    "native": "vỡ"
+  },
+  {
+    "foreign": "よう",
+    "native": "say"
+  },
+  {
+    "foreign": "こわれる",
+    "native": "bị hỏng"
+  },
+  {
+    "foreign": "ちゅういする",
+    "native": "chú ý, cẩn thận"
+  },
+  {
+    "foreign": "けんかする",
+    "native": "cãi nhau, đánh nhau"
+  },
+  {
+    "foreign": "すききらいする",
+    "native": "kén chọn"
+  },
+  {
+    "foreign": "サボる",
+    "native": "trốn (học/làm)"
+  },
+  {
+    "foreign": "わるい",
+    "native": "xấu, tệ"
+  },
+  {
+    "foreign": "よわい",
+    "native": "yếu"
+  },
+  {
+    "foreign": "つよい",
+    "native": "mạnh"
+  },
+  {
+    "foreign": "あまい",
+    "native": "dễ dãi, nuông chiều"
+  },
+  {
+    "foreign": "しあわせ［な］",
+    "native": "hạnh phúc"
+  },
+  {
+    "foreign": "しんぱい［な］",
+    "native": "lo lắng"
+  },
+  {
+    "foreign": "ざんぎょう",
+    "native": "làm thêm giờ"
+  },
+  {
+    "foreign": "びょうき",
+    "native": "bệnh"
+  },
+  {
+    "foreign": "キャッシュカード",
+    "native": "thẻ ATM"
+  },
+  {
+    "foreign": "ゆき",
+    "native": "tuyết"
+  },
+  {
+    "foreign": "みち",
+    "native": "đường"
+  },
+  {
+    "foreign": "こうつう",
+    "native": "giao thông"
+  },
+  {
+    "foreign": "じこ",
+    "native": "tai nạn"
+  },
+  {
+    "foreign": "こうつうじこう",
+    "native": "tai nạn giao thông"
+  },
+  {
+    "foreign": "じしん",
+    "native": "động đất"
+  },
+  {
+    "foreign": "たいふう",
+    "native": "bão"
+  },
+  {
+    "foreign": "けいさつ",
+    "native": "cảnh sát"
+  },
+  {
+    "foreign": "エンジン",
+    "native": "động cơ"
+  },
+  {
+    "foreign": "ちょうし",
+    "native": "tình trạng"
+  },
+  {
+    "foreign": "じゅけんひょう",
+    "native": "phiếu dự thi"
+  },
+  {
+    "foreign": "あさねぼう",
+    "native": "ngủ nướng"
+  },
+  {
+    "foreign": "ラブレター",
+    "native": "thư tình"
+  },
+  {
+    "foreign": "せいせき",
+    "native": "thành tích, kết quả"
+  },
+  {
+    "foreign": "おしゃべり",
+    "native": "tán gẫu"
+  },
+  {
+    "foreign": "ず",
+    "native": "hình, sơ đồ"
+  },
+  {
+    "foreign": "いえ",
+    "native": "nhà"
+  },
+  {
+    "foreign": "ちから",
+    "native": "sức mạnh"
+  },
+  {
+    "foreign": "とし",
+    "native": "năm, tuổi"
+  },
+  {
+    "foreign": "へび",
+    "native": "rắn"
+  },
+  {
+    "foreign": "おや",
+    "native": "bố mẹ"
+  },
+  {
+    "foreign": "ふつう",
+    "native": "bình thường"
+  },
+  {
+    "foreign": "ツアー",
+    "native": "tour du lịch"
+  },
+  {
+    "foreign": "もうしこみ",
+    "native": "đăng ký"
+  },
+  {
+    "foreign": "～しょ",
+    "native": "giấy, đơn"
+  },
+  {
+    "foreign": "もうしこみしょ",
+    "native": "đơn đăng ký"
+  },
+  {
+    "foreign": "ちゅうし",
+    "native": "hủy bỏ, dừng"
+  },
+  {
+    "foreign": "―にんのり",
+    "native": "xe chở ~ người"
+  },
+  {
+    "foreign": "～いか",
+    "native": "~ trở xuống"
+  },
+  {
+    "foreign": "～いじょう",
+    "native": "~ trở lên"
+  },
+  {
+    "foreign": "～までに",
+    "native": "trước ~, đến ~"
+  }
 ]
