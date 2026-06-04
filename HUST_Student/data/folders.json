@@ -16,6 +16,16 @@
             "folders": {}
           }
         }
+      },
+      "a": {
+        "folders": {
+          "b": {
+            "folders": {}
+          },
+          "c": {
+            "folders": {}
+          }
+        }
       }
     }
   },

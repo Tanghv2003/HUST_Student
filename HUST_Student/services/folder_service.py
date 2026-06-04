@@ -11,11 +11,14 @@ Cấu trúc folders.json:
 }
 
 Bài giảng (studysets) được lưu riêng trong studysets.json với key = path_key.
+
+THAY ĐỔI: add_subfolder nay tự tạo thư mục vật lý trong data/studysets/<path>/
 """
 
 import json
+from pathlib import Path
 
-from HUST_Student.core.paths import FOLDERS_JSON
+from HUST_Student.core.paths import FOLDERS_JSON, STUDYSETS_DIR
 from HUST_Student.services.studyset_service import (
     delete_studysets_under,
     rename_studyset_path_prefix,
@@ -63,6 +66,39 @@ def normalize_node(node) -> dict:
     if not isinstance(folders, dict):
         folders = {}
     return {"folders": folders}
+
+
+# ══════════════════════════════════════════════════════════════════
+# PHYSICAL FOLDER HELPERS
+# ══════════════════════════════════════════════════════════════════
+
+def _physical_folder_path(path_key: str) -> Path:
+    """Trả về đường dẫn vật lý tương ứng trong data/studysets/."""
+    parts = path_to_list(path_key)
+    return STUDYSETS_DIR.joinpath(*parts) if parts else STUDYSETS_DIR
+
+
+def _create_physical_folder(path_key: str) -> None:
+    """Tạo thư mục vật lý trong data/studysets/<path_key>/."""
+    folder = _physical_folder_path(path_key)
+    folder.mkdir(parents=True, exist_ok=True)
+
+
+def _rename_physical_folder(old_path_key: str, new_path_key: str) -> None:
+    """Đổi tên / di chuyển thư mục vật lý nếu tồn tại."""
+    old = _physical_folder_path(old_path_key)
+    new = _physical_folder_path(new_path_key)
+    if old.exists() and not new.exists():
+        new.parent.mkdir(parents=True, exist_ok=True)
+        old.rename(new)
+
+
+def _delete_physical_folder(path_key: str) -> None:
+    """Xoá thư mục vật lý và toàn bộ nội dung bên trong."""
+    import shutil
+    folder = _physical_folder_path(path_key)
+    if folder.exists():
+        shutil.rmtree(folder, ignore_errors=True)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -218,6 +254,7 @@ def add_subfolder(parent_path: list[str], subfolder_name: str) -> tuple[bool, st
     """
     Thêm folder con vào parent_path.
     parent_path=[] → thêm vào gốc.
+    Đồng thời tạo thư mục vật lý tương ứng trong data/studysets/.
     Trả về (success, error_message).
     """
     name = subfolder_name.strip()
@@ -238,13 +275,18 @@ def add_subfolder(parent_path: list[str], subfolder_name: str) -> tuple[bool, st
 
     parent[name] = {"folders": {}}
     save_folders(data)
+
+    # Tạo thư mục vật lý
+    new_path_key = path_to_key([*parent_path, name])
+    _create_physical_folder(new_path_key)
+
     return True, ""
 
 
 def rename_folder(old_path: list[str], new_name: str) -> tuple[bool, str]:
     """
     Đổi tên folder tại old_path thành new_name.
-    Cũng đổi prefix tương ứng trong studysets.json.
+    Cũng đổi prefix tương ứng trong studysets.json và thư mục vật lý.
     """
     new_name = new_name.strip()
     if not old_path:
@@ -269,6 +311,8 @@ def rename_folder(old_path: list[str], new_name: str) -> tuple[bool, str]:
         old_key = path_to_key(old_path)
         new_key = path_to_key([*old_path[:-1], new_name])
         rename_studyset_path_prefix(old_key, new_key)
+        # Đổi tên thư mục vật lý
+        _rename_physical_folder(old_key, new_key)
 
     return True, ""
 
@@ -276,6 +320,7 @@ def rename_folder(old_path: list[str], new_name: str) -> tuple[bool, str]:
 def delete_folder(folder_path: list[str]) -> tuple[bool, str]:
     """
     Xoá folder và toàn bộ folder con + bài giảng bên trong.
+    Đồng thời xoá thư mục vật lý tương ứng.
     """
     if not folder_path:
         return False, "Không thể xoá thư mục gốc."
@@ -291,7 +336,12 @@ def delete_folder(folder_path: list[str]) -> tuple[bool, str]:
 
     del parent[name]
     save_folders(data)
-    delete_studysets_under(path_to_key(folder_path))
+
+    path_key = path_to_key(folder_path)
+    delete_studysets_under(path_key)
+    # Xoá thư mục vật lý
+    _delete_physical_folder(path_key)
+
     return True, ""
 
 
@@ -306,7 +356,6 @@ def move_folder(src_path: list[str], dst_parent_path: list[str]) -> tuple[bool, 
     src_key = path_to_key(src_path)
     dst_key = path_to_key(dst_parent_path)
 
-    # Không cho di chuyển vào chính nó hoặc subtree của nó
     if dst_key == src_key or dst_key.startswith(src_key + PATH_SEP):
         return False, "Không thể di chuyển thư mục vào chính nó hoặc thư mục con của nó."
 
@@ -327,14 +376,16 @@ def move_folder(src_path: list[str], dst_parent_path: list[str]) -> tuple[bool, 
     if folder_name in dst_parent:
         return False, f"Thư mục '{folder_name}' đã tồn tại tại đích."
 
-    # Di chuyển node
     node = src_parent.pop(folder_name)
     dst_parent[folder_name] = node
     save_folders(data)
 
-    # Cập nhật prefix studysets
     new_path = [*dst_parent_path, folder_name]
-    rename_studyset_path_prefix(src_key, path_to_key(new_path))
+    new_key = path_to_key(new_path)
+    rename_studyset_path_prefix(src_key, new_key)
+    # Di chuyển thư mục vật lý
+    _rename_physical_folder(src_key, new_key)
+
     return True, ""
 
 

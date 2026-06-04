@@ -3,9 +3,15 @@ studyset_service.py — CRUD bài giảng trong studysets.json.
 
 Mỗi entry trong studysets.json:
   "path_key": [{"title": "...", "file": "...", "terms": N}]
+
+THAY ĐỔI:
+  - add_studyset giờ tự sinh đường dẫn file từ title + path_key
+  - Tự tạo file JSON rỗng [] trong thư mục tương ứng
+  - Không cần truyền file_path từ ngoài vào
 """
 
 import json
+import re
 from pathlib import Path
 
 from HUST_Student.core.paths import STUDYSETS_DIR, STUDYSETS_JSON
@@ -81,9 +87,75 @@ def save_studyset_words(file_path: str, words: list) -> None:
 
 
 # ══════════════════════════════════════════════════════════════════
-# ENRICH (đếm số term từ file JSON nếu chưa có)
+# AUTO FILE PATH GENERATION
 # ══════════════════════════════════════════════════════════════════
 
+def _slugify(text: str) -> str:
+    """
+    Chuyển tiêu đề thành tên file an toàn:
+    - Giữ lại chữ cái, số, dấu gạch ngang, gạch dưới
+    - Thay khoảng trắng bằng gạch dưới
+    - Loại bỏ ký tự đặc biệt không hợp lệ
+    """
+    # Thay khoảng trắng và dấu chấm câu thông dụng bằng _
+    text = re.sub(r"[\s\-–—]+", "_", text.strip())
+    # Giữ chữ cái Unicode (bao gồm tiếng Việt/Nhật), số, _, .
+    text = re.sub(r"[^\w.]", "", text, flags=re.UNICODE)
+    # Bỏ dấu _ hoặc . ở đầu/cuối
+    text = text.strip("_.")
+    return text or "studyset"
+
+
+def _build_file_path(path_key: str, title: str) -> str:
+    """
+    Sinh đường dẫn file tương đối trong data/studysets/.
+    Ví dụ: path_key="Tiếng Nhật/DAICHI/Bài 21", title="Từ vựng mới"
+    → "Tiếng_Nhật/DAICHI/Bài_21/Từ_vựng_mới.json"
+    """
+    # Chuyển từng phần của path_key thành tên thư mục an toàn
+    parts = [p for p in path_key.split("/") if p]
+    safe_parts = [_slugify(p) for p in parts]
+
+    # Tên file từ title
+    safe_title = _slugify(title)
+
+    if safe_parts:
+        return "/".join(safe_parts) + f"/{safe_title}.json"
+    else:
+        return f"{safe_title}.json"
+
+
+def _ensure_unique_file_path(base_path: str) -> str:
+    """
+    Nếu file đã tồn tại, thêm hậu tố _2, _3, ... cho đến khi tìm được tên chưa dùng.
+    """
+    resolved = STUDYSETS_DIR / Path(base_path)
+    if not resolved.exists():
+        return base_path
+
+    stem = Path(base_path).stem
+    suffix = Path(base_path).suffix
+    parent = str(Path(base_path).parent)
+
+    counter = 2
+    while True:
+        candidate = f"{parent}/{stem}_{counter}{suffix}"
+        if not (STUDYSETS_DIR / Path(candidate)).exists():
+            return candidate
+        counter += 1
+
+
+def create_empty_studyset_file(file_path: str) -> None:
+    """Tạo file JSON rỗng [] tại đường dẫn đã cho."""
+    resolved = STUDYSETS_DIR / Path(file_path)
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    with open(resolved, "w", encoding="utf-8") as f:
+        json.dump([], f, ensure_ascii=False, indent=2)
+
+
+# ══════════════════════════════════════════════════════════════════
+# ENRICH (đếm số term từ file JSON nếu chưa có)
+# ══════════════════════════════════════════════════════════════════
 
 def _enrich_sets(sets: list) -> list:
     enriched = []
@@ -112,21 +184,36 @@ def get_studysets_for_path(path_key: str) -> list[dict]:
 # CRUD
 # ══════════════════════════════════════════════════════════════════
 
-def add_studyset(path_key: str, title: str, file_path: str) -> tuple[bool, str]:
-    """Thêm bài giảng vào path_key. Trả về (success, error_message)."""
+def add_studyset(path_key: str, title: str, file_path: str = "") -> tuple[bool, str]:
+    """
+    Thêm bài giảng vào path_key.
+
+    Nếu file_path để trống, tự động sinh từ path_key + title và tạo file JSON rỗng.
+    Trả về (success, error_message).
+    """
     title = title.strip()
-    file_path = file_path.strip()
     if not path_key:
         return False, "path_key không được để trống."
     if not title:
         return False, "Tên bài giảng không được để trống."
-    if not file_path:
-        return False, "Đường dẫn file không được để trống."
 
     data = load_studysets_raw()
     sets = data.setdefault(path_key, [])
+
     if any(s.get("title") == title for s in sets):
         return False, f"Bài giảng '{title}' đã tồn tại."
+
+    # Tự sinh đường dẫn nếu không được truyền vào
+    if not file_path or not file_path.strip():
+        auto_path = _build_file_path(path_key, title)
+        file_path = _ensure_unique_file_path(auto_path)
+        # Tạo file JSON rỗng
+        try:
+            create_empty_studyset_file(file_path)
+        except Exception as e:
+            return False, f"Không thể tạo file: {e}"
+    else:
+        file_path = file_path.strip()
 
     sets.append({"title": title, "file": file_path})
     save_studysets(data)
@@ -203,11 +290,9 @@ def move_studyset(src_path: str, dst_path: str, title: str) -> tuple[bool, str]:
     dst_sets = data.get(dst_path, [])
     if any(s.get("title") == title for s in dst_sets):
         return False, f"Bài giảng '{title}' đã tồn tại tại đích."
-    # Remove from src
     data[src_path] = [s for s in src_sets if s.get("title") != title]
     if not data[src_path]:
         del data[src_path]
-    # Add to dst
     dst_sets.append(item)
     data[dst_path] = dst_sets
     save_studysets(data)

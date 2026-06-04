@@ -4,8 +4,12 @@ folder_manager_state.py — State quản lý folder + bài giảng.
 Chức năng:
   - Thêm / đổi tên / xoá folder con (đệ quy)
   - Thêm / đổi tên / xoá bài giảng trong folder
-  - Đồng bộ sidebar (TreeState) sau mỗi thao tác
+  - Đồng bộ sidebar (TreeState) sau mọi thao tác
   - Breadcrumb + summary để hiển thị trên UI
+
+THAY ĐỔI:
+  - confirm_add_studyset không cần new_studyset_file nữa
+  - add_studyset tự sinh đường dẫn file và tạo file JSON rỗng
 """
 
 import reflex as rx
@@ -54,7 +58,7 @@ class FolderManagerState(rx.State):
     new_folder_name: str = ""
     new_subfolder_name: str = ""
     new_studyset_title: str = ""
-    new_studyset_file: str = ""
+    # new_studyset_file đã bị loại bỏ — đường dẫn tự sinh
     rename_studyset_old_title: str = ""
     rename_studyset_new_title: str = ""
     delete_studyset_title: str = ""
@@ -279,7 +283,7 @@ class FolderManagerState(rx.State):
             self.close_delete_confirmation()
 
     # ════════════════════════════════════════════════════════════
-    # ADD STUDYSET
+    # ADD STUDYSET — tự sinh đường dẫn, không cần nhập file
     # ════════════════════════════════════════════════════════════
 
     def open_add_studyset_dialog(self):
@@ -287,20 +291,15 @@ class FolderManagerState(rx.State):
             self._set_message("❌ Chọn một thư mục để thêm bài giảng.", "error")
             return
         self.new_studyset_title = ""
-        self.new_studyset_file = ""
         self.show_add_studyset_dialog = True
         self.message = ""
 
     def close_add_studyset_dialog(self):
         self.show_add_studyset_dialog = False
         self.new_studyset_title = ""
-        self.new_studyset_file = ""
 
     def set_new_studyset_title(self, value: str):
         self.new_studyset_title = str(value) if value else ""
-
-    def set_new_studyset_file(self, value: str):
-        self.new_studyset_file = str(value) if value else ""
 
     @rx.event
     async def confirm_add_studyset(self):
@@ -309,9 +308,9 @@ class FolderManagerState(rx.State):
             return
 
         title = self.new_studyset_title.strip()
-        file_path = self.new_studyset_file.strip()
 
-        ok, err = add_studyset(self.selected_path_key, title, file_path)
+        # Không truyền file_path → service tự sinh
+        ok, err = add_studyset(self.selected_path_key, title)
         if ok:
             self._set_message(f"✅ Đã thêm bài giảng '{title}'")
             self.close_add_studyset_dialog()

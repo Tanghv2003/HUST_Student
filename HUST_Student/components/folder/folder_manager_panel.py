@@ -7,6 +7,10 @@ Chức năng:
   • Thêm / đổi tên / xoá bài giảng
   • Feedback toast tự động (success/error)
   • Đồng bộ sidebar sau mọi thao tác
+
+THAY ĐỔI:
+  • Modal "Thêm bài giảng" chỉ còn 1 input tên — file path tự động sinh
+  • Modal "Thêm thư mục con" hiển thị thêm ghi chú về thư mục vật lý được tạo
 """
 
 import reflex as rx
@@ -133,6 +137,7 @@ def _add_subfolder_modal():
         FolderManagerState.show_add_subfolder_dialog,
         FolderManagerState.close_add_subfolder_dialog,
         rx.vstack(
+            # Breadcrumb hiện tại
             rx.hstack(
                 rx.icon("folder", size=14, color=T.WARN),
                 rx.text(
@@ -157,6 +162,22 @@ def _add_subfolder_modal():
                     _focus={"border_color": T.PRIMARY, "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}"},
                 ),
                 spacing="2",
+                width="100%",
+            ),
+            # Ghi chú thư mục vật lý sẽ được tạo tự động
+            rx.hstack(
+                rx.icon("info", size=13, color=T.TEXT_MUTED),
+                rx.text(
+                    "Thư mục vật lý tương ứng sẽ được tạo tự động trong data/studysets/",
+                    font_size="0.75rem",
+                    color=T.TEXT_MUTED,
+                    line_height="1.4",
+                ),
+                spacing="2",
+                align="start",
+                padding="0.5rem 0.65rem",
+                bg=T.BORDER_LIGHT,
+                border_radius=T.RADIUS_MD,
                 width="100%",
             ),
             spacing="3",
@@ -217,7 +238,7 @@ def _delete_folder_modal():
                         color=T.DANGER,
                     ),
                     rx.text(
-                        "Tất cả thư mục con và bài giảng bên trong sẽ bị xoá vĩnh viễn.",
+                        "Tất cả thư mục con, bài giảng và file dữ liệu bên trong sẽ bị xoá vĩnh viễn.",
                         font_size="0.85rem",
                         color=T.TEXT_SECONDARY,
                         line_height="1.5",
@@ -257,13 +278,18 @@ def _delete_folder_modal():
 
 
 def _add_studyset_modal():
+    """
+    Modal thêm bài giảng — chỉ cần nhập tên.
+    Đường dẫn file JSON được tự động sinh từ thư mục hiện tại + tên bài giảng.
+    """
     return _simple_modal(
         "Thêm bài giảng",
         FolderManagerState.show_add_studyset_dialog,
         FolderManagerState.close_add_studyset_dialog,
         rx.vstack(
+            # Breadcrumb vị trí hiện tại
             rx.hstack(
-                rx.icon("folder", size=14, color=T.WARN),
+                rx.icon("folder-open", size=14, color=T.WARN),
                 rx.text(
                     FolderManagerState.breadcrumb,
                     font_size="0.8rem",
@@ -273,6 +299,7 @@ def _add_studyset_modal():
                 spacing="2",
                 align="center",
             ),
+            # Input tên bài giảng
             rx.vstack(
                 rx.text("Tên bài giảng *", font_size="0.85rem", font_weight="600", color=T.TEXT_PRIMARY),
                 rx.input(
@@ -288,23 +315,22 @@ def _add_studyset_modal():
                 spacing="1",
                 width="100%",
             ),
-            rx.vstack(
-                rx.text("Đường dẫn file JSON *", font_size="0.85rem", font_weight="600", color=T.TEXT_PRIMARY),
-                rx.input(
-                    value=FolderManagerState.new_studyset_file,
-                    on_change=FolderManagerState.set_new_studyset_file,
-                    placeholder="Ví dụ: nihongo/daichi/Bai_21-Tu_vung.json",
-                    width="100%",
-                    border=f"1.5px solid {T.BORDER}",
-                    border_radius=T.RADIUS_MD,
-                    _focus={"border_color": T.PRIMARY, "box_shadow": f"0 0 0 3px {T.PRIMARY_LIGHT}"},
-                ),
+            # Thông báo file tự động tạo
+            rx.hstack(
+                rx.icon("sparkles", size=13, color=T.PRIMARY),
                 rx.text(
-                    "Đường dẫn tương đối trong thư mục data/studysets/",
+                    "File JSON rỗng sẽ tự động được tạo trong thư mục hiện tại. "
+                    "Bạn có thể thêm nội dung sau qua chức năng chỉnh sửa.",
                     font_size="0.75rem",
-                    color=T.TEXT_MUTED,
+                    color=T.TEXT_SECONDARY,
+                    line_height="1.4",
                 ),
-                spacing="1",
+                spacing="2",
+                align="start",
+                padding="0.6rem 0.75rem",
+                bg=T.PRIMARY_TINT,
+                border=f"1px solid {T.PRIMARY_LIGHT}",
+                border_radius=T.RADIUS_MD,
                 width="100%",
             ),
             spacing="3",
@@ -737,7 +763,7 @@ def folder_manager_panel():
                                     text_align="center",
                                 ),
                                 rx.text(
-                                    "Nhấn «Thêm bài giảng» để thêm file JSON.",
+                                    "Nhấn «Thêm bài giảng» để tạo bài giảng mới.",
                                     font_size="0.78rem",
                                     color=T.TEXT_MUTED,
                                     text_align="center",
