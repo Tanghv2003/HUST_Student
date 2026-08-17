@@ -6,3 +6,10 @@ class MatchTile(BaseModel):
     pair_id: int
     text: str
     matched: bool = False
+
+
+class BlockCard(BaseModel):
+    card_id: int
+    front: str
+    back: str
+    is_flipped: bool = False

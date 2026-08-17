@@ -1,143 +1,94 @@
 import reflex as rx
 
-from HUST_Student.components.folder.mini_game_toolbar import mini_settings_bar
 from HUST_Student.components.folder.mini_i18n import mini_txt
 from HUST_Student.components.ui import theme as T
 from HUST_Student.components.ui.modal import modal_close_btn
 from HUST_Student.states.folder_state import FolderState
 
 
-def blocks_overlay():
-    header = rx.vstack(
-        rx.hstack(
-            rx.vstack(
-                rx.text(
-                    rx.cond(FolderState.selected_set, FolderState.selected_set.title, ""),
-                    font_size="1.2rem",
-                    font_weight="800",
-                    color=T.TEXT_PRIMARY,
-                ),
-                rx.text(mini_txt("blocks_title"), font_size="0.95rem", font_weight="700", color=T.PRIMARY),
-                spacing="0",
-                align="start",
-            ),
-            rx.spacer(),
-            modal_close_btn(FolderState.close_blocks),
-            width="100%",
-            align="center",
-        ),
-        rx.text(mini_txt("blocks_sub"), font_size="0.88rem", color=T.TEXT_SECONDARY),
-        mini_settings_bar(),
-        rx.hstack(
-            rx.text(mini_txt("blocks_remaining"), font_weight="600", color=T.TEXT_PRIMARY),
-            rx.text(FolderState.blocks_remaining, font_weight="800", color=T.PRIMARY),
-            rx.spacer(),
-            rx.text(mini_txt("blocks_cleared"), font_weight="600", color=T.TEXT_SECONDARY),
-            rx.text(FolderState.blocks_cleared, font_weight="700", color=T.TEXT_SECONDARY),
-            width="100%",
-            flex_wrap="wrap",
-        ),
-        spacing="3",
-        width="100%",
+def _block_card(card: rx.Var):
+    face_text = rx.cond(
+        FolderState.blocks_first_lang == "native",
+        card.back,
+        card.front,
     )
+    back_text = rx.cond(
+        FolderState.blocks_first_lang == "native",
+        card.front,
+        card.back,
+    )
+    display_text = rx.cond(card.is_flipped, back_text, face_text)
 
-    play = rx.vstack(
-        header,
-        rx.box(
-            rx.text(
-                FolderState.blocks_top_prompt,
-                font_size="1.85rem",
-                font_weight="800",
-                color=T.TEXT_PRIMARY,
-                text_align="center",
-            ),
-            padding="2rem",
-            width="100%",
-            min_height="160px",
-            display="flex",
-            align_items="center",
-            justify_content="center",
-            border=f"1px solid {T.BORDER}",
-            border_radius=T.RADIUS_XL,
-            bg=T.SURFACE,
-            box_shadow=T.SHADOW_CARD,
-        ),
-        rx.input(
-            placeholder=mini_txt("blocks_type"),
-            value=FolderState.blocks_input,
-            on_change=FolderState.set_blocks_input,
-            size="3",
-            width="100%",
-            border=f"1px solid {T.BORDER}",
-            border_radius=T.RADIUS_MD,
-            padding="0.9rem 1rem",
-        ),
-        rx.cond(
-            FolderState.blocks_feedback == "wrong",
-            rx.text(mini_txt("blocks_wrong_rotate"), color=T.DANGER, font_size="0.9rem", font_weight="600"),
-            rx.box(),
-        ),
-        rx.button(
-            mini_txt("blast_send"),
-            on_click=FolderState.submit_blocks,
-            bg=T.PRIMARY,
-            color="white",
-            border_radius=T.RADIUS_PILL,
+    return rx.box(
+        rx.text(
+            display_text,
+            font_size="1.05rem",
             font_weight="700",
-            width="100%",
-            padding="0.9rem",
-            _hover={"bg": T.PRIMARY_HOVER},
+            color=T.TEXT_PRIMARY,
+            text_align="center",
+            line_height="1.4",
         ),
-        spacing="4",
+        padding="1.25rem",
         width="100%",
+        min_height="120px",
+        display="flex",
+        align_items="center",
+        justify_content="center",
+        border=f"1px solid {T.BORDER}",
+        border_radius=T.RADIUS_LG,
+        bg=rx.cond(card.is_flipped, T.PRIMARY_LIGHT, T.SURFACE),
+        box_shadow=T.SHADOW_CARD,
+        cursor="pointer",
+        transition="all 0.15s ease",
+        on_click=[rx.stop_propagation, FolderState.flip_block_card(card.card_id)],
+        _hover={"border_color": T.PRIMARY, "transform": "translateY(-2px)"},
     )
 
-    done = rx.vstack(
-        header,
-        rx.box(
+
+def blocks_overlay():
+    settings_bar = rx.hstack(
+        rx.vstack(
             rx.text(
-                mini_txt("blocks_done"),
-                font_size="1.15rem",
-                font_weight="700",
-                color=T.TEXT_PRIMARY,
-                text_align="center",
-            ),
-            rx.hstack(
-                rx.text(mini_txt("blocks_cleared"), ": ", FolderState.blocks_cleared, font_weight="600"),
-                rx.text("·", color=T.TEXT_MUTED),
-                rx.text(mini_txt("blast_stat_wrong"), ": ", FolderState.blocks_wrong, font_weight="600"),
-                justify="center",
-                width="100%",
-                margin_top="0.75rem",
+                rx.cond(FolderState.ui_lang == "vi", "Ngôn ngữ", "Language"),
+                font_size="0.75rem",
                 color=T.TEXT_SECONDARY,
+                font_weight="700",
             ),
-            padding="1.5rem",
-            width="100%",
-            border_radius=T.RADIUS_LG,
-            bg=T.SUCCESS_BG,
-            border=f"1px solid {T.SUCCESS}",
+            rx.select(
+                ["vi", "en"],
+                value=FolderState.ui_lang,
+                on_change=FolderState.set_ui_lang,
+                width="90px",
+                border=f"1px solid {T.BORDER}",
+                border_radius=T.RADIUS_MD,
+            ),
+            spacing="1",
+            align="start",
         ),
-        rx.hstack(
+        rx.vstack(
+            rx.text(
+                rx.cond(FolderState.ui_lang == "vi", "Thẻ mới", "Reset"),
+                font_size="0.75rem",
+                color=T.TEXT_SECONDARY,
+                font_weight="700",
+            ),
             rx.button(
-                mini_txt("common_again"),
+                rx.icon("rotate-ccw", size=15),
+                "Reset",
                 on_click=FolderState.restart_blocks,
                 bg=T.SURFACE,
                 color=T.TEXT_PRIMARY,
                 border=f"1px solid {T.BORDER}",
-                border_radius=T.RADIUS_PILL,
-                font_weight="600",
-            ),
-            rx.button(
-                mini_txt("common_close"),
-                on_click=FolderState.close_blocks,
-                bg=T.BORDER_LIGHT,
-                color=T.TEXT_PRIMARY,
                 border_radius=T.RADIUS_MD,
                 font_weight="600",
+                height="32px",
+                _hover={"bg": T.BORDER_LIGHT},
             ),
-            spacing="3",
+            spacing="1",
+            align="start",
         ),
         spacing="4",
+        flex_wrap="wrap",
         width="100%",
     )
 
@@ -146,7 +97,44 @@ def blocks_overlay():
         rx.box(
             rx.box(
                 rx.vstack(
-                    rx.cond(FolderState.blocks_phase == "complete", done, play),
+                    rx.hstack(
+                        rx.vstack(
+                            rx.text(
+                                rx.cond(FolderState.selected_set, FolderState.selected_set.title, ""),
+                                font_size="1.2rem",
+                                font_weight="800",
+                                color=T.TEXT_PRIMARY,
+                            ),
+                            rx.text(mini_txt("blocks_title"), font_size="0.95rem", font_weight="700", color=T.PRIMARY),
+                            spacing="0",
+                            align="start",
+                        ),
+                        rx.spacer(),
+                        modal_close_btn(FolderState.close_blocks),
+                        width="100%",
+                        align="center",
+                    ),
+                    rx.text(mini_txt("blocks_sub"), font_size="0.88rem", color=T.TEXT_SECONDARY),
+                    settings_bar,
+                    rx.hstack(
+                        rx.text(mini_txt("blocks_card_count"), font_weight="600", color=T.TEXT_PRIMARY),
+                        rx.text(FolderState.blocks_card_count, font_weight="800", color=T.PRIMARY),
+                        spacing="2",
+                        width="100%",
+                    ),
+                    rx.grid(
+                        rx.foreach(FolderState.blocks_cards, _block_card),
+                        columns="2",
+                        gap="3",
+                        width="100%",
+                    ),
+                    rx.text(
+                        mini_txt("blocks_flip_hint"),
+                        font_size="0.82rem",
+                        color=T.TEXT_MUTED,
+                        text_align="center",
+                        width="100%",
+                    ),
                     spacing="4",
                     width="100%",
                 ),

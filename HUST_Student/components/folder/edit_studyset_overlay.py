@@ -411,7 +411,6 @@ def edit_studyset_overlay():
                         bg=T.BORDER_LIGHT,
                     ),
                     rx.hstack(
-                        # Add card button (cards mode only)
                         rx.cond(
                             FolderState.edit_mode == "cards",
                             rx.button(
@@ -428,6 +427,26 @@ def edit_studyset_overlay():
                                 border_radius=T.RADIUS_MD,
                                 padding="0.5rem 1rem",
                                 _hover={"bg": T.PRIMARY_LIGHT, "border_color": T.PRIMARY},
+                                transition="all 0.15s ease",
+                            ),
+                            rx.box(),
+                        ),
+                        rx.cond(
+                            FolderState.edit_mode == "cards",
+                            rx.button(
+                                rx.hstack(
+                                    rx.icon("trash-2", size=15),
+                                    rx.text("Xóa tất cả", font_size="0.82rem", font_weight="600"),
+                                    spacing="1",
+                                    align="center",
+                                ),
+                                on_click=FolderState.delete_all_edit_words,
+                                bg=T.DANGER_BG,
+                                color=T.DANGER,
+                                border=f"1.5px solid {T.DANGER}",
+                                border_radius=T.RADIUS_MD,
+                                padding="0.5rem 1rem",
+                                _hover={"bg": "#fde8e8", "border_color": T.DANGER},
                                 transition="all 0.15s ease",
                             ),
                             rx.box(),

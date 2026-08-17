@@ -23,7 +23,7 @@ def mini_settings_bar():
         rx.vstack(
             rx.text(mini_txt("answer_mode_label"), font_size="0.75rem", color=T.TEXT_SECONDARY),
             rx.select(
-                ["Cả hai", "Native", "Foreign"],
+                ["Native", "Foreign"],
                 value=FolderState.answer_language,
                 on_change=FolderState.set_answer_language,
                 width="180px",

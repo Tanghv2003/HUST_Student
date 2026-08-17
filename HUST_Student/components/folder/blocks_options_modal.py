@@ -5,24 +5,9 @@ from HUST_Student.components.ui.modal import modal_close_btn
 from HUST_Student.states.folder_state import FolderState
 
 
-def test_option_button(label: str, mode: str):
-    return rx.button(
-        label,
-        on_click=lambda: FolderState.set_test_mode(mode),
-        width="100%",
-        padding="1rem",
-        border_radius=T.RADIUS_PILL,
-        border=f"1px solid {T.BORDER}",
-        font_weight="600",
-        bg=rx.cond(FolderState.test_mode == mode, T.PRIMARY, T.SURFACE),
-        color=rx.cond(FolderState.test_mode == mode, "white", T.TEXT_PRIMARY),
-        _hover={"border_color": T.PRIMARY, "cursor": "pointer"},
-    )
-
-
-def test_options_modal():
+def blocks_options_modal():
     return rx.cond(
-        FolderState.show_test_options,
+        FolderState.show_blocks_options,
         rx.box(
             rx.box(
                 rx.vstack(
@@ -35,7 +20,7 @@ def test_options_modal():
                                 color=T.TEXT_PRIMARY,
                             ),
                             rx.text(
-                                "Thiết lập bài kiểm tra",
+                                "Thiết lập Khối hợp",
                                 color=T.TEXT_SECONDARY,
                                 font_size="0.95rem",
                             ),
@@ -43,57 +28,46 @@ def test_options_modal():
                             align="start",
                         ),
                         rx.spacer(),
-                        modal_close_btn(FolderState.close_test_options),
+                        modal_close_btn(FolderState.close_blocks_options),
                         width="100%",
                         align="center",
                     ),
                     rx.divider(),
                     rx.vstack(
+                        rx.text(
+                            "Mỗi lượt hiện 4 thẻ ngẫu nhiên — nhấn thẻ để lật.",
+                            font_size="0.88rem",
+                            color=T.TEXT_SECONDARY,
+                        ),
                         rx.hstack(
                             rx.vstack(
-                                rx.text("Số câu hỏi", font_weight="600", color=T.TEXT_PRIMARY),
                                 rx.text(
-                                    rx.cond(FolderState.selected_set, FolderState.selected_set.terms, 0),
-                                    " câu",
+                                    "Xuất hiện trước",
+                                    font_weight="600",
                                     color=T.TEXT_PRIMARY,
                                 ),
-                            ),
-                            rx.vstack(
-                                rx.text("Tối đa", font_weight="600", color=T.TEXT_PRIMARY),
-                                rx.text(
-                                    rx.cond(FolderState.selected_set, FolderState.selected_set.terms, 0),
-                                    " câu",
-                                    color=T.TEXT_SECONDARY,
-                                ),
-                            ),
-                            rx.vstack(
-                                rx.text("Trả lời bằng", font_weight="600", color=T.TEXT_PRIMARY),
                                 rx.select(
-                                    ["Native", "Foreign"],
-                                    value=FolderState.answer_language,
-                                    on_change=FolderState.set_answer_language,
-                                    width="160px",
+                                    ["Ngoại ngữ (Foreign)", "Bản xứ (Native)"],
+                                    value=rx.cond(
+                                        FolderState.blocks_first_lang == "native",
+                                        "Bản xứ (Native)",
+                                        "Ngoại ngữ (Foreign)",
+                                    ),
+                                    on_change=FolderState.set_blocks_first_lang_from_ui,
+                                    width="200px",
                                     border=f"1px solid {T.BORDER}",
                                     border_radius=T.RADIUS_MD,
                                     padding="0.9rem 1rem",
                                 ),
+                                spacing="2",
+                                align="start",
                             ),
                             spacing="8",
                             width="100%",
                         ),
-                        rx.text("Loại câu hỏi", font_weight="600", color=T.TEXT_PRIMARY),
-                        rx.grid(
-                            test_option_button("Đúng/Sai", "dung_sai"),
-                            test_option_button("Trắc nghiệm", "trac_nghiem"),
-                            test_option_button("Ghép thẻ", "ghep_the"),
-                            test_option_button("Tự luận", "tu_luan"),
-                            template_columns="repeat(2, minmax(0, 1fr))",
-                            gap="4",
-                            width="100%",
-                        ),
                         rx.button(
-                            "Bắt đầu làm kiểm tra",
-                            on_click=FolderState.start_test,
+                            "Bắt đầu",
+                            on_click=FolderState.start_blocks,
                             bg=T.PRIMARY,
                             color="white",
                             font_weight="700",
@@ -111,8 +85,8 @@ def test_options_modal():
                 ),
                 bg=T.SURFACE,
                 border_radius=T.RADIUS_XL,
-                width="560px",
-                max_width="min(560px, calc(100vw - 2.5rem))",
+                width="480px",
+                max_width="min(480px, calc(100vw - 2.5rem))",
                 max_height=T.MODAL_CONTENT_MAX_HEIGHT,
                 min_height="0",
                 overflow_y="auto",
@@ -132,7 +106,7 @@ def test_options_modal():
             bg=T.OVERLAY_SCRIM,
             z_index="999",
             padding=T.MODAL_OVERLAY_PADDING,
-            on_click=FolderState.close_test_options,
+            on_click=FolderState.close_blocks_options,
         ),
         rx.box(),
     )

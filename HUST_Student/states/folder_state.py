@@ -3,7 +3,7 @@ import random
 import reflex as rx
 
 from HUST_Student.models.card import WordPair, EditWord
-from HUST_Student.models.mini_game import MatchTile
+from HUST_Student.models.mini_game import BlockCard, MatchTile
 from HUST_Student.models.studyset import StudySet
 from HUST_Student.models.test import AnswerRecord
 from HUST_Student.services.studyset_service import load_studyset_detail, load_studysets, save_studyset_words, load_studyset_raw_text, save_studyset_raw_text
@@ -38,6 +38,7 @@ class FolderState(rx.State):
     show_match: bool = False
     show_blast: bool = False
     show_blocks: bool = False
+    show_blocks_options: bool = False
     ui_lang: str = "vi"
 
     MAX_MATCH_PAIRS: int = 12
@@ -60,16 +61,12 @@ class FolderState(rx.State):
     blast_lives: int = 5
     blast_phase: str = "play"
 
-    blocks_deck: list[int] = []
-    blocks_input: str = ""
-    blocks_feedback: str = ""
-    blocks_cleared: int = 0
-    blocks_wrong: int = 0
-    blocks_phase: str = "play"
+    blocks_cards: list[BlockCard] = []
+    blocks_first_lang: str = "foreign"
 
     test_question_count: int = 10
     test_mode: str = "trac_nghiem"
-    answer_language: str = "Cả hai"
+    answer_language: str = "Native"
 
     current_options: list[str] = []
     correct_answer: str = ""
@@ -251,6 +248,11 @@ class FolderState(rx.State):
             EditWord(idx=i, front=w.front, back=w.back)
             for i, w in enumerate(new_words)
         ]
+
+    @rx.event
+    def delete_all_edit_words(self):
+        self.edit_words = []
+        self.edit_feedback = ""
 
     @rx.event
     async def save_edit_studyset(self):
@@ -472,67 +474,69 @@ class FolderState(rx.State):
             if self.blast_lives <= 0:
                 self.blast_phase = "complete"
 
+    def _pick_blocks_cards(self):
+        if not self.selected_set or not self.selected_set.words:
+            self.blocks_cards = []
+            return
+        words = self.selected_set.words
+        count = min(4, len(words))
+        indices = random.sample(range(len(words)), count)
+        self.blocks_cards = [
+            BlockCard(
+                card_id=i,
+                front=words[idx].front,
+                back=words[idx].back,
+                is_flipped=False,
+            )
+            for i, idx in enumerate(indices)
+        ]
+
+    def open_blocks_options(self):
+        if self.selected_set:
+            self.show_set_options = False
+            self.show_blocks_options = True
+
+    def close_blocks_options(self):
+        self.show_blocks_options = False
+
     def start_blocks(self):
         if not self.selected_set or not self.selected_set.words:
             return
-        words = self.selected_set.words
-        deck = list(range(len(words)))
-        random.shuffle(deck)
-        cap = self.MAX_MATCH_PAIRS * 2
-        if len(deck) > cap:
-            deck = deck[:cap]
-        self.blocks_deck = deck
-        self.blocks_input = ""
-        self.blocks_feedback = ""
-        self.blocks_cleared = 0
-        self.blocks_wrong = 0
-        self.blocks_phase = "play"
+        self._pick_blocks_cards()
+        self.show_blocks_options = False
         self.show_blocks = True
         self.show_set_options = False
 
     def close_blocks(self):
         self.show_blocks = False
-        self.blocks_deck = []
-        self.blocks_input = ""
-        self.blocks_feedback = ""
-        self.blocks_phase = "play"
+        self.blocks_cards = []
         self.selected_set = None
 
     def restart_blocks(self):
         if self.selected_set and self.selected_set.words:
-            self.start_blocks()
+            self._pick_blocks_cards()
 
-    def set_blocks_input(self, text: str):
-        self.blocks_input = str(text) if text is not None else ""
+    def flip_block_card(self, card_id: int):
+        updated: list[BlockCard] = []
+        for card in self.blocks_cards:
+            if card.card_id == card_id:
+                updated.append(
+                    BlockCard(
+                        card_id=card.card_id,
+                        front=card.front,
+                        back=card.back,
+                        is_flipped=not card.is_flipped,
+                    )
+                )
+            else:
+                updated.append(card)
+        self.blocks_cards = updated
 
-    def submit_blocks(self):
-        if self.blocks_phase != "play" or not self.selected_set or not self.blocks_deck:
-            if not self.blocks_deck:
-                self.blocks_phase = "complete"
-            return
-        top = self.blocks_deck[0]
-        w = self.selected_set.words[top]
-        _, expected = self._mini_prompt_answer(w)
-        user = (self.blocks_input or "").strip().lower()
-        exp = (expected or "").strip().lower()
-        if not user:
-            return
-        deck = list(self.blocks_deck)
-        if user == exp:
-            deck.pop(0)
-            self.blocks_deck = deck
-            self.blocks_cleared += 1
-            self.blocks_input = ""
-            self.blocks_feedback = ""
-            if not deck:
-                self.blocks_phase = "complete"
+    def set_blocks_first_lang_from_ui(self, value: str):
+        if value == "Bản xứ (Native)":
+            self.blocks_first_lang = "native"
         else:
-            first = deck.pop(0)
-            deck.append(first)
-            self.blocks_deck = deck
-            self.blocks_wrong += 1
-            self.blocks_input = ""
-            self.blocks_feedback = "wrong"
+            self.blocks_first_lang = "foreign"
 
     @rx.var
     def blast_prompt_text(self) -> str:
@@ -556,16 +560,8 @@ class FolderState(rx.State):
         return f"{cur}/{n}"
 
     @rx.var
-    def blocks_top_prompt(self) -> str:
-        if not self.selected_set or not self.blocks_deck or self.blocks_phase != "play":
-            return ""
-        w = self.selected_set.words[self.blocks_deck[0]]
-        prompt, _ = self._mini_prompt_answer(w)
-        return prompt
-
-    @rx.var
-    def blocks_remaining(self) -> int:
-        return len(self.blocks_deck)
+    def blocks_card_count(self) -> int:
+        return len(self.blocks_cards)
 
     @rx.var
     def match_all_matched(self) -> bool:
@@ -596,13 +592,9 @@ class FolderState(rx.State):
         self.show_set_options = False
         words = [{"front": w.front, "back": w.back} for w in self.selected_set.words]
         title = self.selected_set.title
-        # Ánh xạ answer_language của FolderState → LearnState
-        # FolderState: "Cả hai" | "Native" | "Foreign"
-        # LearnState:  "native_to_foreign" | "foreign_to_native"
         if self.answer_language == "Foreign":
             learn_direction = "foreign_to_native"
         else:
-            # "Native" hoặc "Cả hai" → hỏi native (front), đáp foreign (back)
             learn_direction = "native_to_foreign"
         learn = await self.get_state(LearnState)
         return learn.init_learn(words, title, answer_language=learn_direction)
@@ -713,6 +705,23 @@ class FolderState(rx.State):
             random.shuffle(indices)
             self.shuffled_indices = indices
             self._build_options()
+
+    def reset_test(self):
+        if not self.selected_set or not self.selected_set.words:
+            return
+        self.current_test_index = 0
+        self.selected_answer = ""
+        self.written_answer = ""
+        self.check_feedback = ""
+        self.hint_text = ""
+        self.answer_records = []
+        self.score_correct = 0
+        self.score_wrong = 0
+        self.test_question_count = len(self.selected_set.words)
+        indices = list(range(self.test_question_count))
+        random.shuffle(indices)
+        self.shuffled_indices = indices
+        self._build_options()
 
     def close_test(self):
         self.show_test = False
