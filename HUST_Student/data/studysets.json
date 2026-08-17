@@ -50,5 +50,107 @@
       "title": "Toeic Listening",
       "file": "Toeic-Listening.json"
     }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 26": [
+    {
+      "title": "Từ vựng bài 26",
+      "file": "Tiếng_Nhật/DAICHI/Bài_26/Từ_vựng_bài_27.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 27": [
+    {
+      "title": "Từ vựng bài 27",
+      "file": "Tiếng_Nhật\\DAICHI\\Bài_27/Từ_vựng_bài_27_2.json"
+    }
+  ],
+  "Toeic/Từ mới/Part_1": [
+    {
+      "title": "1_79",
+      "file": "Toeic/Từ_mới/Part_1/1_79.json"
+    },
+    {
+      "title": "80_147",
+      "file": "Toeic/Từ_mới/Part_1/80_147.json"
+    },
+    {
+      "title": "148_200",
+      "file": "Toeic/Từ_mới/Part_1/148_200.json"
+    }
+  ],
+  "Toeic/Từ mới/Part_2d7": [
+    {
+      "title": "Day_1",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_1.json"
+    },
+    {
+      "title": "Day_2",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_2.json"
+    },
+    {
+      "title": "Day_3",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_3.json"
+    },
+    {
+      "title": "Day_4",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_4.json"
+    },
+    {
+      "title": "Day_5",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_5.json"
+    },
+    {
+      "title": "Day_6",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_6.json"
+    },
+    {
+      "title": "Day_7",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_7.json"
+    },
+    {
+      "title": "Day_8",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_8.json"
+    },
+    {
+      "title": "Day_9",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_9.json"
+    },
+    {
+      "title": "Day_10",
+      "file": "Toeic/Từ_mới/Part_2d7/Day_10.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 25": [
+    {
+      "title": "Từ vựng bài 25",
+      "file": "Tiếng_Nhật/DAICHI/Bài_25/Từ_vựng_bài_25.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI": [
+    {
+      "title": "Tự động từ - tha động từ 1",
+      "file": "Tiếng_Nhật/DAICHI/Tự_động_từ_tha_động_từ.json"
+    },
+    {
+      "title": "Tự động từ - tha động từ 2",
+      "file": "Tiếng_Nhật/DAICHI/Tự_động_từ_tha_động_từ_2.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 29": [
+    {
+      "title": "Từ vựng bài 29",
+      "file": "Tiếng_Nhật/DAICHI/Bài_29/Từ_vựng_bài_29.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 30": [
+    {
+      "title": "Từ vựng bài 30",
+      "file": "Tiếng_Nhật/DAICHI/Bài_30/Từ_vựng_bài_30.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 32": [
+    {
+      "title": "Từ vừng bài 32",
+      "file": "Tiếng_Nhật/DAICHI/Bài_32/Từ_vừng_bài_32.json"
+    }
   ]
 }

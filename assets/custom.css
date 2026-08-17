@@ -1,0 +1,14 @@
+/* stom · CSS
+html, body {
+    zoom: 75%;
+}
+ 
+/* Firefox fallback */
+/* @-moz-document url-prefix() {
+    html {
+        transform: scale(0.75);
+        transform-origin: top left;
+        width: 133.33%;
+        min-height: 133.33vh;
+    }
+} */

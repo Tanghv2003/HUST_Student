@@ -1,0 +1,402 @@
+[
+  {
+    "foreign": "あきます",
+    "native": "mở | (Tự) Cửa, hiệu sách... tự mở ra. ➔ Tha động từ tương ứng: あけます (mở).",
+    "sound": "akimasu"
+  },
+  {
+    "foreign": "あけます",
+    "native": "mở | (Tha) Ai đó chủ động mở cửa. ➔ Tự động từ tương ứng: あきます (mở).",
+    "sound": "akemasu"
+  },
+  {
+    "foreign": "しまります",
+    "native": "đóng | (Tự) Cửa tự đóng lại. ➔ Tha động từ tương ứng: しめます (đóng).",
+    "sound": "shimarimasu"
+  },
+  {
+    "foreign": "しめます",
+    "native": "đóng | (Tha) Ai đó chủ động đóng cửa. ➔ Tự động từ tương ứng: しまります (đóng).",
+    "sound": "shimemasu"
+  },
+  {
+    "foreign": "でます",
+    "native": "ra ngoài, rời đi | (Tự) Rời khỏi, đi ra khỏi phòng. ➔ Tha động từ tương ứng: だします (lấy ra, nộp).",
+    "sound": "demasu"
+  },
+  {
+    "foreign": "だします",
+    "native": "lấy ra, nộp | (Tha) Lấy đồ vật ra, nộp báo cáo. ➔ Tự động từ tương ứng: でます (ra ngoài, rời đi).",
+    "sound": "dashimasu"
+  },
+  {
+    "foreign": "うごきます",
+    "native": "chuyển động, chạy | (Tự) Máy móc hoạt động, cơ thể cử động. ➔ Tha động từ tương ứng: うごかします (di chuyển, vận hành).",
+    "sound": "ugokimasu"
+  },
+  {
+    "foreign": "うごかします",
+    "native": "di chuyển | (Tha) Ai đó dịch chuyển, vận hành vật. ➔ Tự động từ tương ứng: うごきます (chuyển động, chạy).",
+    "sound": "ugokashimasu"
+  },
+  {
+    "foreign": "とまります",
+    "native": "dừng lại | (Tự) Xe cộ dừng lại. ➔ Tha động từ tương ứng: とめます (dừng, đỗ).",
+    "sound": "tomarimasu"
+  },
+  {
+    "foreign": "とめます",
+    "native": "dừng, đỗ | (Tha) Ai đó chủ động dừng xe, đỗ xe. ➔ Tự động từ tương ứng: とまります (dừng lại).",
+    "sound": "tomemasu"
+  },
+  {
+    "foreign": "つきます",
+    "native": "sáng, bật | (Tự) Điện, đèn tự động sáng lên. ➔ Tha động từ tương ứng: つけます (bật).",
+    "sound": "tsukimasu"
+  },
+  {
+    "foreign": "つけます",
+    "native": "bật | (Tha) Ai đó chủ động bật điện, bật điều hòa. ➔ Tự động từ tương ứng: つきます (sáng, bật).",
+    "sound": "tsukemasu"
+  },
+  {
+    "foreign": "きえます",
+    "native": "tắt | (Tự) Điện tắt, đám cháy lụi đi. ➔ Tha động từ tương ứng: けします (tắt, xóa).",
+    "sound": "kiemasu"
+  },
+  {
+    "foreign": "けします",
+    "native": "tắt, xóa | (Tha) Ai đó chủ động tắt đèn, xóa bảng. ➔ Tự động từ tương ứng: きえます (tắt).",
+    "sound": "keshimasu"
+  },
+  {
+    "foreign": "かわります",
+    "native": "thay đổi | (Tự) Dự định, thời tiết tự thay đổi. ➔ Tha động từ tương ứng: かえます (thay đổi).",
+    "sound": "kawarimasu"
+  },
+  {
+    "foreign": "かえます",
+    "native": "thay đổi | (Tha) Ai đó chủ động đổi kế hoạch, kiểu tóc. ➔ Tự động từ tương ứng: かわります (thay đổi).",
+    "sound": "kaemasu"
+  },
+  {
+    "foreign": "なおります",
+    "native": "khỏi bệnh | (Tự) Cơ thể hồi phục, khỏi bệnh. ➔ Tha động từ tương ứng: なおします (chữa bệnh).",
+    "sound": "naorimasu"
+  },
+  {
+    "foreign": "なおします",
+    "native": "chữa bệnh | (Tha) Bác sĩ chữa trị bệnh. ➔ Tự động từ tương ứng: なおります (khỏi bệnh).",
+    "sound": "naoshimasu"
+  },
+  {
+    "foreign": "はじまります",
+    "native": "bắt đầu | (Tự) Buổi học, bộ phim tự diễn ra. ➔ Tha động từ tương ứng: はじめます (bắt đầu).",
+    "sound": "hajimarimasu"
+  },
+  {
+    "foreign": "はじめます",
+    "native": "bắt đầu | (Tha) Ai đó chủ động mở màn, bắt đầu công việc. ➔ Tự động từ tương ứng: はじまります (bắt đầu).",
+    "sound": "hajimemasu"
+  },
+  {
+    "foreign": "おちます",
+    "native": "rơi | (Tự) Đồ vật tự rơi xuống đất. ➔ Tha động từ tương ứng: おとします (làm rơi).",
+    "sound": "ochimasu"
+  },
+  {
+    "foreign": "おotoshimasu",
+    "native": "làm rơi | (Tha) Ai đó vô ý hoặc chủ động làm rơi đồ. ➔ Tự động từ tương ứng: おちます (rơi).",
+    "sound": "otoshimasu"
+  },
+  {
+    "foreign": "きこえます",
+    "native": "nghe thấy | (Tự) Âm thanh lọt vào tai một cách tự nhiên. ➔ Tha động từ tương ứng: ききます (nghe).",
+    "sound": "kikoemasu"
+  },
+  {
+    "foreign": "ききます",
+    "native": "nghe | (Tha) Chủ động lắng nghe âm nhạc, bài giảng. ➔ Tự động từ tương ứng: きこえます (nghe thấy).",
+    "sound": "kikimasu"
+  },
+  {
+    "foreign": "みえます",
+    "native": "nhìn thấy | (Tự) Hình ảnh đập vào mắt một cách tự nhiên. ➔ Tha động từ tương ứng: みます (nhìn, xem).",
+    "sound": "miemasu"
+  },
+  {
+    "foreign": "みます",
+    "native": "nhìn, xem | (Tha) Chủ động theo dõi, xem tivi, phim ảnh. ➔ Tự động từ tương ứng: みえます (nhìn thấy).",
+    "sound": "mimasu"
+  },
+  {
+    "foreign": "なくなります",
+    "native": "bị mất | (Tự) Đồ vật, ví tiền biến mất. ➔ Tha động từ tương ứng: なくします (làm mất).",
+    "sound": "nakunarimasu"
+  },
+  {
+    "foreign": "なくします",
+    "native": "làm mất | (Tha) Ai đó sơ ý làm thất lạc đồ đạc. ➔ Tự động từ tương ứng: なくなります (bị mất).",
+    "sound": "nakushimasu"
+  },
+  {
+    "foreign": "みつかります",
+    "native": "được tìm thấy | (Tự) Đồ vật thất lạc tự dưng xuất hiện. ➔ Tha động từ tương ứng: みつけます (tìm thấy).",
+    "sound": "mitsukarimasu"
+  },
+  {
+    "foreign": "みつけます",
+    "native": "tìm thấy | (Tha) Chủ động tìm ra một thứ gì đó. ➔ Tự động từ tương ứng: みつかります (được tìm thấy).",
+    "sound": "mitsukemasu"
+  },
+  {
+    "foreign": "きまります",
+    "native": "được quyết định | (Tự) Kế hoạch, ngày giờ đã được chốt. ➔ Tha động từ tương ứng: きめます (quyết định).",
+    "sound": "kimarimasu"
+  },
+  {
+    "foreign": "きめます",
+    "native": "quyết định | (Tha) Bản thân đưa ra lựa chọn, chốt lịch trình. ➔ Tự động từ tương ứng: きまります (được quyết định).",
+    "sound": "kimemasu"
+  },
+  {
+    "foreign": "はいります",
+    "native": "vào | (Tự) Gió lùa vào, bước chân vào phòng. ➔ Tha động từ tương ứng: いれます (cho vào).",
+    "sound": "hairimasu"
+  },
+  {
+    "foreign": "いれます",
+    "native": "cho vào | (Tha) Bỏ đồ đạc vào túi, cắm phích điện. ➔ Tự động từ tương ứng: はいります (vào).",
+    "sound": "iremasu"
+  },
+  {
+    "foreign": "わきます",
+    "native": "sôi | (Tự) Nước nóng tự đạt nhiệt độ sôi. ➔ Tha động từ tương ứng: わかします (đun sôi).",
+    "sound": "wakimasu"
+  },
+  {
+    "foreign": "わかします",
+    "native": "đun sôi | (Tha) Ai đó chủ động đun nước, nấu súp. ➔ Tự động từ tương ứng: わきます (sôi).",
+    "sound": "wakashimasu"
+  },
+  {
+    "foreign": "やけます",
+    "native": "được nướng, chín | (Tự) Bánh mì, thịt đã chín vàng. ➔ Tha động từ tương ứng: ya きます (nướng).",
+    "sound": "yakemasu"
+  },
+  {
+    "foreign": "やきます",
+    "native": "nướng | (Tha) Chủ động nướng thịt, làm bánh. ➔ Tự động từ tương ứng: やけます (được nướng, chín).",
+    "sound": "yakimasu"
+  },
+  {
+    "foreign": "にえます",
+    "native": "được ninh, chín | (Tự) Thức ăn nấu trong nước đã chín mềm. ➔ Tha động từ tương ứng: にます (ninh, kho).",
+    "sound": "niemasu"
+  },
+  {
+    "foreign": "にます",
+    "native": "ninh, kho | (Tha) Chủ động hầm thịt, kho cá. ➔ Tự động từ tương ứng: にえます (được ninh, chín).",
+    "sound": "nimasu"
+  },
+  {
+    "foreign": "こわれます",
+    "native": "bị hỏng | (Tự) Máy móc, đồ đạc tự nhiên trục trặc. ➔ Tha động từ tương ứng: こわします (làm hỏng).",
+    "sound": "kowaremasu"
+  },
+  {
+    "foreign": "こわします",
+    "native": "làm hỏng | (Tha) Ai đó tác động làm vỡ, hư hỏng đồ. ➔ Tự động từ tương ứng: こわれます (bị hỏng).",
+    "sound": "kowashimasu"
+  },
+  {
+    "foreign": "なおります",
+    "native": "được sửa xong | (Tự) Máy tính, đồ đạc đã khôi phục trạng thái cũ. ➔ Tha động từ tương ứng: なおします (sửa chữa).",
+    "sound": "naorimasu"
+  },
+  {
+    "foreign": "なおします",
+    "native": "sửa chữa | (Tha) Chủ động khắc phục lỗi hỏng của máy móc. ➔ Tự động từ tương ứng: なおります (được sửa xong).",
+    "sound": "naoshimasu"
+  },
+  {
+    "foreign": "とどきます",
+    "native": "được giao đến | (Tự) Hàng hóa, thư từ chuyển tới nơi. ➔ Tha động từ tương ứng: とどけます (giao đến).",
+    "sound": "todokimasu"
+  },
+  {
+    "foreign": "とどけます",
+    "native": "giao đến | (Tha) Chủ động mang đồ đến tận tay ai đó. ➔ Tự động từ tương ứng: とどきます (được giao đến).",
+    "sound": "todokemasu"
+  },
+  {
+    "foreign": "あがりまます",
+    "native": "tăng lên | (Tự) Giá cả, nhiệt độ tăng cao. ➔ Tha động từ tương ứng: あげます (nâng lên, tăng).",
+    "sound": "agarimasu"
+  },
+  {
+    "foreign": "あげます",
+    "native": "nâng lên, tăng | (Tha) Chủ động giơ tay, tăng mức giá. ➔ Tự động từ tương ứng: あがります (tăng lên).",
+    "sound": "agemasu"
+  },
+  {
+    "foreign": "さがります",
+    "native": "giảm xuống | (Tự) Chi phí, mực nước hạ thấp. ➔ Tha động từ tương ứng: さげます (hạ xuống, giảm).",
+    "sound": "sagarimasu"
+  },
+  {
+    "foreign": "さげます",
+    "native": "hạ xuống, giảm | (Tha) Chủ động giảm giá, cúi đầu xuống. ➔ Tự động từ tương ứng: さがります (giảm xuống).",
+    "sound": "sagemasu"
+  },
+  {
+    "foreign": "ふえます",
+    "native": "tăng lên (số lượng) | (Tự) Công việc, dân số đông lên. ➔ Tha động từ tương ứng: ふやします (làm tăng lên).",
+    "sound": "fuemasu"
+  },
+  {
+    "foreign": "ふやします",
+    "native": "làm tăng lên | (Tha) Chủ động tăng số lượng nhân sự, của cải. ➔ Tự động từ tương ứng: ふえます (tăng lên).",
+    "sound": "fuyashimasu"
+  },
+  {
+    "foreign": "へります",
+    "native": "giảm đi (số lượng) | (Tự) Cân nặng, tài nguyên ít đi. ➔ Tha động từ tương ứng: へらします (làm giảm đi).",
+    "sound": "herimasu"
+  },
+  {
+    "foreign": "へらします",
+    "native": "làm giảm đi | (Tha) Chủ động cắt giảm chi phí, khẩu phần ăn. ➔ Tự động từ tương ứng: へります (giảm đi).",
+    "sound": "herashimasu"
+  },
+  {
+    "foreign": "つづきます",
+    "native": "tiếp diễn | (Tự) Cuộc họp, cơn mưa kéo dài liên tục. ➔ Tha động từ tương ứng: つづけます (tiếp tục).",
+    "sound": "tsudukimasu"
+  },
+  {
+    "foreign": "つづけます",
+    "native": "tiếp tục | (Tha) Chủ động duy trì hành động học tập, làm việc. ➔ Tự động từ tương ứng: つづきます (tiếp diễn).",
+    "sound": "tsudukemasu"
+  },
+  {
+    "foreign": "たすかります",
+    "native": "được cứu, may mắn | (Tự) Được giải nguy, thoát nạn. ➔ Tha động từ tương ứng: たすけます (cứu, giúp đỡ).",
+    "sound": "tasukarimasu"
+  },
+  {
+    "foreign": "たすけます",
+    "native": "cứu, giúp đỡ | (Tha) Chủ động tương trợ, giải cứu người gặp nạn. ➔ Tự động từ tương ứng: たすかります (được cứu, may mắn).",
+    "sound": "tasukemasu"
+  },
+  {
+    "foreign": "まわります",
+    "native": "quay | (Tự) Bánh xe, Trái Đất tự xoay vòng. ➔ Tha động từ tương ứng: まわします (xoay, vặn).",
+    "sound": "mawarimasu"
+  },
+  {
+    "foreign": "まわします",
+    "native": "xoay, vặn | (Tha) Vặn núm thiết bị, xoay tròn đồ vật. ➔ Tự động từ tương ứng: まわります (quay).",
+    "sound": "mawashimasu"
+  },
+  {
+    "foreign": "まがります",
+    "native": "uốn cong, rẽ | (Tự) Con đường quanh co, xe rẽ hướng. ➔ Tha động từ tương ứng: まげます (uốn cong).",
+    "sound": "magarimasu"
+  },
+  {
+    "foreign": "まげます",
+    "native": "uốn cong | (Tha) Dùng lực gập tay, uốn thanh sắt. ➔ Tự động từ tương ứng: まがります (uốn cong, rẽ).",
+    "sound": "magemasu"
+  },
+  {
+    "foreign": "おれます",
+    "native": "bị gãy | (Tự) Cành cây, xương chân bị gãy. ➔ Tha động từ tương ứng: おります (bẻ gãy, gập).",
+    "sound": "oremasu"
+  },
+  {
+    "foreign": "おります",
+    "native": "bẻ gãy, gập | (Tha) Chủ động bẻ cành cây, gấp giấy origami. ➔ Tự động từ tương ứng: おれます (bị gãy).",
+    "sound": "orimasu"
+  },
+  {
+    "foreign": "あつまります",
+    "native": "tập hợp, tụ họp | (Tự) Đám đông tự động quây lại. ➔ Tha động từ tương ứng: あつめます (thu thập, gom lại).",
+    "sound": "atsumarimasu"
+  },
+  {
+    "foreign": "あつめます",
+    "native": "thu thập, gom lại | (Tha) Chủ động sưu tầm tem, gom tài liệu. ➔ Tự động từ tương ứng: あつまります (tập hợp, tụ họp).",
+    "sound": "atsumemasu"
+  },
+  {
+    "foreign": "ならびます",
+    "native": "xếp hàng | (Tự) Mọi người tự đứng thành hàng. ➔ Tha động từ tương ứng: ならべます (sắp xếp ra).",
+    "sound": "narabimasu"
+  },
+  {
+    "foreign": "ならべます",
+    "native": "sắp xếp ra | (Tha) Bày biện bát đĩa, sách vở ra bàn. ➔ Tự động từ tương ứng: ならびます (xếp hàng).",
+    "sound": "narabemasu"
+  },
+  {
+    "foreign": "こぼれます",
+    "native": "bị tràn, đổ | (Tự) Nước, cà phê tự sóng ra ngoài túi. ➔ Tha động từ tương ứng: こぼします (làm tràn, làm đổ).",
+    "sound": "koboremasu"
+  },
+  {
+    "foreign": "こぼします",
+    "native": "làm tràn, làm đổ | (Tha) Vô ý làm đổ nước ra bàn. ➔ Tự động từ tương ứng: こぼれます (bị tràn, đổ).",
+    "sound": "koboshimasu"
+  },
+  {
+    "foreign": "われます",
+    "native": "bị vỡ | (Tự) Trứng, cốc thủy tinh bị nứt vỡ. ➔ Tha động từ tương ứng: わります (đập vỡ, chia nhỏ).",
+    "sound": "waremasu"
+  },
+  {
+    "foreign": "わります",
+    "native": "đập vỡ, chia nhỏ | (Tha) Chủ động đập trứng, làm vỡ đồ. ➔ Tự động từ tương ứng: われます (bị vỡ).",
+    "sound": "warimasu"
+  },
+  {
+    "foreign": "きれます",
+    "native": "bị đứt | (Tự) Sợi dây, sợi cáp bị đứt đoạn. ➔ Tha động từ tương ứng: きります (cắt).",
+    "sound": "kiremasu"
+  },
+  {
+    "foreign": "きります",
+    "native": "cắt | (Tha) Chủ động dùng kéo cắt giấy, thái thịt. ➔ Tự động từ tương ứng: きれます (bị đứt).",
+    "sound": "kirimasu"
+  },
+  {
+    "foreign": "もえます",
+    "native": "cháy | (Tự) Lửa bắt vào củi, rác tự cháy. ➔ Tha động từ tương ứng: もやします (đốt).",
+    "sound": "moemasu"
+  },
+  {
+    "foreign": "もやします",
+    "native": "đốt | (Tha) Chủ động châm lửa đốt rác, lá khô. ➔ Tự động từ tương ứng: もえます (cháy).",
+    "sound": "moyashimasu"
+  },
+  {
+    "foreign": "とれます",
+    "native": "bị tuột, rụng | (Tự) Cúc áo tự rơi mất. ➔ Tha động từ tương ứng: とります (lấy, cầm).",
+    "sound": "toremasu"
+  },
+  {
+    "foreign": "とります",
+    "native": "lấy, cầm | (Tha) Chủ động với tay lấy đồ vật. ➔ Tự động từ tương ứng: とれます (bị tuột, rụng).",
+    "sound": "torimasu"
+  },
+  {
+    "foreign": "はずれます",
+    "native": "bị tuột ra, bung ra | (Tự) Khuy áo bung ra, tuột xích xe. ➔ Tha động từ tương ứng: はずします (tháo ra, cởi ra).",
+    "sound": "hazuremasu"
+  },
+  {
+    "foreign": "はずします",
+    "native": "tháo ra, cởi ra | (Tha) Chủ động tháo khẩu trang, cởi khuy. ➔ Tự động từ tương ứng: はずれます (bị tuột ra, bung ra).",
+    "sound": "hazushimasu"
+  }
+]

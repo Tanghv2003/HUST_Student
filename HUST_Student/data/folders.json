@@ -14,15 +14,26 @@
           },
           "Bài 24": {
             "folders": {}
-          }
-        }
-      },
-      "a": {
-        "folders": {
-          "b": {
+          },
+          "Bài 25": {
             "folders": {}
           },
-          "c": {
+          "Bài 26": {
+            "folders": {}
+          },
+          "Bài 27": {
+            "folders": {}
+          },
+          "Bài 28": {
+            "folders": {}
+          },
+          "Bài 29": {
+            "folders": {}
+          },
+          "Bài 30": {
+            "folders": {}
+          },
+          "Bài 32": {
             "folders": {}
           }
         }
@@ -30,6 +41,17 @@
     }
   },
   "Toeic": {
-    "folders": {}
+    "folders": {
+      "Từ mới": {
+        "folders": {
+          "Part_1": {
+            "folders": {}
+          },
+          "Part_2d7": {
+            "folders": {}
+          }
+        }
+      }
+    }
   }
 }
