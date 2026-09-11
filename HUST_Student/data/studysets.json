@@ -1,10 +1,4 @@
 {
-  "Tiếng Nhật": [
-    {
-      "title": "Kanji N5 Tổng Hợp",
-      "file": "nihongo/kanji/Kanji_N5.json"
-    }
-  ],
   "Tiếng Nhật/DAICHI/Bài 21": [
     {
       "title": "Từ vựng bài 21",
@@ -151,6 +145,140 @@
     {
       "title": "Từ vừng bài 32",
       "file": "Tiếng_Nhật/DAICHI/Bài_32/Từ_vừng_bài_32.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 33": [
+    {
+      "title": "Danh từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_33/Danh_từ.json"
+    },
+    {
+      "title": "Động từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_33/Động_từ.json"
+    },
+    {
+      "title": "Tính từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_33/Tính_từ.json"
+    },
+    {
+      "title": "Từ mới bài 33",
+      "file": "Tiếng_Nhật/DAICHI/Bài_33/Từ_mới_bài_33.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 34": [
+    {
+      "title": "Danh từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_34/Danh_từ.json"
+    },
+    {
+      "title": "Động từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_34/Động_từ.json"
+    },
+    {
+      "title": "Tính từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_34/Tính_từ.json"
+    },
+    {
+      "title": "Từ vựng bài 34",
+      "file": "Tiếng_Nhật/DAICHI/Bài_34/Từ_vựng_bài_34.json"
+    }
+  ],
+  "Tiếng Nhật/KANJI/BỘ THỦ": [
+    {
+      "title": "Bộ thủ phần 1",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_1.json"
+    },
+    {
+      "title": "Bộ thủ phần 2",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_2.json"
+    },
+    {
+      "title": "Bộ thủ phần 3",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_3.json"
+    },
+    {
+      "title": "Bộ thủ phần 4",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_4.json"
+    },
+    {
+      "title": "Bộ thủ phần 5",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_5.json"
+    },
+    {
+      "title": "Bộ thủ phần 6",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_6.json"
+    },
+    {
+      "title": "Bộ thủ phần 7",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_7.json"
+    },
+    {
+      "title": "Bộ thủ phần 8",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_8.json"
+    },
+    {
+      "title": "Bộ thủ phần 1.1",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_1.1.json"
+    },
+    {
+      "title": "Bộ thủ phần 2.1",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_2.1.json"
+    },
+    {
+      "title": "Bộ thủ phần 3.1",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_3.1.json"
+    },
+    {
+      "title": "Bộ thủ phần 4.1",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_4.1.json"
+    },
+    {
+      "title": "Bộ thủ phần 5.1",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_5.1.json"
+    },
+    {
+      "title": "Bộ thủ phần 6.1",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_6.1.json"
+    },
+    {
+      "title": "Bộ thủ phần 7.1",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_7.1.json"
+    },
+    {
+      "title": "Bộ thủ phần 8.1",
+      "file": "Tiếng_Nhật/KANJI/BỘ_THỦ/Bộ_thủ_phần_8.1.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 35": [
+    {
+      "title": "Danh từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_35/Danh_từ.json"
+    },
+    {
+      "title": "Động từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_35/Động_từ.json"
+    },
+    {
+      "title": "Tính từ &",
+      "file": "Tiếng_Nhật/DAICHI/Bài_35/Tính_từ.json"
+    },
+    {
+      "title": "Từ vựng bài 35",
+      "file": "Tiếng_Nhật/DAICHI/Bài_35/Từ_vựng_bài_35.json"
+    }
+  ],
+  "Tiếng Nhật/DAICHI/Bài 36": [
+    {
+      "title": "Danh từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_36/Danh_từ.json"
+    },
+    {
+      "title": "Động từ",
+      "file": "Tiếng_Nhật/DAICHI/Bài_36/Động_từ.json"
+    },
+    {
+      "title": "Tính từ &",
+      "file": "Tiếng_Nhật/DAICHI/Bài_36/Tính_từ.json"
     }
   ]
 }

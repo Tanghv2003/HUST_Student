@@ -1,0 +1,10 @@
+[
+  { "foreign": "たく", "native": "nấu cơm", "sound": "taku" },
+  { "foreign": "はかる", "native": "đo", "sound": "hakaru" },
+  { "foreign": "すべる", "native": "trơn, trượt", "sound": "suberu" },
+  { "foreign": "まねく", "native": "mời", "sound": "maneku" },
+  { "foreign": "もちあるく", "native": "mang theo bên mình", "sound": "mochiaruku" },
+  { "foreign": "うる", "native": "bán", "sound": "uru" },
+  { "foreign": "あげる", "native": "giơ (tay)", "sound": "ageru" },
+  { "foreign": "きょうりょくする", "native": "hợp tác, chung sức", "sound": "kyouryokusuru" }
+]

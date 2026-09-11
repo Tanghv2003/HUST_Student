@@ -1,0 +1,12 @@
+[
+  { "foreign": "はずかしい", "native": "ngượng", "sound": "hazukashii" },
+  { "foreign": "くやしい", "native": "hối tiếc, ân hận", "sound": "kuyashii" },
+  { "foreign": "とくい［な］", "native": "giỏi", "sound": "tokui[na]" },
+  { "foreign": "にがて［な］", "native": "dở", "sound": "nigate[na]" },
+  { "foreign": "そんなに", "native": "như thế", "sound": "sonnani" },
+  { "foreign": "このくらい", "native": "khoảng chừng này", "sound": "konokurai" },
+  { "foreign": "では", "native": "thế thì ~ (lịch sự của じゃ)", "sound": "dewa" },
+  { "foreign": "おさきに。", "native": "Tôi xin phép về trước.", "sound": "osaki ni." },
+  { "foreign": "ただいま。", "native": "Tôi về rồi đây.", "sound": "tadaima." },
+  { "foreign": "おかえりなさい。", "native": "Mừng bạn đã về.", "sound": "okaerinasai." }
+]

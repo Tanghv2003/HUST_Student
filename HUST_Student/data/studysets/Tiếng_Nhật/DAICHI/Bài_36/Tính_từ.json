@@ -1,0 +1,10 @@
+[
+  { "foreign": "うつくしい", "native": "đẹp", "sound": "utsukushii" },
+  { "foreign": "きょうりょくぶかい", "native": "quan tâm sâu sắc, rất thú vị", "sound": "kyoumibukai" },
+  { "foreign": "いや［な］", "native": "ghét, không ưa", "sound": "iya[na]" },
+  { "foreign": "さかん［な］", "native": "thịnh vượng, phát triển mạnh mẽ", "sound": "sakan[na]" },
+  { "foreign": "でんとうてき［な］", "native": "mang tính truyền thống", "sound": "dentouteki[na]" },
+  { "foreign": "たいへん", "native": "rất", "sound": "taihen" },
+  { "foreign": "とくに", "native": "đặc biệt là", "sound": "tokuni" },
+  { "foreign": "～によって", "native": "do, bởi vì ~", "sound": "~ni yotte" }
+]

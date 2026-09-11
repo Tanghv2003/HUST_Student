@@ -1,0 +1,15 @@
+[
+  { "foreign": "てんぷ", "native": "đính kèm", "sound": "tenpu" },
+  { "foreign": "パスワード", "native": "mật khẩu", "sound": "pasuwa-do" },
+  { "foreign": "あみだな", "native": "giá để hành lý (trên tàu xe)", "sound": "amidana" },
+  { "foreign": "ポケット", "native": "túi", "sound": "poketto" },
+  { "foreign": "ズボン", "native": "quần", "sound": "zubon" },
+  { "foreign": "こい", "native": "tình yêu", "sound": "koi" },
+  { "foreign": "はつこい", "native": "tình yêu đầu", "sound": "hatsukoi" },
+  { "foreign": "あいて", "native": "đối phương", "sound": "aite" },
+  { "foreign": "ようちえん", "native": "trường mẫu giáo", "sound": "youchien" },
+  { "foreign": "ものがたり", "native": "câu chuyện, truyện kể", "sound": "monogatari" },
+  { "foreign": "はつこいものがたり", "native": "câu chuyện tình yêu đầu", "sound": "hatsukoi monogatari" },
+  { "foreign": "コーチ", "native": "huấn luyện viên", "sound": "ko-chi" },
+  { "foreign": "サイン", "native": "chữ ký, dấu hiệu", "sound": "sain" }
+]

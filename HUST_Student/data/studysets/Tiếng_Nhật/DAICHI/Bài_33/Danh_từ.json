@@ -1,0 +1,21 @@
+[
+  { "foreign": "しょうがくきん", "native": "học bổng", "sound": "shougakukin" },
+  { "foreign": "タクシー", "native": "taxi", "sound": "takushi-" },
+  { "foreign": "スタンプ", "native": "tem, con dấu", "sound": "sutanpu" },
+  { "foreign": "クーポン", "native": "phiếu giảm giá", "sound": "ku-pon" },
+  { "foreign": "ミス", "native": "lỗi", "sound": "misu" },
+  { "foreign": "はやねはやおき", "native": "ngủ sớm dậy sớm", "sound": "hayanehayaoki" },
+  { "foreign": "きゅうりょう", "native": "lương", "sound": "kyuuryou" },
+  { "foreign": "じょうけん", "native": "điều kiện", "sound": "jouken" },
+  { "foreign": "ぎじゅつかいはつ", "native": "phát triển kỹ thuật", "sound": "gijutsukaihatsu" },
+  { "foreign": "～だい", "native": "tiền ~", "sound": "~dai" },
+  { "foreign": "アルバイトだい", "native": "tiền làm thêm", "sound": "arubaito dai" },
+  { "foreign": "ゆうめいじん", "native": "người nổi tiếng", "sound": "yuumeijin" },
+  { "foreign": "スタジアム", "native": "sân vận động", "sound": "sutajiamu" },
+  { "foreign": "ヘッドホン", "native": "tai nghe", "sound": "heddohon" },
+  { "foreign": "こしょう", "native": "hỏng", "sound": "koshou" },
+  { "foreign": "ちゅうこしゃ", "native": "xe cũ", "sound": "chuukosha" },
+  { "foreign": "ちゅうこしゃセンター", "native": "trung tâm bán xe cũ", "sound": "chuukosha senta-" },
+  { "foreign": "―てん", "native": "~ điểm", "sound": "-ten" },
+  { "foreign": "じょうけんけい", "native": "thể điều kiện", "sound": "joukenkei" }
+]

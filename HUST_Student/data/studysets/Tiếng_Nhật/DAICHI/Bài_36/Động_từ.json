@@ -1,0 +1,23 @@
+[
+  { "foreign": "さわぐ", "native": "làm ồn", "sound": "sawagu" },
+  { "foreign": "よぶ", "native": "kêu, gọi", "sound": "yobu" },
+  { "foreign": "ふる", "native": "bỏ (chia tay)", "sound": "furu" },
+  { "foreign": "しかる", "native": "mắng", "sound": "shikaru" },
+  { "foreign": "おこす", "native": "đánh thức", "sound": "okosu" },
+  { "foreign": "こぼす", "native": "làm đổ", "sound": "kobosu" },
+  { "foreign": "とる", "native": "lấy trộm", "sound": "toru" },
+  { "foreign": "さす", "native": "đâm, chích", "sound": "sasu" },
+  { "foreign": "ひらく", "native": "mở, khai mạc", "sound": "hiraku" },
+  { "foreign": "おこなう", "native": "tổ chức, tiến hành", "sound": "okonau" },
+  { "foreign": "したしむ", "native": "thân quen, thân thuộc", "sound": "shitashimu" },
+  { "foreign": "うたがう", "native": "nghi ngờ", "sound": "utagau" },
+  { "foreign": "ころす", "native": "giết", "sound": "korosu" },
+  { "foreign": "ほめる", "native": "khen", "sound": "homeru" },
+  { "foreign": "すすめる", "native": "khuyến khích, gợi ý", "sound": "susumeru" },
+  { "foreign": "いきる", "native": "sống", "sound": "ikiru" },
+  { "foreign": "はつめいする", "native": "phát minh", "sound": "hatsumeisuru" },
+  { "foreign": "プロポーズする", "native": "cầu hôn", "sound": "puropo-zusuru" },
+  { "foreign": "はっけんする", "native": "phát hiện", "sound": "hakkensuru" },
+  { "foreign": "ゆしゅつする", "native": "xuất khẩu", "sound": "yushutsusuru" },
+  { "foreign": "ゆにゅうする", "native": "nhập khẩu", "sound": "yunyuusuru" }
+]

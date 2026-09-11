@@ -1,0 +1,12 @@
+[
+  { "foreign": "かつ", "native": "thắng", "sound": "katsu" },
+  { "foreign": "まける", "native": "thua", "sound": "makeru" },
+  { "foreign": "やめる", "native": "bỏ", "sound": "yameru" },
+  { "foreign": "まちがえる", "native": "nhầm", "sound": "machigaeru" },
+  { "foreign": "せいりする", "native": "sắp xếp", "sound": "seirisuru" },
+  { "foreign": "ねぼうする", "native": "ngủ nướng, ngủ quên", "sound": "nebousuru" },
+  { "foreign": "フリーズする", "native": "treo máy (không thao tác được gì)", "sound": "furi-zusuru" },
+  { "foreign": "しゅうりょうする", "native": "kết thúc", "sound": "shuuryousuru" },
+  { "foreign": "がっかりする", "native": "thất vọng", "sound": "gakkarisuru" },
+  { "foreign": "うそを つく", "native": "nói dối", "sound": "uso o tsuku" }
+]
